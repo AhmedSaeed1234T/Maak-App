@@ -1,3 +1,4 @@
+import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'screens/splash_screen.dart';
@@ -22,6 +23,7 @@ import 'screens/profile/profile_company_screen.dart';
 // ... يمكن إضافة بقية الشاشات لاحقاً
 
 void main() {
+  setupServiceLocator();
   runApp(const MaakApp());
 }
 
@@ -43,10 +45,7 @@ class MaakApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child!,
-        );
+        return Directionality(textDirection: TextDirection.rtl, child: child!);
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,
