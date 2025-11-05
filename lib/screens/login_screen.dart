@@ -1,0 +1,100 @@
+import 'package:flutter/material.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 36),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    'تسجيل دخول',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'مرحبًا بعودتك! يرجى إدخال بياناتك.',
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 28),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'البريد الإلكترونى أو الاسم',
+                            hintText: 'john.doe@example.com',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'كلمة المرور',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF13A9F6),
+                              foregroundColor: Colors.white,
+                              textStyle: const TextStyle(fontSize: 18),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(context, '/dashboard');
+                            },
+                            child: const Text('دخول'),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/forgot');
+                          },
+                          child: const Text(
+                            'نسيت كلمة المرور؟',
+                            style: TextStyle(color: Color(0xFF13A9F6)),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
