@@ -75,7 +75,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       pos.latitude,
       pos.longitude,
     );
-
+    debugPrint(placemarks.toString());
     if (placemarks.isNotEmpty) {
       final place = placemarks.first;
       String address =
@@ -165,21 +165,32 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
             ),
             TextButton(onPressed: _pickImage, child: const Text('رفع صورة')),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _firstNameController,
-              decoration: const InputDecoration(
-                labelText: 'الاسم الاول',
-                border: OutlineInputBorder(),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  flex: 6,
+                  child: TextFormField(
+                    controller: _firstNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'الاسم الاول',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                Expanded(flex: 1, child: Container()),
+                Expanded(
+                  flex: 6,
+                  child: TextFormField(
+                    controller: _lastNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'الاسم الاخير',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _lastNameController,
-              decoration: const InputDecoration(
-                labelText: 'الاسم الاخير',
-                border: OutlineInputBorder(),
-              ),
-            ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _emailController,
