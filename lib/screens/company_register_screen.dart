@@ -104,13 +104,13 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       lat: 30.0444,
       lng: 31.2357,
       userType: "SP", // Service Provider
-      providerType: userTypeIndex == 0 ? "Company" : "MarketPlace",
+      providerType: userTypeIndex == 0 ? "Company" : "Marketplace",
       business: _businessNameController.text,
       owner: _ownerNameController.text,
       workerType: 1,
       bio: _bioController.text,
     );
-
+    debugPrint(company.toString());
     sessionCompanyData = {
       'businessName': _businessNameController.text,
       'ownerName': _ownerNameController.text,

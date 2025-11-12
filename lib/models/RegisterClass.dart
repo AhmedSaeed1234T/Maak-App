@@ -55,7 +55,7 @@ class RegisterUserDto {
       "workerType": workerType,
       "business": business,
       "owner": owner,
-      "pay": pay,
+      "pay": pay ?? 0.0,
       "specialization": specialization,
       "referralUserName": referralUserName,
     };
