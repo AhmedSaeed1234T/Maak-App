@@ -1,12 +1,15 @@
+import 'package:abokamall/controllers/LoginController.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final loginController = getIt<LoginController>();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -70,8 +73,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/dashboard');
+                            onPressed: () async {
+                              if (await loginController.login(
+                                    _emailController.text,
+                                    _passwordController.text,
+                                  ) ==
+                                  true) {
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/dashboard',
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'فشل تسجيل الدخول. يرجى التحقق من بياناتك.',
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                             child: const Text('دخول'),
                           ),
@@ -85,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'نسيت كلمة المرور؟',
                             style: TextStyle(color: Color(0xFF13A9F6)),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),

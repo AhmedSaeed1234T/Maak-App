@@ -1,29 +1,37 @@
 import 'dart:convert';
 import 'package:abokamall/helpers/apiroute.dart';
+import 'package:abokamall/models/RegisterClass.dart';
 import 'package:abokamall/models/Worker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:abokamall/helpers/apiroute.dart';
+
 class RegisterController {
-  void RegisterWorker(Worker worker) {
+  Future<bool> registerUser(RegisterUserDto user) async {
+    final url = Uri.parse('$apiRoute/Auth/register');
+
     try {
-      Future<void> registerWorker(Worker worker) async {
-        final url = Uri.parse('$apiRoute/auth/register');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(user.toJson()),
+      );
 
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(worker.toJson()), // <-- converts Map to JSON string
-        );
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          print('Worker registered successfully');
-        } else {
-          print('Failed to register: ${response.body}');
-        }
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        print('User registered successfully: $data');
+        return true;
+      } else {
+        print('Failed to register: ${response.body}');
+        return false;
       }
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('Register error: $e');
+      return false;
     }
   }
 }

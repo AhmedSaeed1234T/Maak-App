@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SelectAccountTypeScreen extends StatelessWidget {
-  const SelectAccountTypeScreen({Key? key}) : super(key: key);
+  const SelectAccountTypeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +26,6 @@ class SelectAccountTypeScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  _AccountTypeTile(
-                    icon: Icons.person_outline,
-                    label: 'مستخدم عادي',
-                    description: 'دخول للمميزات الأساسية المحدودة.',
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/register');
-                    },
-                  ),
                   _AccountTypeTile(
                     icon: Icons.build,
                     label: 'عامل',
@@ -66,8 +58,15 @@ class SelectAccountTypeScreen extends StatelessWidget {
               children: [
                 const Text('لديك حساب بالفعل؟ '),
                 GestureDetector(
-                  onTap: () => Navigator.pushReplacementNamed(context, '/login'),
-                  child: const Text('سجّل دخول', style: TextStyle(color: Color(0xFF13A9F6), fontWeight: FontWeight.bold)),
+                  onTap: () =>
+                      Navigator.pushReplacementNamed(context, '/login'),
+                  child: const Text(
+                    'سجّل دخول',
+                    style: TextStyle(
+                      color: Color(0xFF13A9F6),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -97,9 +96,7 @@ class _AccountTypeTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 0,
       color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
         onTap: onPressed,
@@ -113,13 +110,29 @@ class _AccountTypeTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(description, style: const TextStyle(fontSize: 15, color: Colors.black54)),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black54,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, color: Colors.black38, size: 20),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.black38,
+                size: 20,
+              ),
             ],
           ),
         ),
