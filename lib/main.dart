@@ -28,7 +28,7 @@ void main() {
 }
 
 class MaakApp extends StatelessWidget {
-  const MaakApp({Key? key}) : super(key: key);
+  const MaakApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +63,7 @@ class MaakApp extends StatelessWidget {
         '/reset_success': (_) => const ResetSuccessScreen(),
         '/dashboard': (_) => const DashboardScreen(),
         '/filters': (_) => const FiltersScreen(),
-        '/search_results': (_) => const SearchResultsScreen(),
+        '/search_results': (_) => const SearchResultsPage(providers: []),
         '/settings': (_) => const SettingsScreen(),
         '/payment': (_) => const PaymentScreen(),
         '/my_account': (_) => const SettingsScreen(),

@@ -14,5 +14,5 @@ void setupServiceLocator() {
   getIt.registerLazySingleton<ProfileController>(() => ProfileController());
   getIt.registerSingleton<TokenService>(TokenService());
   getIt.registerLazySingleton<DashboardController>(() => DashboardController());
-  getIt.registerLazySingleton<SearchController>(() => SearchController());
+  getIt.registerLazySingleton<Searchcontroller>(() => Searchcontroller());
 }

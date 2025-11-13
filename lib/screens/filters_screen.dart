@@ -1,16 +1,96 @@
+import 'package:abokamall/controllers/SearchController.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/screens/search_results_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/enums.dart';
 
 class FiltersScreen extends StatefulWidget {
-  const FiltersScreen({Key? key}) : super(key: key);
+  const FiltersScreen({super.key});
 
   @override
   State<FiltersScreen> createState() => _FiltersScreenState();
 }
 
 class _FiltersScreenState extends State<FiltersScreen> {
-  final Set<String> specializations = {};
+  String? selectedProfession;
   String? location = '';
   String? typeOfService;
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController specializationController =
+      TextEditingController();
+
+  late Searchcontroller searchController;
+  @override
+  void initState() {
+    searchController = getIt<Searchcontroller>();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    locationController.dispose();
+    fullNameController.dispose();
+    super.dispose();
+  }
+
+  int? _mapTypeOfServiceToWorkerType() {
+    if (typeOfService == 'يومي') return 0;
+    if (typeOfService == 'مقطوعية') return 1;
+    return null;
+  }
+
+  ProviderType _mapProfessionToProviderType(String? profession) {
+    switch (profession) {
+      case 'مهندس':
+        return ProviderType.Engineers;
+      case 'مقاول':
+        return ProviderType.Contractors;
+      case 'شركة':
+        return ProviderType.Companies;
+      case 'متجر':
+        return ProviderType.Marketplaces;
+      case 'عامل':
+      default:
+        return ProviderType.Workers;
+    }
+  }
+
+  Future<void> _applyFilters() async {
+    if (selectedProfession == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('يرجى اختيار التخصص')));
+      return;
+    }
+
+    final workerType = _mapTypeOfServiceToWorkerType();
+    final providerType = _mapProfessionToProviderType(selectedProfession);
+
+    final providersList = await searchController.searchWorkers(
+      fullNameController.text,
+      specializationController.text,
+      workerType,
+      locationController.text,
+      providerType,
+    );
+
+    if (providersList.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchResultsPage(providers: providersList),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(' حدث خطأ أثناء البحث او لا يوجد مقدمون لهذه الخدمة'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +104,9 @@ class _FiltersScreenState extends State<FiltersScreen> {
         elevation: 0,
         actions: [
           IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.pop(context)),
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
         ],
       ),
       body: SafeArea(
@@ -33,47 +114,104 @@ class _FiltersScreenState extends State<FiltersScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("التخصص", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text(
+                      "الاسم الكامل",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     TextField(
-                      decoration: const InputDecoration(hintText: 'ابحث بالتخصص...', border: OutlineInputBorder()),
-                    ),
-                    CheckboxListTile(
-                      title: const Text('عامل'),
-                      value: specializations.contains('عامل'),
-                      onChanged: (val) => setState(() {val!? specializations.add('عامل') : specializations.remove('عامل');}),
-                    ),
-                    CheckboxListTile(
-                      title: const Text('مقاول'),
-                      value: specializations.contains('مقاول'),
-                      onChanged: (val) => setState(() {val!? specializations.add('مقاول') : specializations.remove('مقاول');}),
-                    ),
-                    CheckboxListTile(
-                      title: const Text('شركة'),
-                      value: specializations.contains('شركة'),
-                      onChanged: (val) => setState(() {val!? specializations.add('شركة') : specializations.remove('شركة');}),
-                    ),
-                    CheckboxListTile(
-                      title: const Text('مهندس'),
-                      value: specializations.contains('مهندس'),
-                      onChanged: (val) => setState(() {val!? specializations.add('مهندس') : specializations.remove('مهندس');}),
-                    ),
-                    CheckboxListTile(
-                      title: const Text('متجر'),
-                      value: specializations.contains('متجر'),
-                      onChanged: (val) => setState(() {val!? specializations.add('متجر') : specializations.remove('متجر');}),
+                      controller: fullNameController,
+                      decoration: const InputDecoration(
+                        hintText: 'ابحث بالاسم الكامل...',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    const Text('الموقع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+
+                    const Text(
+                      "التخصص",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     TextField(
-                      decoration: const InputDecoration(hintText: 'مثال: القاهرة، مصر', prefixIcon: Icon(Icons.location_on), border: OutlineInputBorder()),
-                      onChanged: (val) => setState(() => location = val),
+                      controller: specializationController,
+                      decoration: const InputDecoration(
+                        hintText: 'ابحث التخصص ...',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    RadioListTile<String>(
+                      title: const Text('عامل'),
+                      value: 'عامل',
+                      groupValue: selectedProfession,
+                      onChanged: (val) =>
+                          setState(() => selectedProfession = val),
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('مقاول'),
+                      value: 'مقاول',
+                      groupValue: selectedProfession,
+                      onChanged: (val) =>
+                          setState(() => selectedProfession = val),
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('شركة'),
+                      value: 'شركة',
+                      groupValue: selectedProfession,
+                      onChanged: (val) =>
+                          setState(() => selectedProfession = val),
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('مهندس'),
+                      value: 'مهندس',
+                      groupValue: selectedProfession,
+                      onChanged: (val) =>
+                          setState(() => selectedProfession = val),
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('متجر'),
+                      value: 'متجر',
+                      groupValue: selectedProfession,
+                      onChanged: (val) =>
+                          setState(() => selectedProfession = val),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'الموقع',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    TextField(
+                      controller: locationController,
+                      decoration: const InputDecoration(
+                        hintText: 'مثال: القاهرة، مصر',
+                        prefixIcon: Icon(Icons.location_on),
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 14),
-                    const Text('نوع الخدمة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text(
+                      'نوع الخدمة',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     RadioListTile<String>(
                       title: const Text('يومي'),
                       value: 'يومي',
@@ -99,26 +237,28 @@ class _FiltersScreenState extends State<FiltersScreen> {
                     child: OutlinedButton(
                       onPressed: () {
                         setState(() {
-                          specializations.clear();
-                          location = '';
+                          selectedProfession = null;
+                          locationController.clear();
+                          fullNameController.clear();
                           typeOfService = null;
                         });
                       },
-                      style: OutlinedButton.styleFrom(foregroundColor: Colors.black54),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.black54,
+                      ),
                       child: const Text('مسح الفلاتر'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF13A9F6)),
-                      onPressed: () {
-                        // عند الضغط على تطبيق الفلاتر
-                        Navigator.pop(context);
-                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF13A9F6),
+                      ),
+                      onPressed: _applyFilters, // triggers the search
                       child: const Text('تطبيق الفلاتر'),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
