@@ -119,11 +119,10 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
     );
     debugPrint(_jobController.text);
     // Navigate to login after registration
-    if (await registerController.registerUser(worker) == true) {
+    if (await registerController.registerUser(worker, _imageFile) == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("تم تسجيل بياناتك بنجاح")));
-      Navigator.pop(context);
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(

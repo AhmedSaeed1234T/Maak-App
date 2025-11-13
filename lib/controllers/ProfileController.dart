@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -94,6 +96,7 @@ class ProfileController {
     required String firstName,
     required String lastName,
     required String providerType,
+    File? profileImage,
     String? bio,
     String? skill,
     String? pay,
@@ -108,7 +111,14 @@ class ProfileController {
         return false;
       }
       final url = Uri.parse('$apiRoute/profile');
-
+      final imageUrl = Uri.parse('$apiRoute/profile/upload-profile-image');
+      String? uploadedImageUrl;
+      if (profileImage != null) {
+        uploadedImageUrl = await uploadProfileImage(profileImage);
+        if (uploadedImageUrl != null) {
+          sessionUser['imageUrl'] = uploadedImageUrl;
+        }
+      }
       // Start with common fields
       Map<String, dynamic> body = {
         "firstName": firstName,

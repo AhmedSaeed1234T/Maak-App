@@ -1,6 +1,8 @@
+import 'package:abokamall/controllers/DashboardController.dart';
 import 'package:abokamall/controllers/LoginController.dart';
 import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/controllers/RegisterController.dart';
+import 'package:abokamall/controllers/SearchController.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:get_it/get_it.dart';
 
@@ -11,4 +13,6 @@ void setupServiceLocator() {
   getIt.registerLazySingleton<LoginController>(() => LoginController());
   getIt.registerLazySingleton<ProfileController>(() => ProfileController());
   getIt.registerSingleton<TokenService>(TokenService());
+  getIt.registerLazySingleton<DashboardController>(() => DashboardController());
+  getIt.registerLazySingleton<SearchController>(() => SearchController());
 }

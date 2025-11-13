@@ -275,13 +275,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   lastName: lastNameController.text,
                   providerType: providerType,
                   bio: bioController.text,
+                  profileImage: _imageFile,
                   skill: skillController.text,
                   specialization: specializationController.text,
                   pay: payController.text,
                   business: businessController.text,
                   owner: ownerController.text,
                 );
-
+                Navigator.pop(context);
                 if (success) {
                   setState(() {
                     sessionUser['firstName'] = firstNameController.text;

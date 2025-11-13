@@ -29,8 +29,15 @@ class TokenService {
 
   /// Read accessToken
   Future<String?> getAccessToken() async {
-    _accessToken ??= await _storage.read(key: _accessTokenKey);
-    return _accessToken;
+    try {
+      _accessToken ??= await _storage.read(key: _accessTokenKey);
+
+      return _accessToken;
+    } catch (e) {
+      print('SecureStorage read failed: $e');
+      await _storage.deleteAll(); // optional recovery
+    }
+    return null;
   }
 
   /// Read refreshToken

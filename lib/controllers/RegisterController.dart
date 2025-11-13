@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/models/RegisterClass.dart';
 import 'package:abokamall/models/Worker.dart';
@@ -11,9 +13,12 @@ import 'package:http/http.dart' as http;
 import 'package:abokamall/helpers/apiroute.dart';
 
 class RegisterController {
-  Future<bool> registerUser(RegisterUserDto user) async {
+  Future<bool> registerUser(RegisterUserDto user, File? profileImage) async {
     final url = Uri.parse('$apiRoute/Auth/register');
-
+    String? uploadedImageUrl;
+    if (profileImage != null) {
+      uploadedImageUrl = await uploadProfileImage(profileImage);
+    }
     try {
       final response = await http.post(
         url,

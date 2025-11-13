@@ -122,7 +122,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
     };
     sessionImage = _imageFile;
 
-    if (await registerController.registerUser(company) == true) {
+    if (await registerController.registerUser(company, _imageFile) == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("تم تسجيل بياناتك بنجاح")));

@@ -148,7 +148,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       'providerType': worker.providerType,
     };
 
-    if (await registerController.registerUser(worker) == true) {
+    if (await registerController.registerUser(worker, _imageFile) == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("تم تسجيل بياناتك بنجاح")));
