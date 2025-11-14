@@ -140,14 +140,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       CircleAvatar(
                         radius: 28,
                         backgroundColor: Colors.white,
-                        backgroundImage: NetworkImage(
-                          featuredProviders[i].imageUrl,
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 28,
-                          color: Color(0xFF13A9F6),
-                        ),
+                        backgroundImage:
+                            (featuredProviders[i].imageUrl.isNotEmpty)
+                            ? NetworkImage(featuredProviders[i].imageUrl)
+                            : null,
+                        child: (featuredProviders[i].imageUrl.isEmpty)
+                            ? Icon(
+                                Icons.person,
+                                size: 28,
+                                color: Color(0xFF13A9F6),
+                              )
+                            : null,
                       ),
                       SizedBox(height: 7),
                       Text(

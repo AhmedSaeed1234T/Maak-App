@@ -28,6 +28,23 @@ class ServiceProvider {
     this.aboutMe,
   });
 
+  static String? returnSuitableSkillName(String skill) {
+    switch (skill) {
+      case 'Company':
+        return 'شركة';
+      case 'Contractor':
+        return 'مقاول';
+      case 'Engineer':
+        return 'مهندس';
+      case 'Worker':
+        return 'عامل';
+      case 'Marketplace':
+        return 'متجر';
+      default:
+        return skill;
+    }
+  }
+
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
     return ServiceProvider(
       name: json['name'] ?? '',
@@ -40,7 +57,7 @@ class ServiceProvider {
       mobileNumber: json['mobileNumber']?.toString(),
       email: json['email']?.toString(),
       locationOfServiceArea: json['locationOfServiceArea']?.toString(),
-      typeOfService: json['typeOfService']?.toString(),
+      typeOfService: returnSuitableSkillName(json['typeOfService']) ?? '',
       aboutMe: json['aboutMe']?.toString(),
     );
   }

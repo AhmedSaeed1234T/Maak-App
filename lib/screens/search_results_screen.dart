@@ -18,7 +18,7 @@ class SearchResultsPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Search Results',
+          'نتائج البحث',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
         actions: [
@@ -37,7 +37,7 @@ class SearchResultsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${providers.length} Results found',
+                  '${providers.length} نتائج',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
                 Row(
@@ -50,7 +50,7 @@ class SearchResultsPage extends StatelessWidget {
                         color: Colors.black87,
                       ),
                       label: const Text(
-                        'Filters',
+                        'تصفية',
                         style: TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -63,7 +63,7 @@ class SearchResultsPage extends StatelessWidget {
                         color: Colors.black87,
                       ),
                       label: const Text(
-                        'Sort',
+                        'ترتيب',
                         style: TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -164,7 +164,7 @@ class SearchResultsPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            provider.pay ?? '0',
+                            "${provider.pay ?? '0'} ج ",
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
@@ -197,7 +197,7 @@ class SearchResultsPage extends StatelessWidget {
                                 elevation: 0,
                               ),
                               child: const Text(
-                                'View',
+                                'عرض',
                                 style: TextStyle(fontSize: 12),
                               ),
                             ),
@@ -226,10 +226,7 @@ class WorkerProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       appBar: AppBar(
-        title: const Text(
-          'Worker Profile',
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text('ملف العامل', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -285,26 +282,34 @@ class WorkerProfilePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Details',
+            'التفاصيل',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           _detailRow(
             Icons.phone,
-            'Mobile Number',
-            provider.mobileNumber ?? 'N/A',
+            'رقم الهاتف',
+            provider.mobileNumber ?? 'غير متوفر',
           ),
-          _detailRow(Icons.email, 'Email', provider.email ?? 'N/A'),
+          _detailRow(
+            Icons.email,
+            'البريد الإلكتروني',
+            provider.email ?? 'غير متوفر',
+          ),
           _detailRow(
             Icons.location_on,
-            'Location of Service Area',
+            'منطقة الخدمة',
             provider.locationOfServiceArea ?? provider.location,
           ),
-          _detailRow(Icons.attach_money, 'Price', provider.pay ?? '0'),
+          _detailRow(
+            Icons.attach_money,
+            'السعر',
+            {provider.pay ?? '0', ' ج '}.join(),
+          ),
           _detailRow(
             Icons.work,
-            'Type of Service',
-            provider.typeOfService ?? 'N/A',
+            'نوع الخدمة',
+            provider.typeOfService ?? 'غير متوفر',
           ),
         ],
       ),
@@ -337,13 +342,13 @@ class WorkerProfilePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'About Me',
+            'نبذة عني',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           Text(
             provider.aboutMe ??
-                'No description available for this provider. Please contact directly for more details.',
+                'لا توجد معلومات متاحة عن هذا الموفر. يرجى التواصل مباشرة لمزيد من التفاصيل.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[700],

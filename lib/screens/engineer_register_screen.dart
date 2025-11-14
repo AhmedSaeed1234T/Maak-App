@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
+import '../helpers/HelperMethods.dart'; // For getCurrentLocation()
 
 class EngineerRegisterScreen extends StatefulWidget {
   const EngineerRegisterScreen({super.key});
@@ -23,7 +22,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   static Map<String, dynamic>? sessionEngineerData;
   static File? sessionImage;
 
-  // User selection: 0 = Contractor, 1 = Engineer
+  // User type: 0 = Contractor, 1 = Engineer
   int userTypeIndex = 1;
 
   // Controllers
@@ -37,8 +36,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
   final _locationController = TextEditingController();
-
-  String salaryType = 'daily'; // 0 = daily, 1 = fixed
+  final _referralController = TextEditingController();
 
   @override
   void initState() {
@@ -54,6 +52,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       _bioController.text = sessionEngineerData!['bio'] ?? '';
       _locationController.text = sessionEngineerData!['location'] ?? '';
       _passwordController.text = sessionEngineerData!['password'] ?? '';
+      _referralController.text = sessionEngineerData!['referralCode'] ?? '';
     }
     _imageFile = sessionImage;
   }
@@ -66,97 +65,61 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
     }
   }
 
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('قم بتفعيل خدمة الموقع')));
-      return;
-    }
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم رفض إذن الموقع')));
-        return;
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('إذن الموقع مرفوض دائمًا')));
-      return;
-    }
-
-    Position pos = await Geolocator.getCurrentPosition();
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-      pos.latitude,
-      pos.longitude,
-    );
-    if (placemarks.isNotEmpty) {
-      final place = placemarks.first;
-      String address =
-          '${place.country ?? ''} - ${place.administrativeArea ?? ''} - ${place.locality ?? ''} - ${place.street ?? ''}';
-      setState(() => _locationController.text = address);
-    } else {
-      setState(
-        () => _locationController.text =
-            'Lat: ${pos.latitude}, Lon: ${pos.longitude}',
-      );
-    }
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Future<void> _registerEngineer() async {
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('كلمات المرور غير متطابقة')));
+      _toast("كلمات المرور غير متطابقة");
+      return;
+    }
+
+    // Get current location
+    final loc = await getCurrentLocation();
+    if (loc == null) {
+      _toast("يرجى تفعيل خدمات الموقع");
       return;
     }
 
     final worker = RegisterUserDto(
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-      email: _emailController.text,
-      phoneNumber: _mobileController.text,
-      password: _passwordController.text,
-      location: _locationController.text,
-      lat: 30.0444,
-      lng: 31.2357,
+      firstName: _firstNameController.text.trim(),
+      lastName: _lastNameController.text.trim(),
+      email: _emailController.text.trim(),
+      phoneNumber: _mobileController.text.trim(),
+      password: _passwordController.text.trim(),
+      location: _locationController.text.trim(),
+      lat: loc["lat"],
+      lng: loc["lng"],
       userType: "SP",
       providerType: userTypeIndex == 0 ? "Contractor" : "Engineer",
-      specialization: _specializationController.text,
-      workerType: 1, // always 1
-      pay: double.tryParse(_salaryController.text) ?? 0,
-      bio: _bioController.text,
+      specialization: _specializationController.text.trim(),
+      workerType: 1,
+      pay: double.tryParse(_salaryController.text.trim()) ?? 0,
+      bio: _bioController.text.trim(),
+      referralUserName: _referralController.text.trim(),
     );
 
-    // Store session data
+    // Save session
     sessionEngineerData = {
-      'firstName': _firstNameController.text,
-      'lastName': _lastNameController.text,
-      'email': _emailController.text,
-      'phoneNumber': _mobileController.text,
-      'specialization': _specializationController.text,
-      'pay': double.tryParse(_salaryController.text) ?? 0,
-      'bio': _bioController.text,
-      'location': _locationController.text,
-      'password': _passwordController.text,
+      'firstName': worker.firstName,
+      'lastName': worker.lastName,
+      'email': worker.email,
+      'phoneNumber': worker.phoneNumber,
+      'specialization': worker.specialization,
+      'pay': worker.pay,
+      'bio': worker.bio,
+      'location': worker.location,
+      'password': worker.password,
       'providerType': worker.providerType,
+      'referralCode': worker.referralUserName,
     };
 
     if (await registerController.registerUser(worker, _imageFile) == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("تم تسجيل بياناتك بنجاح")));
+      _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("حدث خطأ يرجي اعادة التسجيل")));
+      _toast("حدث خطأ يرجي اعادة التسجيل");
     }
   }
 
@@ -164,7 +127,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تسجيل مقاول/مهندس'),
+        title: const Text(
+          'تسجيل مقاول/مهندس',
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
@@ -193,6 +159,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
             ),
             TextButton(onPressed: _pickImage, child: const Text('رفع صورة')),
             const SizedBox(height: 16),
+
             Row(
               children: [
                 Expanded(
@@ -213,11 +180,11 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  flex: 6,
                   child: TextFormField(
                     controller: _firstNameController,
                     decoration: const InputDecoration(
@@ -228,7 +195,6 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  flex: 6,
                   child: TextFormField(
                     controller: _lastNameController,
                     decoration: const InputDecoration(
@@ -239,6 +205,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _emailController,
@@ -246,17 +213,18 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 labelText: 'البريد الالكتروني',
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.emailAddress,
             ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _mobileController,
               decoration: const InputDecoration(
-                labelText: 'الجوال',
+                labelText: 'رقم الجوال',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.phone,
             ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _specializationController,
@@ -265,16 +233,17 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
 
+            const SizedBox(height: 12),
             TextFormField(
               controller: _salaryController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'الاجر',
+                labelText: 'الأجر',
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _bioController,
@@ -284,6 +253,16 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
+
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _referralController,
+              decoration: const InputDecoration(
+                labelText: ' كيف عرفت هذا التطبيق؟',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _locationController,
@@ -292,10 +271,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            IconButton(
-              onPressed: _getCurrentLocation,
-              icon: const Icon(Icons.location_on, color: Color(0xFF13A9F6)),
-            ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _passwordController,
@@ -305,6 +281,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _confirmPasswordController,
@@ -314,6 +291,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 18),
             SizedBox(
               width: double.infinity,

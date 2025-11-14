@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
@@ -17,6 +17,8 @@ class WorkerRegisterScreen extends StatefulWidget {
 
 class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final registerController = getIt<RegisterController>();
+
+  // Image
   File? _imageFile;
   final picker = ImagePicker();
 
@@ -24,110 +26,67 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _mobileController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _jobController = TextEditingController();
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
   final _locationController = TextEditingController();
+  final _referralController = TextEditingController(); // New referral code
 
-  String salaryType = 'daily'; // 'daily' -> 0, 'fixed' -> 1
+  String salaryType = "daily"; // daily = 0, fixed = 1
 
   // Pick image
   Future<void> _pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _imageFile = File(picked.path));
     }
   }
 
   // Get current location
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('قم بتفعيل خدمة الموقع')));
-      return;
-    }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم رفض إذن الموقع')));
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('إذن الموقع مرفوض دائمًا')));
-      return;
-    }
-
-    Position pos = await Geolocator.getCurrentPosition();
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-      pos.latitude,
-      pos.longitude,
-    );
-    debugPrint(placemarks.toString());
-    if (placemarks.isNotEmpty) {
-      final place = placemarks.first;
-      String address =
-          '${place.country ?? ''} - ${place.administrativeArea ?? ''} - ${place.locality ?? ''} - ${place.street ?? ''}';
-      setState(() => _locationController.text = address);
-    } else {
-      setState(
-        () => _locationController.text =
-            'Lat: ${pos.latitude}, Lon: ${pos.longitude}',
-      );
-    }
+  // Show simple toast
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // Register worker
   Future<void> _registerWorker() async {
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('كلمات المرور غير متطابقة')));
+      _toast("كلمات المرور غير متطابقة");
       return;
     }
 
-    final worker = RegisterUserDto(
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-      email: _emailController.text,
-      phoneNumber: _mobileController.text,
-      password: _passwordController.text,
-      location: _locationController.text,
+    final loc = await getCurrentLocation();
+    if (loc == null) return; // Stop if location not available
 
-      lat: 30.0444,
-      lng: 31.2357,
-
-      userType: "SP", // Service Provider
-
+    final user = RegisterUserDto(
+      firstName: _firstNameController.text.trim(),
+      lastName: _lastNameController.text.trim(),
+      email: _emailController.text.trim(),
+      phoneNumber: _phoneController.text.trim(),
+      password: _passwordController.text.trim(),
+      location: _locationController.text.trim(),
+      lat: loc["lat"],
+      lng: loc["lng"],
+      userType: "SP",
       providerType: "Worker",
-      skill: _jobController.text,
-      workerType: salaryType == 'daily' ? 0 : 1, // 0 = daily, 1 = fixed
-      pay: double.tryParse(_salaryController.text) ?? 0,
-      bio: _bioController.text,
+      skill: _jobController.text.trim(),
+      workerType: salaryType == "daily" ? 0 : 1,
+      pay: double.tryParse(_salaryController.text.trim()) ?? 0,
+      bio: _bioController.text.trim(),
+      referralUserName: _referralController.text.trim(), // Added referral
     );
-    debugPrint(_jobController.text);
-    // Navigate to login after registration
-    if (await registerController.registerUser(worker, _imageFile) == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("تم تسجيل بياناتك بنجاح")));
+
+    final ok = await registerController.registerUser(user, _imageFile);
+
+    if (ok == true) {
+      _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("حدث خطأ يرجي اعادة التسجيل")));
+      _toast("حدث خطأ يرجي اعادة التسجيل");
     }
   }
 
@@ -135,84 +94,83 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تسجيل عامل'),
+        title: const Text("تسجيل عامل"),
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
+        foregroundColor: Colors.black,
       ),
-      backgroundColor: const Color(0xFFF7FAFF),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Image picker
             GestureDetector(
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 48,
-                backgroundColor: Colors.grey[100],
+                backgroundColor: Colors.grey[200],
                 backgroundImage: _imageFile != null
                     ? FileImage(_imageFile!)
                     : null,
                 child: _imageFile == null
-                    ? const Icon(
-                        Icons.camera_alt,
-                        color: Color(0xFF13A9F6),
-                        size: 32,
-                      )
+                    ? const Icon(Icons.camera_alt, size: 32, color: Colors.blue)
                     : null,
               ),
             ),
-            TextButton(onPressed: _pickImage, child: const Text('رفع صورة')),
+            TextButton(onPressed: _pickImage, child: const Text("رفع صورة")),
             const SizedBox(height: 16),
+
+            // Name fields
             Row(
               children: [
                 Expanded(
-                  flex: 6,
-                  child: TextFormField(
+                  child: TextField(
                     controller: _firstNameController,
                     decoration: const InputDecoration(
-                      labelText: 'الاسم الاول',
+                      labelText: "الاسم الاول",
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
-                Expanded(flex: 1, child: Container()),
+                const SizedBox(width: 10),
                 Expanded(
-                  flex: 6,
-                  child: TextFormField(
+                  child: TextField(
                     controller: _lastNameController,
                     decoration: const InputDecoration(
-                      labelText: 'الاسم الاخير',
+                      labelText: "الاسم الاخير",
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
 
-            const SizedBox(height: 12),
-            TextFormField(
+            // Email & phone
+            TextField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'البريد الالكتروني',
-                border: OutlineInputBorder(),
-              ),
               keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _mobileController,
               decoration: const InputDecoration(
-                labelText: 'الجوال',
+                labelText: "البريد الالكتروني",
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: "رقم الجوال",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Job & salary type
+            TextField(
               controller: _jobController,
               decoration: const InputDecoration(
-                labelText: 'المهنة',
+                labelText: "المهنة",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -220,80 +178,92 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
             Row(
               children: [
                 Expanded(
-                  child: RadioListTile<String>(
-                    title: const Text('يومي'),
-                    value: 'daily',
+                  child: RadioListTile(
+                    title: const Text("يومي"),
+                    value: "daily",
                     groupValue: salaryType,
-                    onChanged: (val) => setState(() => salaryType = val!),
+                    onChanged: (v) => setState(() => salaryType = v!),
                   ),
                 ),
                 Expanded(
-                  child: RadioListTile<String>(
-                    title: const Text('مقطوعية'),
-                    value: 'fixed',
+                  child: RadioListTile(
+                    title: const Text("مقطوعية"),
+                    value: "fixed",
                     groupValue: salaryType,
-                    onChanged: (val) => setState(() => salaryType = val!),
+                    onChanged: (v) => setState(() => salaryType = v!),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            TextField(
               controller: _salaryController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'الاجر',
+                labelText: "الأجر",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
+
+            // Bio
+            TextField(
               controller: _bioController,
               maxLines: 2,
               decoration: const InputDecoration(
-                labelText: 'نبذة عنك',
+                labelText: "نبذة عنك",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
+
+            // Referral code
+            TextField(
+              controller: _referralController,
+              decoration: const InputDecoration(
+                labelText: " كيف عرفت هذا التطبيق؟",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Location
+            TextField(
               controller: _locationController,
               decoration: const InputDecoration(
-                labelText: 'الموقع',
+                labelText: "الموقع",
                 border: OutlineInputBorder(),
               ),
             ),
-            IconButton(
-              onPressed: _getCurrentLocation,
-              icon: const Icon(Icons.location_on, color: Color(0xFF13A9F6)),
-            ),
+
             const SizedBox(height: 12),
-            TextFormField(
+
+            // Password
+            TextField(
               controller: _passwordController,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: 'كلمة المرور',
+                labelText: "كلمة المرور",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            TextField(
               controller: _confirmPasswordController,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: 'تأكيد كلمة المرور',
+                labelText: "تأكيد كلمة المرور",
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
+
+            // Submit button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _registerWorker,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF13A9F6),
-                ),
-                child: const Text('حفظ'),
+                child: const Text("حفظ"),
               ),
             ),
           ],
