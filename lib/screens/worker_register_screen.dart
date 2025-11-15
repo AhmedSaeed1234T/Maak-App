@@ -1,9 +1,6 @@
 import 'dart:io';
-import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
@@ -32,8 +29,10 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _jobController = TextEditingController();
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _referralController = TextEditingController(); // New referral code
+  final _referralController = TextEditingController();
+  final _governorateController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _districtController = TextEditingController();
 
   String salaryType = "daily"; // daily = 0, fixed = 1
 
@@ -44,8 +43,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       setState(() => _imageFile = File(picked.path));
     }
   }
-
-  // Get current location
 
   // Show simple toast
   void _toast(String msg) {
@@ -59,34 +56,30 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       return;
     }
 
-    final loc = await getCurrentLocation();
-    if (loc == null) return; // Stop if location not available
-
     final user = RegisterUserDto(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
       password: _passwordController.text.trim(),
-      location: _locationController.text.trim(),
-      lat: loc["lat"],
-      lng: loc["lng"],
-      userType: "SP",
+      governorate: _governorateController.text.trim(),
+      city: _cityController.text.trim(),
+      district: _districtController.text.trim(),
+      bio: _bioController.text.trim(),
       providerType: "Worker",
       skill: _jobController.text.trim(),
       workerType: salaryType == "daily" ? 0 : 1,
       pay: double.tryParse(_salaryController.text.trim()) ?? 0,
-      bio: _bioController.text.trim(),
-      referralUserName: _referralController.text.trim(), // Added referral
+      referralUserName: _referralController.text.trim(),
     );
 
     final ok = await registerController.registerUser(user, _imageFile);
 
-    if (ok == true) {
+    if (ok) {
       _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
-      _toast("حدث خطأ يرجي اعادة التسجيل");
+      _toast("حدث خطأ يرجى إعادة التسجيل");
     }
   }
 
@@ -221,21 +214,36 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
             TextField(
               controller: _referralController,
               decoration: const InputDecoration(
-                labelText: " كيف عرفت هذا التطبيق؟",
+                labelText: "كيف عرفت هذا التطبيق؟",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Location
+            // Location inputs
             TextField(
-              controller: _locationController,
+              controller: _governorateController,
               decoration: const InputDecoration(
-                labelText: "الموقع",
+                labelText: "المحافظة",
                 border: OutlineInputBorder(),
               ),
             ),
-
+            const SizedBox(height: 12),
+            TextField(
+              controller: _cityController,
+              decoration: const InputDecoration(
+                labelText: "المدينة",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _districtController,
+              decoration: const InputDecoration(
+                labelText: "الحي",
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 12),
 
             // Password

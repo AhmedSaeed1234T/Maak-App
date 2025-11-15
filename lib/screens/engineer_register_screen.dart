@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
-import '../helpers/HelperMethods.dart'; // For getCurrentLocation()
 
 class EngineerRegisterScreen extends StatefulWidget {
   const EngineerRegisterScreen({super.key});
@@ -35,8 +34,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final _specializationController = TextEditingController();
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
-  final _locationController = TextEditingController();
   final _referralController = TextEditingController();
+  final _governorateController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _districtController = TextEditingController();
 
   @override
   void initState() {
@@ -50,7 +51,9 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
           sessionEngineerData!['specialization'] ?? '';
       _salaryController.text = sessionEngineerData!['pay']?.toString() ?? '';
       _bioController.text = sessionEngineerData!['bio'] ?? '';
-      _locationController.text = sessionEngineerData!['location'] ?? '';
+      _governorateController.text = sessionEngineerData!['governorate'] ?? '';
+      _cityController.text = sessionEngineerData!['city'] ?? '';
+      _districtController.text = sessionEngineerData!['district'] ?? '';
       _passwordController.text = sessionEngineerData!['password'] ?? '';
       _referralController.text = sessionEngineerData!['referralCode'] ?? '';
     }
@@ -75,47 +78,41 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       return;
     }
 
-    // Get current location
-    final loc = await getCurrentLocation();
-    if (loc == null) {
-      _toast("يرجى تفعيل خدمات الموقع");
-      return;
-    }
-
-    final worker = RegisterUserDto(
+    final user = RegisterUserDto(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
       phoneNumber: _mobileController.text.trim(),
       password: _passwordController.text.trim(),
-      location: _locationController.text.trim(),
-      lat: loc["lat"],
-      lng: loc["lng"],
-      userType: "SP",
       providerType: userTypeIndex == 0 ? "Contractor" : "Engineer",
       specialization: _specializationController.text.trim(),
       workerType: 1,
       pay: double.tryParse(_salaryController.text.trim()) ?? 0,
       bio: _bioController.text.trim(),
       referralUserName: _referralController.text.trim(),
+      governorate: _governorateController.text.trim(),
+      city: _cityController.text.trim(),
+      district: _districtController.text.trim(),
     );
 
     // Save session
     sessionEngineerData = {
-      'firstName': worker.firstName,
-      'lastName': worker.lastName,
-      'email': worker.email,
-      'phoneNumber': worker.phoneNumber,
-      'specialization': worker.specialization,
-      'pay': worker.pay,
-      'bio': worker.bio,
-      'location': worker.location,
-      'password': worker.password,
-      'providerType': worker.providerType,
-      'referralCode': worker.referralUserName,
+      'firstName': user.firstName,
+      'lastName': user.lastName,
+      'email': user.email,
+      'phoneNumber': user.phoneNumber,
+      'specialization': user.specialization,
+      'pay': user.pay,
+      'bio': user.bio,
+      'governorate': user.governorate,
+      'city': user.city,
+      'district': user.district,
+      'password': user.password,
+      'providerType': user.providerType,
+      'referralCode': user.referralUserName,
     };
 
-    if (await registerController.registerUser(worker, _imageFile) == true) {
+    if (await registerController.registerUser(user, _imageFile) == true) {
       _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
@@ -258,21 +255,38 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
             TextFormField(
               controller: _referralController,
               decoration: const InputDecoration(
-                labelText: ' كيف عرفت هذا التطبيق؟',
+                labelText: 'كيف عرفت هذا التطبيق؟',
                 border: OutlineInputBorder(),
               ),
             ),
 
+            const SizedBox(height: 12),
+            // Location fields
+            TextFormField(
+              controller: _governorateController,
+              decoration: const InputDecoration(
+                labelText: 'المحافظة',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _locationController,
+              controller: _cityController,
               decoration: const InputDecoration(
-                labelText: 'الموقع',
+                labelText: 'المدينة',
                 border: OutlineInputBorder(),
               ),
             ),
-
             const SizedBox(height: 12),
+            TextFormField(
+              controller: _districtController,
+              decoration: const InputDecoration(
+                labelText: 'الحي',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
             TextFormField(
               controller: _passwordController,
               obscureText: true,

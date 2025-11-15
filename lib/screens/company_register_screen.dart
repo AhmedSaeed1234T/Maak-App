@@ -1,9 +1,6 @@
 import 'dart:io';
-import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
@@ -23,36 +20,37 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   static Map<String, dynamic>? sessionCompanyData;
   static File? sessionImage;
 
-  int userTypeIndex = 0; // 0 = Company, 1 = Commercial Store
+  int userTypeIndex = 0; // 0 = Company, 1 = Marketplace
 
   // Controllers
-  final _referralController = TextEditingController();
-  final _specializationController = TextEditingController();
-  final _businessNameController = TextEditingController();
-  final _ownerNameController = TextEditingController();
+  final _businessController = TextEditingController();
+  final _ownerController = TextEditingController();
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _bioController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _salaryController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _bioController = TextEditingController();
+  final _referralController = TextEditingController();
+
+  // Location controllers
+  final _governorateController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _districtController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     if (sessionCompanyData != null) {
-      _referralController.text = sessionCompanyData!['referral'] ?? '';
-      _specializationController.text =
-          sessionCompanyData!['specialization'] ?? '';
-      _businessNameController.text = sessionCompanyData!['businessName'] ?? '';
-      _ownerNameController.text = sessionCompanyData!['ownerName'] ?? '';
+      _businessController.text = sessionCompanyData!['business'] ?? '';
+      _ownerController.text = sessionCompanyData!['owner'] ?? '';
       _emailController.text = sessionCompanyData!['email'] ?? '';
-      _mobileController.text = sessionCompanyData!['mobile'] ?? '';
-      _locationController.text = sessionCompanyData!['location'] ?? '';
+      _mobileController.text = sessionCompanyData!['phoneNumber'] ?? '';
       _bioController.text = sessionCompanyData!['bio'] ?? '';
       _passwordController.text = sessionCompanyData!['password'] ?? '';
-      _salaryController.text = sessionCompanyData!['salary'] ?? '';
+      _referralController.text = sessionCompanyData!['referralUserName'] ?? '';
+      _governorateController.text = sessionCompanyData!['governorate'] ?? '';
+      _cityController.text = sessionCompanyData!['city'] ?? '';
+      _districtController.text = sessionCompanyData!['district'] ?? '';
     }
     _imageFile = sessionImage;
   }
@@ -70,60 +68,49 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   }
 
   Future<void> _registerCompany() async {
-    if (_passwordController.text.isEmpty) return;
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('كلمات المرور غير متطابقة')));
+      _toast("كلمات المرور غير متطابقة");
       return;
     }
-    final loc = await getCurrentLocation();
-    if (loc == null) {
-      _toast("يرجى تفعيل خدمات الموقع");
-      return;
-    }
+
     final company = RegisterUserDto(
-      firstName: _businessNameController.text,
-      lastName: _ownerNameController.text,
-      email: _emailController.text,
-      phoneNumber: _mobileController.text,
-      password: _passwordController.text,
-      location: _locationController.text,
-      lat: loc["lat"],
-      lng: loc["lng"],
-      userType: "SP",
+      firstName: _businessController.text.trim(), // Business Name
+      lastName: _ownerController.text.trim(), // Owner Name
+      email: _emailController.text.trim(),
+      phoneNumber: _mobileController.text.trim(),
+      password: _passwordController.text.trim(),
       providerType: userTypeIndex == 0 ? "Company" : "Marketplace",
-      business: _businessNameController.text,
-      owner: _ownerNameController.text,
-      workerType: 1,
-      bio: _bioController.text,
-      referralUserName: _referralController.text,
+
+      governorate: _governorateController.text.trim(),
+      city: _cityController.text.trim(),
+      district: _districtController.text.trim(),
+      business: _businessController.text.trim(),
+      owner: _ownerController.text.trim(),
+      bio: _bioController.text.trim(),
+      referralUserName: _referralController.text.trim(),
     );
 
-    // Save session data
+    // Save session
     sessionCompanyData = {
-      'referral': _referralController.text,
-      'specialization': _specializationController.text,
-      'businessName': _businessNameController.text,
-      'ownerName': _ownerNameController.text,
-      'email': _emailController.text,
-      'mobile': _mobileController.text,
-      'location': _locationController.text,
-      'bio': _bioController.text,
-      'password': _passwordController.text,
+      'business': company.business,
+      'owner': company.owner,
+      'email': company.email,
+      'phoneNumber': company.phoneNumber,
+      'bio': company.bio,
+      'password': company.password,
+      'referralUserName': company.referralUserName,
       'providerType': company.providerType,
+      'governorate': _governorateController.text,
+      'city': _cityController.text,
+      'district': _districtController.text,
     };
-    sessionImage = _imageFile;
 
-    if (await registerController.registerUser(company, _imageFile) == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("تم تسجيل بياناتك بنجاح")));
+    final ok = await registerController.registerUser(company, _imageFile);
+    if (ok == true) {
+      _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("حدث خطأ يرجى إعادة التسجيل")),
-      );
+      _toast("حدث خطأ يرجى إعادة التسجيل");
     }
   }
 
@@ -132,114 +119,67 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'تسجيل شركة/متجر',
+          "تسجيل شركة/متجر",
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
       ),
-      backgroundColor: const Color(0xFFF7FAFF),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Referral input field
-
-            // Image picker
+            // Image
             GestureDetector(
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 48,
-                backgroundColor: Colors.grey[100],
+                backgroundColor: Colors.grey[200],
                 backgroundImage: _imageFile != null
                     ? FileImage(_imageFile!)
                     : null,
                 child: _imageFile == null
-                    ? const Icon(
-                        Icons.camera_alt,
-                        color: Color(0xFF13A9F6),
-                        size: 32,
-                      )
+                    ? const Icon(Icons.camera_alt, size: 32, color: Colors.blue)
                     : null,
               ),
             ),
             TextButton(
               onPressed: _pickImage,
-              child: const Text('رفع شعار/صورة الشركة'),
+              child: const Text("رفع شعار/صورة الشركة"),
             ),
+
             const SizedBox(height: 16),
-
-            // User type toggle
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<int>(
-                    title: const Text('شركة'),
-                    value: 0,
-                    groupValue: userTypeIndex,
-                    onChanged: (val) => setState(() => userTypeIndex = val!),
-                  ),
-                ),
-                Expanded(
-                  child: RadioListTile<int>(
-                    title: const Text('متجر تجاري'),
-                    value: 1,
-                    groupValue: userTypeIndex,
-                    onChanged: (val) => setState(() => userTypeIndex = val!),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Form fields
+            // Business and owner
             TextFormField(
-              controller: _specializationController,
+              controller: _businessController,
               decoration: const InputDecoration(
-                labelText: 'التخصص/مجال العمل',
+                labelText: "اسم الشركة/المؤسسة",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _businessNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'اسم الشركة/المؤسسة',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _ownerNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'اسم المالك',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
+            TextFormField(
+              controller: _ownerController,
+              decoration: const InputDecoration(
+                labelText: "اسم المالك",
+                border: OutlineInputBorder(),
+              ),
             ),
+
             const SizedBox(height: 12),
             TextFormField(
               controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                labelText: 'البريد الإلكتروني',
+                labelText: "البريد الإلكتروني",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _mobileController,
-              keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'رقم الجوال',
+                labelText: "رقم الجوال",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -247,41 +187,55 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
             TextFormField(
               controller: _referralController,
               decoration: const InputDecoration(
-                labelText: 'كيف عرفت هذا التطبيق',
+                labelText: "كيف عرفت هذا التطبيق؟",
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
-            // Location with icon
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _locationController,
-                    decoration: const InputDecoration(
-                      labelText: 'الموقع/العنوان',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 12),
+
+            // Location fields
+            TextFormField(
+              controller: _governorateController,
+              decoration: const InputDecoration(
+                labelText: "المحافظة",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _cityController,
+              decoration: const InputDecoration(
+                labelText: "المدينة",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _districtController,
+              decoration: const InputDecoration(
+                labelText: "الحي",
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
 
+            // Bio
             TextFormField(
               controller: _bioController,
               maxLines: 2,
               decoration: const InputDecoration(
-                labelText: 'نبذة عن الشركة',
+                labelText: "نبذة عن الشركة",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
+
+            // Passwords
             TextFormField(
               controller: _passwordController,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: 'كلمة المرور',
+                labelText: "كلمة المرور",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -290,21 +244,18 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
               controller: _confirmPasswordController,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: 'تأكيد كلمة المرور',
+                labelText: "تأكيد كلمة المرور",
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            const SizedBox(height: 24),
+            // Submit
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _registerCompany,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF13A9F6),
-                ),
-                child: const Text('حفظ'),
+                child: const Text("حفظ"),
               ),
             ),
           ],
