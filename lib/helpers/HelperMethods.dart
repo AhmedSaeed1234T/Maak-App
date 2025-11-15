@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
+import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -73,3 +74,34 @@ Future<Map<String, dynamic>?> getCurrentLocation() async {
 }
 
 // i want to make a refresh token function
+String translateProviderTypeToArabic(String providerType) {
+  switch (providerType.toLowerCase()) {
+    case 'worker':
+      return 'عامل';
+    case 'engineer':
+      return 'مهندس';
+    case 'marketplace':
+      return 'سوق';
+    case 'contractor':
+      return 'مقاول';
+    case 'company':
+      return 'شركة';
+    default:
+      return 'غير معروف';
+  }
+}
+
+String formatPay(ServiceProvider provider) {
+  final pay = provider.pay ?? '0';
+
+  if (provider.typeOfService == 'Worker') {
+    if (provider.workerType == 0) return '$pay ج باليومية';
+    if (provider.workerType == 1) return '$pay ج بالمشروع';
+    return '$pay ج';
+  }
+  if (provider.typeOfService == 'Engineer') return '$pay ج بالمرتب';
+  if (provider.typeOfService == 'Contractor' ||
+      provider.typeOfService == 'Company')
+    return '$pay ج بالمشروع';
+  return '$pay ج';
+}

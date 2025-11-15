@@ -38,9 +38,9 @@ class RegisterUserDto {
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final userRegister = {
       "firstName": firstName,
-      "lastName": lastName,
+      "lastName": lastName ?? '',
       "email": email,
       "phoneNumber": phoneNumber,
       "password": password,
@@ -50,34 +50,37 @@ class RegisterUserDto {
       "bio": bio,
       "providerType": providerType,
       "skill": skill,
-      "workerType": workerType,
+      "workerType": workerType ?? 1,
       "business": business,
       "owner": owner,
       "pay": pay ?? 0.0,
       "specialization": specialization,
-      "referralUserName": referralUserName,
     };
+    if (referralUserName != null && referralUserName!.isNotEmpty) {
+      userRegister['referralUserName'] = referralUserName;
+    }
+    return userRegister;
   }
 
   factory RegisterUserDto.fromJson(Map<String, dynamic> json) {
     return RegisterUserDto(
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      email: json['email'],
-      phoneNumber: json['phoneNumber'],
-      password: json['password'],
-      governorate: json['governorate'],
-      city: json['city'],
-      district: json['district'],
-      bio: json['bio'],
-      providerType: json['providerType'],
-      skill: json['skill'],
-      workerType: json['workerType'],
-      business: json['business'],
-      owner: json['owner'],
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      email: json['email'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
+      password: json['password'] ?? '',
+      governorate: json['governorate'] ?? '',
+      city: json['city'] ?? '',
+      district: json['district'] ?? '',
+      bio: json['bio'] ?? '',
+      providerType: json['providerType'] ?? '',
+      skill: json['skill'] ?? '',
+      workerType: json['workerType'] ?? 1,
+      business: json['business'] ?? '',
+      owner: json['owner'] ?? '',
       pay: (json['pay'] != null) ? (json['pay'] as num).toDouble() : 0.0,
-      specialization: json['specialization'],
-      referralUserName: json['referralUserName'],
+      specialization: json['specialization'] ?? '',
+      referralUserName: json['referralUserName'] ?? '',
     );
   }
 }

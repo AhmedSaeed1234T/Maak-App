@@ -31,7 +31,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _bioController = TextEditingController();
   final _referralController = TextEditingController();
-
+  final _nameController = TextEditingController();
   // Location controllers
   final _governorateController = TextEditingController();
   final _cityController = TextEditingController();
@@ -41,6 +41,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   void initState() {
     super.initState();
     if (sessionCompanyData != null) {
+      _nameController.text = sessionCompanyData!['name'] ?? '';
       _businessController.text = sessionCompanyData!['business'] ?? '';
       _ownerController.text = sessionCompanyData!['owner'] ?? '';
       _emailController.text = sessionCompanyData!['email'] ?? '';
@@ -74,8 +75,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
     }
 
     final company = RegisterUserDto(
-      firstName: _businessController.text.trim(), // Business Name
-      lastName: _ownerController.text.trim(), // Owner Name
+      firstName: _nameController.text.trim(), // Business Name
       email: _emailController.text.trim(),
       phoneNumber: _mobileController.text.trim(),
       password: _passwordController.text.trim(),
@@ -103,6 +103,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       'governorate': _governorateController.text,
       'city': _cityController.text,
       'district': _districtController.text,
+      'name': _nameController.text,
     };
 
     final ok = await registerController.registerUser(company, _imageFile);
@@ -152,7 +153,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
             const SizedBox(height: 16),
             // Business and owner
             TextFormField(
-              controller: _businessController,
+              controller: _nameController,
               decoration: const InputDecoration(
                 labelText: "اسم الشركة/المؤسسة",
                 border: OutlineInputBorder(),
@@ -166,7 +167,14 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _businessController,
+              decoration: const InputDecoration(
+                labelText: "اسم التخصص",
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _emailController,
@@ -192,6 +200,26 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<int>(
+                    title: const Text('شركة'),
+                    value: 0,
+                    groupValue: userTypeIndex,
+                    onChanged: (val) => setState(() => userTypeIndex = val!),
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<int>(
+                    title: const Text('سوق'),
+                    value: 1,
+                    groupValue: userTypeIndex,
+                    onChanged: (val) => setState(() => userTypeIndex = val!),
+                  ),
+                ),
+              ],
+            ),
 
             // Location fields
             TextFormField(

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:abokamall/controllers/ProfileController.dart';
+import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/models/UserProfile.dart';
 import 'package:flutter/material.dart';
@@ -395,11 +396,32 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           icon: Icons.person,
         ),
 
+        _buildNonEditableField(
+          label: 'النقاط',
+          value: _userProfile!.points.toString(),
+          icon: Icons.stars,
+        ),
+        _buildNonEditableField(
+          label: 'اول يوم للاشتراك',
+          value: _userProfile!.subscription!.startDate.toString(),
+          icon: Icons.date_range,
+        ),
+        _buildNonEditableField(
+          label: 'اخر يوم للاشتراك',
+          value: _userProfile!.subscription!.endDate.toString(),
+
+          icon: Icons.error,
+        ),
+
         const SizedBox(height: 16),
 
         // First name
         _buildDisplayField(
-          label: 'الاسم الأول',
+          label:
+              (_userProfile?.serviceProvider!.providerType == "Company" ||
+                  _userProfile?.serviceProvider!.providerType == "Marketplace")
+              ? 'الاسم'
+              : 'الاسم الأول',
           value: _firstName,
           icon: Icons.person,
           onEdit: () => _showEditDialog(
@@ -413,19 +435,22 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
 
         // Last name
-        _buildDisplayField(
-          label: 'اسم العائلة',
-          value: _lastName,
-          icon: Icons.person,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل اسم العائلة',
-            initialValue: _lastName,
-            onSave: (value) {
-              setState(() => _lastName = value);
-              _markAsChanged();
-            },
-          ),
-        ),
+        (_userProfile?.serviceProvider!.providerType == "Company" ||
+                _userProfile?.serviceProvider!.providerType == "Marketplace")
+            ? SizedBox.shrink()
+            : _buildDisplayField(
+                label: 'اسم العائلة',
+                value: _lastName,
+                icon: Icons.person,
+                onEdit: () => _showEditDialog(
+                  title: 'تعديل اسم العائلة',
+                  initialValue: _lastName,
+                  onSave: (value) {
+                    setState(() => _lastName = value);
+                    _markAsChanged();
+                  },
+                ),
+              ),
 
         // Bio
         _buildDisplayField(
@@ -552,7 +577,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
         // Pay (editable)
         _buildDisplayField(
-          label: 'الأجر (جنيه/ساعة)',
+          label: _workerTypes == 0
+              ? 'الأجر (جنيه/يومية)'
+              : 'الأجر (جنيه/مشروع)',
           value: '$_pay جنيه',
           icon: Icons.attach_money,
           onEdit: () => _showEditDialog(
@@ -569,7 +596,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         // Worker type (non-editable)
         _buildNonEditableField(
           label: 'نوع العمل',
-          value: _workerTypes == 1 ? 'عمل فردي' : 'عمل جماعي (فريق)',
+          value: _workerTypes == 1 ? 'مقطوعية' : 'يومية',
           icon: Icons.group,
         ),
       ],
@@ -606,7 +633,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
         // Pay (editable)
         _buildDisplayField(
-          label: 'الأجر (جنيه/ساعة)',
+          label: 'الراتب (جنيه/شهر)',
           value: '$_pay جنيه',
           icon: Icons.attach_money,
           onEdit: () => _showEditDialog(
@@ -651,21 +678,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label: 'اسم المالك',
           value: _owner,
           icon: Icons.person_outline,
-        ),
-
-        _buildDisplayField(
-          label: 'الأجر (جنيه/ساعة)',
-          value: '$_pay جنيه',
-          icon: Icons.attach_money,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل الأجر',
-            initialValue: _pay,
-            keyboardType: TextInputType.number,
-            onSave: (value) {
-              setState(() => _pay = value);
-              _markAsChanged();
-            },
-          ),
         ),
       ],
     );
@@ -748,21 +760,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label: 'اسم المالك/المدير',
           value: _owner,
           icon: Icons.person_outline,
-        ),
-
-        _buildDisplayField(
-          label: 'الأجر (جنيه/ساعة)',
-          value: '$_pay جنيه',
-          icon: Icons.attach_money,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل الأجر',
-            initialValue: _pay,
-            keyboardType: TextInputType.number,
-            onSave: (value) {
-              setState(() => _pay = value);
-              _markAsChanged();
-            },
-          ),
         ),
       ],
     );
@@ -985,21 +982,4 @@ Widget _buildNonEditableField({
       ],
     ),
   );
-}
-
-String translateProviderTypeToArabic(String providerType) {
-  switch (providerType.toLowerCase()) {
-    case 'worker':
-      return 'عامل';
-    case 'engineer':
-      return 'مهندس';
-    case 'marketplace':
-      return 'سوق';
-    case 'contractor':
-      return 'مقاول';
-    case 'company':
-      return 'شركة';
-    default:
-      return 'غير معروف';
-  }
 }

@@ -1,3 +1,5 @@
+import 'package:abokamall/helpers/HelperMethods.dart';
+import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 
@@ -40,35 +42,7 @@ class SearchResultsPage extends StatelessWidget {
                   '${providers.length} نتائج',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.filter_list,
-                        size: 18,
-                        color: Colors.black87,
-                      ),
-                      label: const Text(
-                        'تصفية',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.sort,
-                        size: 18,
-                        color: Colors.black87,
-                      ),
-                      label: const Text(
-                        'ترتيب',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ],
-                ),
+                Expanded(child: Container()),
               ],
             ),
           ),
@@ -164,7 +138,7 @@ class SearchResultsPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "${provider.pay ?? '0'} ج ",
+                            _formatPay(provider),
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
@@ -214,149 +188,32 @@ class SearchResultsPage extends StatelessWidget {
       ),
     );
   }
-}
 
-class WorkerProfilePage extends StatelessWidget {
-  final ServiceProvider provider;
+  /// Helper method to format pay based on provider type / worker type
+  String _formatPay(ServiceProvider provider) {
+    final pay = provider.pay ?? '0';
+    debugPrint(provider.typeOfService);
+    // Workers
+    if (provider.typeOfService == 'Worker') {
+      if (provider.workerType == 0) return '$pay ج باليومية';
+      if (provider.workerType == 1) return '$pay ج بالمشروع';
+      return '$pay ج';
+    }
 
-  const WorkerProfilePage({super.key, required this.provider});
+    // Engineers
+    if (provider.typeOfService == 'Engineer') {
+      return '$pay ج بالمرتب';
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F6),
-      appBar: AppBar(
-        title: const Text('ملف العامل', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.grey[200],
-                backgroundImage: provider.imageUrl != null
-                    ? NetworkImage(provider.imageUrl!)
-                    : null,
-                child: provider.imageUrl == null
-                    ? Icon(
-                        provider.isCompany ? Icons.business : Icons.person,
-                        size: 50,
-                        color: Colors.grey,
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              provider.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-            ),
-            Text(
-              provider.skill,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            _buildDetailsSection(provider),
-            const SizedBox(height: 24),
-            _buildAboutSection(provider),
-          ],
-        ),
-      ),
-    );
-  }
+    // Contractors / Companies
+    if (provider.typeOfService == 'Contractor' ||
+        provider.typeOfService == 'Company') {
+      return '$pay ج بالمشروع';
+    }
 
-  Widget _buildDetailsSection(ServiceProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'التفاصيل',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          _detailRow(
-            Icons.phone,
-            'رقم الهاتف',
-            provider.mobileNumber ?? 'غير متوفر',
-          ),
-          _detailRow(
-            Icons.email,
-            'البريد الإلكتروني',
-            provider.email ?? 'غير متوفر',
-          ),
-          _detailRow(
-            Icons.location_on,
-            'منطقة الخدمة',
-            provider.locationOfServiceArea ?? provider.location,
-          ),
-          _detailRow(
-            Icons.attach_money,
-            'السعر',
-            {provider.pay ?? '0', ' ج '}.join(),
-          ),
-          _detailRow(
-            Icons.work,
-            'نوع الخدمة',
-            provider.typeOfService ?? 'غير متوفر',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _detailRow(IconData icon, String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blue, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text('$title: $value', style: const TextStyle(fontSize: 14)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutSection(ServiceProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'نبذة عني',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            provider.aboutMe ??
-                'لا توجد معلومات متاحة عن هذا الموفر. يرجى التواصل مباشرة لمزيد من التفاصيل.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
+    // Default fallback
+    return '$pay ج';
   }
 }
+
+// Your existing WorkerProfilePage stays the same

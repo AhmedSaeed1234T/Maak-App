@@ -13,25 +13,32 @@ class FiltersScreen extends StatefulWidget {
 
 class _FiltersScreenState extends State<FiltersScreen> {
   String? selectedProfession;
-  String? location = '';
   String? typeOfService;
-  final TextEditingController locationController = TextEditingController();
-  final TextEditingController fullNameController = TextEditingController();
+
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
   final TextEditingController specializationController =
       TextEditingController();
+  final TextEditingController governorateController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController districtController = TextEditingController();
 
-  late Searchcontroller searchController;
+  late searchcontroller searchController;
+
   @override
   void initState() {
-    searchController = getIt<Searchcontroller>();
-
+    searchController = getIt<searchcontroller>();
     super.initState();
   }
 
   @override
   void dispose() {
-    locationController.dispose();
-    fullNameController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    specializationController.dispose();
+    governorateController.dispose();
+    cityController.dispose();
+    districtController.dispose();
     super.dispose();
   }
 
@@ -69,11 +76,15 @@ class _FiltersScreenState extends State<FiltersScreen> {
     final providerType = _mapProfessionToProviderType(selectedProfession);
 
     final providersList = await searchController.searchWorkers(
-      fullNameController.text,
+      firstNameController.text,
+      lastNameController.text,
       specializationController.text,
+      governorateController.text,
+      cityController.text,
+      districtController.text,
       workerType,
-      locationController.text,
       providerType,
+      false,
     );
 
     if (providersList.isNotEmpty) {
@@ -86,7 +97,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(' حدث خطأ أثناء البحث او لا يوجد مقدمون لهذه الخدمة'),
+          content: Text('حدث خطأ أثناء البحث أو لا يوجد مقدمون لهذه الخدمة'),
         ),
       );
     }
@@ -121,22 +132,44 @@ class _FiltersScreenState extends State<FiltersScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // First Name
                     const Text(
-                      "الاسم الكامل",
+                      "الاسم الأول",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     TextField(
-                      controller: fullNameController,
+                      controller: firstNameController,
                       decoration: const InputDecoration(
-                        hintText: 'ابحث بالاسم الكامل...',
+                        hintText: 'ابحث بالاسم الأول...',
                         border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 12),
 
+                    // Last Name
+                    if (selectedProfession != 'شركة' &&
+                        selectedProfession != 'متجر') ...[
+                      const Text(
+                        "اسم العائلة",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      TextField(
+                        controller: lastNameController,
+                        decoration: const InputDecoration(
+                          hintText: 'ابحث باسم العائلة...',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+
+                    // Specialization
                     const Text(
                       "التخصص",
                       style: TextStyle(
@@ -153,6 +186,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                     ),
                     const SizedBox(height: 12),
 
+                    // Profession Radio Buttons
                     RadioListTile<String>(
                       title: const Text('عامل'),
                       value: 'عامل',
@@ -188,46 +222,84 @@ class _FiltersScreenState extends State<FiltersScreen> {
                       onChanged: (val) =>
                           setState(() => selectedProfession = val),
                     ),
+
                     const SizedBox(height: 12),
+                    // Location fields
                     const Text(
-                      'الموقع',
+                      'المحافظة',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     TextField(
-                      controller: locationController,
+                      controller: governorateController,
                       decoration: const InputDecoration(
-                        hintText: 'مثال: القاهرة، مصر',
-                        prefixIcon: Icon(Icons.location_on),
+                        hintText: 'مثال: القاهرة',
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
+
                     const Text(
-                      'نوع الخدمة',
+                      'المدينة',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
-                    RadioListTile<String>(
-                      title: const Text('يومي'),
-                      value: 'يومي',
-                      groupValue: typeOfService,
-                      onChanged: (val) => setState(() => typeOfService = val),
+                    TextField(
+                      controller: cityController,
+                      decoration: const InputDecoration(
+                        hintText: 'مثال: مدينة نصر',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                    RadioListTile<String>(
-                      title: const Text('مقطوعية'),
-                      value: 'مقطوعية',
-                      groupValue: typeOfService,
-                      onChanged: (val) => setState(() => typeOfService = val),
+                    const SizedBox(height: 12),
+
+                    const Text(
+                      'الحي',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
+                    TextField(
+                      controller: districtController,
+                      decoration: const InputDecoration(
+                        hintText: 'مثال: التجمع الخامس',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Worker Type (only for عامل)
+                    if (selectedProfession == 'عامل') ...[
+                      const Text(
+                        'نوع الخدمة',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      RadioListTile<String>(
+                        title: const Text('يومي'),
+                        value: 'يومي',
+                        groupValue: typeOfService,
+                        onChanged: (val) => setState(() => typeOfService = val),
+                      ),
+                      RadioListTile<String>(
+                        title: const Text('مقطوعية'),
+                        value: 'مقطوعية',
+                        groupValue: typeOfService,
+                        onChanged: (val) => setState(() => typeOfService = val),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
+            // Buttons
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               color: Colors.white,
@@ -238,8 +310,12 @@ class _FiltersScreenState extends State<FiltersScreen> {
                       onPressed: () {
                         setState(() {
                           selectedProfession = null;
-                          locationController.clear();
-                          fullNameController.clear();
+                          firstNameController.clear();
+                          lastNameController.clear();
+                          specializationController.clear();
+                          governorateController.clear();
+                          cityController.clear();
+                          districtController.clear();
                           typeOfService = null;
                         });
                       },
@@ -253,9 +329,9 @@ class _FiltersScreenState extends State<FiltersScreen> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF13A9F6),
+                        backgroundColor: const Color(0xFF13A9F6),
                       ),
-                      onPressed: _applyFilters, // triggers the search
+                      onPressed: _applyFilters,
                       child: const Text('تطبيق الفلاتر'),
                     ),
                   ),

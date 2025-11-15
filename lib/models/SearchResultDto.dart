@@ -6,7 +6,7 @@ class ServiceProvider {
   final String? owner;
   final String? imageUrl;
   final bool isCompany;
-
+  final int? workerType;
   final String? mobileNumber;
   final String? email;
   final String? locationOfServiceArea;
@@ -21,6 +21,7 @@ class ServiceProvider {
     this.owner,
     this.imageUrl,
     this.isCompany = false,
+    this.workerType,
     this.mobileNumber,
     this.email,
     this.locationOfServiceArea,
@@ -49,7 +50,9 @@ class ServiceProvider {
     return ServiceProvider(
       name: json['name'] ?? '',
       skill: json['skill'] ?? '',
-      location: json['location'] ?? '',
+      location:
+          '${json['governorate'] ?? 'غير محدد'} - ${json['city'] ?? 'غير محدد'} - ${json['district'] ?? 'غير محدد'}' ??
+          '',
       pay: json['pay']?.toString(),
       owner: json['owner']?.toString(),
       imageUrl: json['imageUrl'],
@@ -57,8 +60,9 @@ class ServiceProvider {
       mobileNumber: json['mobileNumber']?.toString(),
       email: json['email']?.toString(),
       locationOfServiceArea: json['locationOfServiceArea']?.toString(),
-      typeOfService: returnSuitableSkillName(json['typeOfService']) ?? '',
+      typeOfService: json['typeOfService'] ?? '',
       aboutMe: json['aboutMe']?.toString(),
+      workerType: json['workerType'],
     );
   }
 
@@ -76,6 +80,7 @@ class ServiceProvider {
       'locationOfServiceArea': locationOfServiceArea,
       'typeOfService': typeOfService,
       'aboutMe': aboutMe,
+      'workerType': workerType,
     };
   }
 }

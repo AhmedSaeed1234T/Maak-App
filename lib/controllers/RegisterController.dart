@@ -22,7 +22,7 @@ class RegisterController {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(user.toJson()),
       );
-
+      debugPrint(user.toJson().toString());
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         String? uploadedImageUrl;
