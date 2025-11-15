@@ -13,6 +13,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -47,17 +48,30 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _emailController,
                           decoration: const InputDecoration(
                             labelText: 'البريد الإلكترونى أو الاسم',
-                            hintText: 'john.doe@example.com',
+                            hintText: 'user@example.com',
                             border: OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
                             labelText: 'كلمة المرور',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
                           ),
                         ),
                         const SizedBox(height: 28),
