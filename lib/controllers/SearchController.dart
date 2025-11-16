@@ -59,7 +59,7 @@ class searchcontroller {
           body: jsonEncode(body),
         );
       });
-
+      debugPrint(response.statusCode.toString());
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         for (var item in data) {

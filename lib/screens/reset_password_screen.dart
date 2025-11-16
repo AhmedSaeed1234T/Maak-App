@@ -1,85 +1,121 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../helpers/apiroute.dart';
+import '../helpers/ServiceLocator.dart';
+import '../helpers/TokenService.dart';
 
-class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({Key? key}) : super(key: key);
+class ChangePasswordScreen extends StatefulWidget {
+  const ChangePasswordScreen({super.key});
 
   @override
-  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  final TextEditingController _passController = TextEditingController();
-  final TextEditingController _confirmController = TextEditingController();
-  bool _hidePass = true;
-  bool _hideConfirm = true;
-  String? errorText;
-  
-  void _checkAndSubmit() {
-    if(_passController.text != _confirmController.text) {
-      setState(() { errorText = 'كلمة المرور غير متطابقة'; });
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController currentPasswordController =
+      TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
+  bool isLoading = false;
+
+  Future<void> changePassword() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => isLoading = true);
+
+    final tokenService = getIt<TokenService>();
+    final accessToken = await tokenService.getAccessToken();
+    if (accessToken == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("المستخدم غير مسجل دخول")));
+      setState(() => isLoading = false);
+      return;
+    }
+
+    final url = Uri.parse('$apiRoute/auth/change-password');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode({
+        'currentPassword': currentPasswordController.text.trim(),
+        'newPassword': newPasswordController.text.trim(),
+        'confirmPassword': confirmPasswordController.text.trim(),
+      }),
+    );
+
+    setState(() => isLoading = false);
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تغيير كلمة المرور بنجاح')),
+      );
+      Navigator.pop(context); // العودة للصفحة السابقة
     } else {
-      setState(() { errorText = null; });
-      Navigator.pushReplacementNamed(context, '/reset_success');
+      final data = jsonDecode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(data['message'] ?? 'حدث خطأ أثناء تغيير كلمة المرور'),
+        ),
+      );
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text('إعادة تعيين كلمة المرور', style: TextStyle(color: Colors.black)),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('تغيير كلمة المرور')),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 28),
-            const Text('يجب أن تكون كلمة المرور الجديدة مختلفة عن السابقة.', style: TextStyle(color: Colors.black54)),
-            const SizedBox(height: 35),
-            TextField(
-              controller: _passController,
-              obscureText: _hidePass,
-              decoration: InputDecoration(
-                labelText: 'كلمة مرور جديدة',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_hidePass ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () => setState(() {_hidePass = !_hidePass;}),
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: currentPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'كلمة المرور الحالية',
                 ),
               ),
-            ),
-            const SizedBox(height: 22),
-            TextField(
-              controller: _confirmController,
-              obscureText: _hideConfirm,
-              decoration: InputDecoration(
-                labelText: 'تأكيد كلمة المرور الجديدة',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_hideConfirm ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () => setState(() {_hideConfirm = !_hideConfirm;}),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'كلمة المرور الجديدة',
                 ),
+                validator: (v) => v != null && v.length >= 6
+                    ? null
+                    : 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
               ),
-            ),
-            if (errorText != null) ...[
-              const SizedBox(height: 12),
-              Text(errorText!, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'تأكيد كلمة المرور',
+                ),
+                validator: (v) => v != null && v == newPasswordController.text
+                    ? null
+                    : 'كلمة المرور غير متطابقة',
+              ),
+              const SizedBox(height: 20),
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: changePassword,
+                      child: const Text('تغيير كلمة المرور'),
+                    ),
             ],
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.check_circle_outline),
-                style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF13A9F6)),
-                onPressed: _checkAndSubmit,
-                label: const Text('تأكيد'),
-              ),
-            )
-          ],
+          ),
         ),
       ),
     );

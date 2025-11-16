@@ -67,16 +67,23 @@ class TokenService {
   Future<bool> refreshAccessToken() async {
     final refreshToken = await getRefreshToken();
     if (refreshToken == null) return false;
-
     try {
       final response = await http.post(
         Uri.parse('$apiRoute/auth/refresh'),
-        body: {'refreshToken': refreshToken},
+        body: jsonEncode({'refreshToken': refreshToken}),
+        headers: {'Content-Type': 'application/json'},
       );
-      if (response.statusCode != 200) return false;
+      if (response.statusCode != 200) {
+        debugPrint('Token refresh failed: ${response.body}');
+        return false;
+      }
       final data = jsonDecode(response.body);
       final newAccessToken = data['accessToken'];
-      await saveAccessToken(accessToken: newAccessToken);
+      final newRefreshToken = data['refreshToken'];
+      await saveTokens(
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      );
       return true;
     } catch (e) {
       return false; // refresh failed

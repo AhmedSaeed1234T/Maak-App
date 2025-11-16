@@ -59,7 +59,7 @@ class MaakApp extends StatelessWidget {
         '/select_account_type': (_) => const SelectAccountTypeScreen(),
         '/forgot': (_) => const ForgotPasswordScreen(),
         '/verify_code': (_) => const VerifyCodeScreen(),
-        '/reset_password': (_) => const ResetPasswordScreen(),
+        '/reset_password': (_) => const ChangePasswordScreen(),
         '/reset_success': (_) => const ResetSuccessScreen(),
         '/dashboard': (_) => const DashboardScreen(),
         '/filters': (_) => const FiltersScreen(),

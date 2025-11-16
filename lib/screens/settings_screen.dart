@@ -241,7 +241,30 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
             // Provider-Specific Section
             _buildProviderSpecificSection(providerType),
-
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _changePassword,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text("تغيير كلمة المرور"),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _logout,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text("تسجيل الخروج"),
+            ),
             const SizedBox(height: 32),
 
             // Save Button
@@ -924,6 +947,15 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ],
       ),
     );
+  }
+
+  void _logout() async {
+    await _controller.logout();
+    Navigator.pushNamedAndRemoveUntil(context, '/splash', (route) => false);
+  }
+
+  void _changePassword() {
+    Navigator.pushNamed(context, '/reset_password');
   }
 }
 

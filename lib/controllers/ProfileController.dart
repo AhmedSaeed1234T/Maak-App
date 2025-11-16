@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:abokamall/helpers/HelperMethods.dart';
+import 'package:abokamall/helpers/HttpHelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
@@ -11,36 +12,13 @@ import 'package:http/http.dart' as http;
 
 class ProfileController {
   /// Helper method to wrap requests with token refresh
-  Future<http.Response?> _withTokenRetry(
-    Future<http.Response> Function(String token) requestFn,
-  ) async {
-    final tokenService = getIt<TokenService>();
-    String? accessToken = await tokenService.getAccessToken();
-    if (accessToken == null) return null;
-
-    // First attempt
-    http.Response response = await requestFn(accessToken);
-
-    // If unauthorized, try refresh token
-    if (response.statusCode == 401) {
-      final refreshed = await tokenService.refreshAccessToken();
-      if (refreshed) {
-        accessToken = await tokenService.getAccessToken();
-        if (accessToken != null) {
-          response = await requestFn(accessToken);
-        }
-      }
-    }
-
-    return response;
-  }
 
   /// Fetch profile
   Future<UserProfile?> fetchProfile() async {
     try {
       final url = Uri.parse('$apiRoute/profile');
 
-      final response = await _withTokenRetry(
+      final response = await withTokenRetry(
         (token) => http.get(
           url,
           headers: {
@@ -50,8 +28,8 @@ class ProfileController {
         ),
       );
 
-      if (response == null || response.statusCode != 200) {
-        debugPrint('Profile fetch failed: ${response?.body}');
+      if (response.statusCode != 200) {
+        debugPrint('Profile fetch failed: ${response.body}');
         return null;
       }
 
@@ -103,7 +81,7 @@ class ProfileController {
         if (uploadedImageUrl != null) "profileImage": uploadedImageUrl,
       };
 
-      final response = await _withTokenRetry(
+      final response = await withTokenRetry(
         (token) => http.put(
           url,
           headers: {
@@ -114,8 +92,8 @@ class ProfileController {
         ),
       );
 
-      if (response == null || response.statusCode != 200) {
-        debugPrint('Profile update failed: ${response?.body}');
+      if (response.statusCode != 200) {
+        debugPrint('Profile update failed: ${response.body}');
         return false;
       }
 
@@ -123,6 +101,27 @@ class ProfileController {
     } catch (e) {
       debugPrint('Error updating profile: $e');
       return false;
+    }
+  }
+
+  Future<bool> logout() async {
+    try {
+      final tokenService = getIt<TokenService>();
+      final refreshToken = await tokenService.getRefreshToken();
+      final response = await http.post(
+        Uri.parse('$apiRoute/auth/logout'),
+        body: jsonEncode({'refreshToken': refreshToken}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode != 200) {
+        debugPrint('logout failed: ${response.body}');
+        return false;
+      }
+      await tokenService.clearTokens();
+
+      return true;
+    } catch (e) {
+      return false; // refresh failed
     }
   }
 }
