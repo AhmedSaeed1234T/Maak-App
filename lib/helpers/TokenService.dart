@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:abokamall/helpers/apiroute.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class TokenService {
   final FlutterSecureStorage _storage;
@@ -27,6 +31,12 @@ class TokenService {
     await _storage.write(key: _refreshTokenKey, value: refreshToken);
   }
 
+  /// Save both tokens
+  Future<void> saveAccessToken({required String accessToken}) async {
+    _accessToken = accessToken;
+    await _storage.write(key: _accessTokenKey, value: accessToken);
+  }
+
   /// Read accessToken
   Future<String?> getAccessToken() async {
     try {
@@ -52,5 +62,24 @@ class TokenService {
     _refreshToken = null;
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
+  }
+
+  Future<bool> refreshAccessToken() async {
+    final refreshToken = await getRefreshToken();
+    if (refreshToken == null) return false;
+
+    try {
+      final response = await http.post(
+        Uri.parse('$apiRoute/auth/refresh'),
+        body: {'refreshToken': refreshToken},
+      );
+      if (response.statusCode != 200) return false;
+      final data = jsonDecode(response.body);
+      final newAccessToken = data['accessToken'];
+      await saveAccessToken(accessToken: newAccessToken);
+      return true;
+    } catch (e) {
+      return false; // refresh failed
+    }
   }
 }

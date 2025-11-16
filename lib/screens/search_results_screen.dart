@@ -1,12 +1,95 @@
-import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/controllers/SearchController.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 
-class SearchResultsPage extends StatelessWidget {
-  final List<ServiceProvider> providers;
+class SearchResultsPage extends StatefulWidget {
+  final String firstName;
+  final String lastName;
+  final String specialization;
+  final String governorate;
+  final String city;
+  final String district;
+  final int? workerType;
+  final dynamic providerType;
 
-  const SearchResultsPage({super.key, required this.providers});
+  const SearchResultsPage({
+    super.key,
+    required this.firstName,
+    required this.lastName,
+    required this.specialization,
+    required this.governorate,
+    required this.city,
+    required this.district,
+    required this.workerType,
+    required this.providerType,
+  });
+
+  @override
+  State<SearchResultsPage> createState() => _SearchResultsPageState();
+}
+
+class _SearchResultsPageState extends State<SearchResultsPage> {
+  final searchController = getIt<searchcontroller>();
+  final ScrollController _scrollController = ScrollController();
+
+  List<ServiceProvider> providers = [];
+  bool isLoading = false;
+  bool hasMore = true;
+  int currentPage = 1;
+  final int pageSize = 10;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchResults();
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 100 &&
+          !isLoading &&
+          hasMore) {
+        _fetchResults();
+      }
+    });
+  }
+
+  Future<void> _fetchResults() async {
+    setState(() => isLoading = true);
+
+    // <-- simulate network delay
+    await Future.delayed(const Duration(seconds: 2));
+
+    final result = await searchController.searchWorkers(
+      widget.firstName,
+      widget.lastName,
+      widget.specialization,
+      widget.governorate,
+      widget.city,
+      widget.district,
+      widget.workerType,
+      widget.providerType,
+      false,
+      currentPage,
+    );
+
+    setState(() {
+      providers.addAll(result);
+      isLoading = false;
+      currentPage++;
+
+      if (result.length < pageSize) {
+        hasMore = false;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,18 +125,26 @@ class SearchResultsPage extends StatelessWidget {
                   '${providers.length} نتائج',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
-                Expanded(child: Container()),
+                const Expanded(child: SizedBox()),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: providers.length,
+              itemCount: providers.length + (isLoading ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
+                if (index >= providers.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
                 final provider = providers[index];
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -189,31 +280,17 @@ class SearchResultsPage extends StatelessWidget {
     );
   }
 
-  /// Helper method to format pay based on provider type / worker type
   String _formatPay(ServiceProvider provider) {
     final pay = provider.pay ?? '0';
-    debugPrint(provider.typeOfService);
-    // Workers
     if (provider.typeOfService == 'Worker') {
       if (provider.workerType == 0) return '$pay ج باليومية';
       if (provider.workerType == 1) return '$pay ج بالمشروع';
       return '$pay ج';
     }
-
-    // Engineers
-    if (provider.typeOfService == 'Engineer') {
-      return '$pay ج بالمرتب';
-    }
-
-    // Contractors / Companies
+    if (provider.typeOfService == 'Engineer') return '$pay ج بالمرتب';
     if (provider.typeOfService == 'Contractor' ||
-        provider.typeOfService == 'Company') {
+        provider.typeOfService == 'Company')
       return '$pay ج بالمشروع';
-    }
-
-    // Default fallback
     return '$pay ج';
   }
 }
-
-// Your existing WorkerProfilePage stays the same

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:abokamall/helpers/HttpHelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
@@ -19,6 +20,7 @@ class searchcontroller {
     int? workerType,
     ProviderType? providerType,
     bool basedOnPoints,
+    int pageNumber,
   ) async {
     try {
       List<ServiceProvider> providers = [];
@@ -44,16 +46,19 @@ class searchcontroller {
         "city": city,
         "district": district,
         "basedOnPoints": basedOnPoints,
+        "pageNumber": pageNumber,
       };
       //Pagination should be implemented late
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(body),
-      );
+      final response = await withTokenRetry((accessToken) async {
+        return await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(body),
+        );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

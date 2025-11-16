@@ -74,33 +74,21 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
     final workerType = _mapTypeOfServiceToWorkerType();
     final providerType = _mapProfessionToProviderType(selectedProfession);
-
-    final providersList = await searchController.searchWorkers(
-      firstNameController.text,
-      lastNameController.text,
-      specializationController.text,
-      governorateController.text,
-      cityController.text,
-      districtController.text,
-      workerType,
-      providerType,
-      false,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchResultsPage(
+          firstName: firstNameController.text,
+          lastName: lastNameController.text,
+          specialization: specializationController.text,
+          governorate: governorateController.text,
+          city: cityController.text,
+          district: districtController.text,
+          workerType: workerType,
+          providerType: providerType,
+        ),
+      ),
     );
-
-    if (providersList.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SearchResultsPage(providers: providersList),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('حدث خطأ أثناء البحث أو لا يوجد مقدمون لهذه الخدمة'),
-        ),
-      );
-    }
   }
 
   @override

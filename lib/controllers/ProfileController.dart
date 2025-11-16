@@ -1,34 +1,57 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/models/UserProfile.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 
-// ============= UPDATED CONTROLLER =============
 class ProfileController {
-  /// Fetch profile and return UserProfile DTO
-  Future<UserProfile?> fetchProfile() async {
+  /// Helper method to wrap requests with token refresh
+  Future<http.Response?> _withTokenRetry(
+    Future<http.Response> Function(String token) requestFn,
+  ) async {
     final tokenService = getIt<TokenService>();
-    final accessToken = await tokenService.getAccessToken();
+    String? accessToken = await tokenService.getAccessToken();
     if (accessToken == null) return null;
 
+    // First attempt
+    http.Response response = await requestFn(accessToken);
+
+    // If unauthorized, try refresh token
+    if (response.statusCode == 401) {
+      final refreshed = await tokenService.refreshAccessToken();
+      if (refreshed) {
+        accessToken = await tokenService.getAccessToken();
+        if (accessToken != null) {
+          response = await requestFn(accessToken);
+        }
+      }
+    }
+
+    return response;
+  }
+
+  /// Fetch profile
+  Future<UserProfile?> fetchProfile() async {
     try {
       final url = Uri.parse('$apiRoute/profile');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
+
+      final response = await _withTokenRetry(
+        (token) => http.get(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
       );
 
-      if (response.statusCode != 200) {
-        debugPrint('Profile fetch failed: ${response.body}');
+      if (response == null || response.statusCode != 200) {
+        debugPrint('Profile fetch failed: ${response?.body}');
         return null;
       }
 
@@ -40,7 +63,7 @@ class ProfileController {
     }
   }
 
-  /// Update profile with provider-specific fields
+  /// Update profile
   Future<bool> updateProfile({
     required String firstName,
     required String lastName,
@@ -57,18 +80,14 @@ class ProfileController {
   }) async {
     try {
       final tokenService = getIt<TokenService>();
-      final accessToken = await tokenService.getAccessToken();
-      if (accessToken == null) return false;
-
-      // Upload profile image if provided
       String? uploadedImageUrl;
+
       if (profileImage != null) {
         uploadedImageUrl = await uploadProfileImage(profileImage);
       }
 
       final url = Uri.parse('$apiRoute/profile');
 
-      // Build payload with all editable fields
       final body = {
         "firstName": firstName,
         "lastName": lastName,
@@ -77,21 +96,26 @@ class ProfileController {
         "governorate": governorate,
         "city": city,
         "district": district,
+        if (specialization != null) "specialization": specialization,
+        if (business != null) "business": business,
+        if (owner != null) "owner": owner,
+        if (workerTypes != null) "workerTypes": workerTypes,
+        if (uploadedImageUrl != null) "profileImage": uploadedImageUrl,
       };
 
-      // Add provider-specific fields if provided
-
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(body),
+      final response = await _withTokenRetry(
+        (token) => http.put(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(body),
+        ),
       );
 
-      if (response.statusCode != 200) {
-        debugPrint('Profile update failed: ${response.body}');
+      if (response == null || response.statusCode != 200) {
+        debugPrint('Profile update failed: ${response?.body}');
         return false;
       }
 

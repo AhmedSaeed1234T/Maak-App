@@ -15,10 +15,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String search = '';
-
   List<ServiceProvider> featuredProviders = [];
   int tabIndex = 0;
   late final searchcontroller searchController;
+  bool isLoading = false; // <-- loading flag
 
   final List<String> tabs = [
     'المقاولين',
@@ -38,10 +38,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void initState() {
-    print(
-      'Is SearchController registered? ${getIt.isRegistered<SearchController>()}',
-    );
-
     super.initState();
     searchController = getIt<searchcontroller>();
     _loadFeaturedProviders(providerTypes[0], true);
@@ -51,6 +47,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ProviderType type,
     bool basedOnPoints,
   ) async {
+    setState(() => isLoading = true); // show loader
+
+    // simulate network delay if needed
+    await Future.delayed(const Duration(milliseconds: 500));
+
     final providers = await searchController.searchWorkers(
       null,
       null,
@@ -61,10 +62,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       null,
       type,
       basedOnPoints,
+      1,
     );
 
     setState(() {
       featuredProviders = providers;
+      isLoading = false; // hide loader
     });
   }
 
@@ -110,7 +113,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 itemCount: tabs.length,
                 itemBuilder: (ctx, i) => GestureDetector(
                   onTap: () {
-                    setState(() => tabIndex = i);
+                    setState(() {
+                      tabIndex = i;
+                    });
                     _loadFeaturedProviders(providerTypes[i], true);
                   },
                   child: Container(
@@ -142,67 +147,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5),
-            SizedBox(
-              height: 220,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: featuredProviders.length >= 10
-                    ? 10
-                    : featuredProviders.length,
-                itemBuilder: (ctx, i) {
-                  final provider = featuredProviders[i];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              WorkerProfilePage(provider: provider),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: Colors.white,
-                          backgroundImage:
-                              provider.imageUrl != null &&
-                                  provider.imageUrl!.isNotEmpty
-                              ? NetworkImage(provider.imageUrl!)
-                              : null,
-                          child:
-                              provider.imageUrl == null ||
-                                  provider.imageUrl!.isEmpty
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Color(0xFF13A9F6),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          provider.name ?? '',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
+
+            // Loading effect
+            if (isLoading)
+              const SizedBox(
+                height: 150,
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
+              SizedBox(
+                height: 220,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: featuredProviders.length >= 10
+                      ? 10
+                      : featuredProviders.length,
+                  itemBuilder: (ctx, i) {
+                    final provider = featuredProviders[i];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                WorkerProfilePage(provider: provider),
                           ),
-                        ),
-                        Text(
-                          provider.skill,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black45,
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.white,
+                            backgroundImage:
+                                provider.imageUrl != null &&
+                                    provider.imageUrl!.isNotEmpty
+                                ? NetworkImage(provider.imageUrl!)
+                                : null,
+                            child:
+                                provider.imageUrl == null ||
+                                    provider.imageUrl!.isEmpty
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Color(0xFF13A9F6),
+                                  )
+                                : null,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                separatorBuilder: (_, __) => const SizedBox(width: 20),
+                          const SizedBox(height: 10),
+                          Text(
+                            provider.name ?? '',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            provider.skill,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(width: 20),
+                ),
               ),
-            ),
           ],
         ),
       ),
