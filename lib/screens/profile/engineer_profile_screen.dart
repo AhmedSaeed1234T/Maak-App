@@ -7,11 +7,11 @@ class EngineerProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // نموذج بيانات تجريبي جاهز للربط
     final profile = EngineerProfile(
-      image: null, // للمستقبل/NetworkImage
-      name: 'Sophia Chen',
+      image: null, 
+      name: 'User Name',
       title: 'Civil Engineer',
       phone: '+1 (555) 987-6543',
-      email: 'sophia.chen@example.com',
+      email: 'user@example.com',
       location: 'New York, NY',
       price: '	150 / hour',
       bio: 'As a licensed Civil Engineer with 8 years of experience, I specialize in structural design and analysis for residential and commercial buildings. My expertise covers a wide range of projects, from small-scale renovations to large new constructions. I am proficient in using AutoCAD, SAP2000, and ETABS for detailed structural modeling. Committed to delivering safe, efficient, and innovative engineering solutions.',

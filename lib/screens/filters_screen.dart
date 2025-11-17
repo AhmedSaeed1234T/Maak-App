@@ -6,15 +6,12 @@ import 'package:abokamall/helpers/enums.dart';
 
 class FiltersScreen extends StatefulWidget {
   const FiltersScreen({super.key});
-
   @override
   State<FiltersScreen> createState() => _FiltersScreenState();
 }
-
 class _FiltersScreenState extends State<FiltersScreen> {
   String? selectedProfession;
   String? typeOfService;
-
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController specializationController =

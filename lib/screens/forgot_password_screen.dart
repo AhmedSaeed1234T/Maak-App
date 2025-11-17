@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
-
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
-
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _phoneController = TextEditingController();
 
@@ -53,7 +51,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   textStyle: const TextStyle(fontSize: 18),
                 ),
                 onPressed: () {
-                  // عند التنفيذ الفعلي استبدله ب: إرسال الكود للرقم عبر backend
                   Navigator.pushNamed(context, '/verify_code');
                 },
                 child: const Text('إرسال كود'),

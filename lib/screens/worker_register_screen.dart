@@ -5,22 +5,17 @@ import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
-
 class WorkerRegisterScreen extends StatefulWidget {
   const WorkerRegisterScreen({super.key});
-
   @override
   State<WorkerRegisterScreen> createState() => _WorkerRegisterScreenState();
 }
-
 class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final registerController = getIt<RegisterController>();
   final _formKey = GlobalKey<FormState>();
-
   // Image
   File? _imageFile;
   final picker = ImagePicker();
-
   // Controllers
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -33,11 +28,9 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _bioController = TextEditingController();
   final _locationController = TextEditingController();
   final _referralController = TextEditingController(); // New referral code
-
   String salaryType = "daily"; // daily = 0, fixed = 1
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
-
   // Pick image
   Future<void> _pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -45,24 +38,18 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       setState(() => _imageFile = File(picked.path));
     }
   }
-
-  // Get current location
-
   // Show simple toast
   void _toast(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
-
   // Register worker
   Future<void> _registerWorker() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       _toast("كلمات المرور غير متطابقة");
       return;
     }
-
     final loc = await getCurrentLocation();
     if (loc == null) return; // Stop if location not available
-
     final user = RegisterUserDto(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),

@@ -1,12 +1,9 @@
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:flutter/material.dart';
-
 class WorkerProfilePage extends StatelessWidget {
   final ServiceProvider provider;
-
   const WorkerProfilePage({super.key, required this.provider});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +53,6 @@ class WorkerProfilePage extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildDetailsSection(ServiceProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -112,7 +108,6 @@ class WorkerProfilePage extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildAboutSection(ServiceProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -141,6 +136,4 @@ class WorkerProfilePage extends StatelessWidget {
       ),
     );
   }
-
-  /// Duplicate of _formatPay for profile page
 }

@@ -18,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<ServiceProvider> featuredProviders = [];
   int tabIndex = 0;
   late final searchcontroller searchController;
-  bool isLoading = false; // <-- loading flag
+  bool isLoading = false; 
 
   final List<String> tabs = [
     'المقاولين',
@@ -51,7 +51,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // simulate network delay if needed
     await Future.delayed(const Duration(milliseconds: 500));
-
     final providers = await searchController.searchWorkers(
       null,
       null,

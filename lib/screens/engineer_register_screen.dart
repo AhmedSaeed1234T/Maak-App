@@ -20,10 +20,8 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   // Session storage
   static Map<String, dynamic>? sessionEngineerData;
   static File? sessionImage;
-
   // User type: 0 = Contractor, 1 = Engineer
   int userTypeIndex = 1;
-
   // Controllers
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();

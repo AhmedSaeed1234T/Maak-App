@@ -3,11 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({Key? key}) : super(key: key);
-
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
-
 class _PaymentScreenState extends State<PaymentScreen> {
   String? _selectedPaymentMethod;
   String? _paymentPhone = '';
@@ -99,7 +97,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ),
     );
   }
-
   Widget _buildPaymentOption({
     required String title,
     required String subtitle,

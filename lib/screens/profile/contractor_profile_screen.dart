@@ -7,10 +7,10 @@ class ContractorProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = ContractorProfile(
       image: null,
-      name: 'Ethan Carter',
+      name: 'user name',
       role: 'Plumbing Specialist',
       phone: '+1 (555) 123-4567',
-      email: 'ethan.carter@example.com',
+      email: 'user@example.com',
       location: 'San Francisco, CA',
       bio: 'With over 10 years of experience in plumbing, I specialize in residential and commercial plumbing services. My expertise includes leak detection, pipe repair, water heater installation, and drain cleaning. I am committed to providing high-quality workmanship and excellent customer service. Available for projects in San Francisco and surrounding areas.',
     );

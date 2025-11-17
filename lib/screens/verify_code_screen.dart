@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 
 class VerifyCodeScreen extends StatefulWidget {
   const VerifyCodeScreen({Key? key}) : super(key: key);
-
   @override
   State<VerifyCodeScreen> createState() => _VerifyCodeScreenState();
 }
-
 class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
@@ -51,7 +49,6 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF13A9F6)),
                     onPressed: () {
-                      // إرسال الكود من جديد (عند الربط الفعلي)
                     },
                     child: const Text('SMS'),
                   ),
@@ -74,7 +71,6 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF13A9F6), textStyle: const TextStyle(fontSize: 18)),
                 onPressed: () {
-                  // تحقق من الكود (عند الربط الفعلي)، مؤقتًا ينقل لصفحة reset password
                   Navigator.pushNamed(context, '/reset_password');
                 },
                 child: const Text('تأكيد الكود'),

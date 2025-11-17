@@ -1,14 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
-
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
-
 class _RegisterScreenState extends State<RegisterScreen> {
   static File? sessionImage;
   static Map<String, String> sessionUser = {
@@ -25,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _hidePassword = true;
-
   @override
   void initState() {
     super.initState();
@@ -35,7 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _addressController.text = sessionUser['address'] ?? '';
     _passwordController.text = sessionUser['password'] ?? '';
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

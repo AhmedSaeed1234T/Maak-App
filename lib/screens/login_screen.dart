@@ -1,13 +1,11 @@
 import 'package:abokamall/controllers/LoginController.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:flutter/material.dart';
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
-
 class _LoginScreenState extends State<LoginScreen> {
   final loginController = getIt<LoginController>();
   final _formKey = GlobalKey<FormState>();

@@ -6,13 +6,13 @@ class CompanyProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profile = CompanyProfile(
-      image: null, // NetworkImage أو FileImage عند الحاجة
+      image: null, 
       name: 'The Fashion Hub',
-      email: 'contact@fashionhub.com',
+      email: 'User@gmail.com',
       about: 'The Fashion Hub is your one-stop destination for the latest trends in apparel and accessories. We offer a curated collection of high-quality clothing for men and women, ensuring you always step out in style.',
       location: '456 Style Avenue, Fashion City, NY 10001',
       phone: '(555) 987-6543',
-      shopkeeper: 'Jane Smith',
+      shopkeeper: 'User Name',
     );
     return Scaffold(
       appBar: AppBar(

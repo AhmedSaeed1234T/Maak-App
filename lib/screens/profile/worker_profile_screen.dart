@@ -7,11 +7,11 @@ class WorkerProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // نموذج بيانات حقيقي (يمكن استبداله بAPI لاحقًا)
     final worker = WorkerProfile(
-      image: null, // FileImage/File أو NetworkImage حين الربط
-      name: 'John Doe',
+      image: null,
+      name: 'User Name',
       role: 'Plumber',
       phone: '+1 (555) 123-4567',
-      email: 'john.doe@example.com',
+      email: 'User@example.com',
       location: 'San Francisco, CA',
       price: '	75 / hour',
       serviceType: 'Daily',
@@ -34,7 +34,7 @@ class WorkerProfileScreen extends StatelessWidget {
             CircleAvatar(
               radius: 54,
               backgroundColor: Colors.grey[300],
-              backgroundImage: worker.image, // قم بالربط هنا لاحقًا
+              backgroundImage: worker.image, 
               child: worker.image == null ? const Icon(Icons.person, size: 65, color: Color(0xFF13A9F6)) : null,
             ),
             const SizedBox(height: 12),

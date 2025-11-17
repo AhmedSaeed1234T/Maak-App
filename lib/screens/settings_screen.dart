@@ -6,24 +6,19 @@ import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/models/UserProfile.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
-
   @override
   State<ProfileSettingsPage> createState() => _ProfileSettingsPageState();
 }
-
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final ProfileController _controller = getIt<ProfileController>();
 
   bool _isLoading = true;
   bool _isSaving = false;
   bool _hasChanges = false;
-
   // Profile data from API
   UserProfile? _userProfile;
-
   // Local editable data
   String _firstName = '';
   String _lastName = '';
@@ -36,15 +31,12 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   String _business = '';
   String _owner = '';
   int _workerTypes = 1;
-
   File? _newProfileImage;
-
   @override
   void initState() {
     super.initState();
     _loadProfile();
   }
-
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
 
@@ -53,7 +45,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     if (profile != null) {
       setState(() {
         _userProfile = profile;
-
         // Populate local variables
         _firstName = profile.firstName;
         _lastName = profile.lastName;
@@ -102,11 +93,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       });
     }
   }
-
   void _markAsChanged() {
     setState(() => _hasChanges = true);
   }
-
   Future<void> _saveProfile() async {
     if (!_hasChanges) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,12 +106,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       );
       return;
     }
-
     setState(() => _isSaving = true);
-
     final providerType =
         _userProfile?.serviceProvider?.providerType.toLowerCase() ?? '';
-
     // Determine which fields to send based on provider type
     String? specialization;
     String? business;
@@ -229,16 +215,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           children: [
             // Profile Image Section
             _buildProfileImageSection(),
-
             const SizedBox(height: 32),
-
             // Shared Fields Section
             _buildSharedFieldsSection(),
-
             const SizedBox(height: 24),
-
             const Divider(height: 32, thickness: 1),
-
             // Provider-Specific Section
             _buildProviderSpecificSection(providerType),
             const SizedBox(height: 32),

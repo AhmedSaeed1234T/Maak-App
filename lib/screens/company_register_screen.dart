@@ -20,7 +20,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   static Map<String, dynamic>? sessionCompanyData;
   static File? sessionImage;
 
-  int userTypeIndex = 0; // 0 = Company, 1 = Marketplace
+  int userTypeIndex = 0; 
 
   // Controllers
   final _businessController = TextEditingController();

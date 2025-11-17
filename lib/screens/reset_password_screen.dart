@@ -4,14 +4,11 @@ import 'dart:convert';
 import '../helpers/apiroute.dart';
 import '../helpers/ServiceLocator.dart';
 import '../helpers/TokenService.dart';
-
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
-
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
-
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController currentPasswordController =
@@ -19,9 +16,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
-
   bool isLoading = false;
-
   Future<void> changePassword() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -36,7 +31,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       setState(() => isLoading = false);
       return;
     }
-
     final url = Uri.parse('$apiRoute/auth/change-password');
     final response = await http.post(
       url,
@@ -57,7 +51,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم تغيير كلمة المرور بنجاح')),
       );
-      Navigator.pop(context); // العودة للصفحة السابقة
+      Navigator.pop(context); 
     } else {
       final data = jsonDecode(response.body);
       ScaffoldMessenger.of(context).showSnackBar(
