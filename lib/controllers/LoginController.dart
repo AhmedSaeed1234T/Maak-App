@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
-import 'package:abokamall/models/Worker.dart';
+import 'package:abokamall/models/UserProfile.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 

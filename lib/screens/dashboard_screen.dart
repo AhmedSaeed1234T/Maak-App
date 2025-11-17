@@ -1,6 +1,9 @@
-import 'package:abokamall/controllers/DashboardController.dart';
+import 'package:abokamall/controllers/SearchController.dart';
+import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
-import 'package:abokamall/models/ProviderDto.dart';
+import 'package:abokamall/helpers/enums.dart';
+import 'package:abokamall/models/SearchResultDto.dart';
+import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -12,27 +15,59 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String search = '';
-  late DashboardController dashboardController;
-  List<ProviderDto> featuredProviders = [];
+  List<ServiceProvider> featuredProviders = [];
   int tabIndex = 0;
+  late final searchcontroller searchController;
+  bool isLoading = false; // <-- loading flag
+
   final List<String> tabs = [
-    'الكل',
+    'المقاولين',
     'العمال',
     'المهندسين',
     'الشركات',
     'المتاجر',
   ];
+
+  final List<ProviderType> providerTypes = [
+    ProviderType.Contractors,
+    ProviderType.Workers,
+    ProviderType.Engineers,
+    ProviderType.Companies,
+    ProviderType.Marketplaces,
+  ];
+
   @override
   void initState() {
     super.initState();
-    dashboardController = getIt<DashboardController>();
-    _loadFeaturedProviders();
+    searchController = getIt<searchcontroller>();
+    _loadFeaturedProviders(providerTypes[0], true);
   }
 
-  Future<void> _loadFeaturedProviders() async {
-    final providers = await dashboardController.ReturnFeaturedSellers();
+  Future<void> _loadFeaturedProviders(
+    ProviderType type,
+    bool basedOnPoints,
+  ) async {
+    setState(() => isLoading = true); // show loader
+
+    // simulate network delay if needed
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final providers = await searchController.searchWorkers(
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      type,
+      basedOnPoints,
+      1,
+    );
+
     setState(() {
       featuredProviders = providers;
+      isLoading = false; // hide loader
     });
   }
 
@@ -46,154 +81,142 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings');
-            },
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
           ),
         ],
       ),
       backgroundColor: const Color(0xFFF6FAFF),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'ابحث عن عامل، مهندس، شركة...',
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      onChanged: (v) => setState(() {
-                        search = v;
-                      }),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.filter_alt,
-                      color: Color(0xFF13A9F6),
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/filters');
-                    },
-                  ),
-                ],
+      body: RefreshIndicator(
+        onRefresh: () => _loadFeaturedProviders(providerTypes[tabIndex], true),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'ابحث عن عامل، مهندس، شركة...',
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
               ),
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 38,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: tabs.length,
-                  itemBuilder: (ctx, i) => GestureDetector(
-                    onTap: () => setState(() => tabIndex = i),
-                    child: Container(
-                      margin: EdgeInsets.only(left: 12),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: tabIndex == i
-                            ? Color(0xFF13A9F6)
-                            : Color(0xFFE8F0F8),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Text(
-                        tabs[i],
-                        style: TextStyle(
-                          color: tabIndex == i ? Colors.white : Colors.black54,
-                          fontWeight: FontWeight.bold,
-                        ),
+              onChanged: (v) => setState(() => search = v),
+              onTap: () => Navigator.pushNamed(context, '/filters'),
+            ),
+            const SizedBox(height: 15),
+            SizedBox(
+              height: 38,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: tabs.length,
+                itemBuilder: (ctx, i) => GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      tabIndex = i;
+                    });
+                    _loadFeaturedProviders(providerTypes[i], true);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tabIndex == i
+                          ? const Color(0xFF13A9F6)
+                          : const Color(0xFFE8F0F8),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(
+                      tabs[i],
+                      style: TextStyle(
+                        color: tabIndex == i ? Colors.white : Colors.black54,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 25),
-              Text(
-                "مقدمو الخدمة",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 5),
+            ),
+            const SizedBox(height: 25),
+            const Text(
+              "مقدمو الخدمة",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+
+            // Loading effect
+            if (isLoading)
+              const SizedBox(
+                height: 150,
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
               SizedBox(
-                height: 100,
+                height: 220,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: featuredProviders.length >= 10
                       ? 10
-                      : featuredProviders
-                            .length, // عدل لاحقا حسب البيانات القادمة من backend
-                  itemBuilder: (ctx, i) => Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.white,
-                        backgroundImage:
-                            (featuredProviders[i].imageUrl.isNotEmpty)
-                            ? NetworkImage(featuredProviders[i].imageUrl)
-                            : null,
-                        child: (featuredProviders[i].imageUrl.isEmpty)
-                            ? Icon(
-                                Icons.person,
-                                size: 28,
-                                color: Color(0xFF13A9F6),
-                              )
-                            : null,
+                      : featuredProviders.length,
+                  itemBuilder: (ctx, i) {
+                    final provider = featuredProviders[i];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                WorkerProfilePage(provider: provider),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.white,
+                            backgroundImage:
+                                provider.imageUrl != null &&
+                                    provider.imageUrl!.isNotEmpty
+                                ? NetworkImage(provider.imageUrl!)
+                                : null,
+                            child:
+                                provider.imageUrl == null ||
+                                    provider.imageUrl!.isEmpty
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Color(0xFF13A9F6),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            provider.name ?? '',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            provider.skill,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black45,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 7),
-                      Text(
-                        featuredProviders[i].fullName,
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      Text(
-                        featuredProviders[i].specialization,
-                        style: TextStyle(fontSize: 11, color: Colors.black45),
-                      ),
-                    ],
-                  ),
-                  separatorBuilder: (_, __) => SizedBox(width: 18),
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(width: 20),
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(
-                "المميزون",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () =>
-                          Navigator.pushNamed(context, '/profile_company'),
-                      child: _featuredCard("شركة مميزة", Icons.domain),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () =>
-                          Navigator.pushNamed(context, '/profile_worker'),
-                      child: _featuredCard("عامل مميز", Icons.engineering),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-            ],
-          ),
+          ],
         ),
       ),
       bottomNavigationBar: Padding(
@@ -203,27 +226,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF13A9F6),
+                  backgroundColor: const Color(0xFF13A9F6),
                 ),
                 child: const Text('الدفع'),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/payment');
-                },
+                onPressed: () => Navigator.pushNamed(context, '/payment'),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Color(0xFF13A9F6),
+                  foregroundColor: const Color(0xFF13A9F6),
                 ),
                 child: const Text('خدمة العملاء'),
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/payment',
-                  ); // أو استدعِ دالة الواتساب مباشرة لو أردتها هكذا
-                },
+                onPressed: () => Navigator.pushNamed(context, '/payment'),
               ),
             ),
           ],
@@ -231,33 +247,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-}
-
-Widget _featuredCard(String title, IconData icon) {
-  return Expanded(
-    child: Container(
-      height: 78,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(1, 2)),
-        ],
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Color(0xFF13A9F6)),
-            SizedBox(height: 6),
-            Text(
-              title,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-            Text("شركة", style: TextStyle(fontSize: 11, color: Colors.black38)),
-          ],
-        ),
-      ),
-    ),
-  );
 }

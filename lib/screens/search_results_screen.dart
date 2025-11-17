@@ -1,10 +1,95 @@
+import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/controllers/SearchController.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 
-class SearchResultsPage extends StatelessWidget {
-  final List<ServiceProvider> providers;
+class SearchResultsPage extends StatefulWidget {
+  final String firstName;
+  final String lastName;
+  final String specialization;
+  final String governorate;
+  final String city;
+  final String district;
+  final int? workerType;
+  final dynamic providerType;
 
-  const SearchResultsPage({super.key, required this.providers});
+  const SearchResultsPage({
+    super.key,
+    required this.firstName,
+    required this.lastName,
+    required this.specialization,
+    required this.governorate,
+    required this.city,
+    required this.district,
+    required this.workerType,
+    required this.providerType,
+  });
+
+  @override
+  State<SearchResultsPage> createState() => _SearchResultsPageState();
+}
+
+class _SearchResultsPageState extends State<SearchResultsPage> {
+  final searchController = getIt<searchcontroller>();
+  final ScrollController _scrollController = ScrollController();
+
+  List<ServiceProvider> providers = [];
+  bool isLoading = false;
+  bool hasMore = true;
+  int currentPage = 1;
+  final int pageSize = 10;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchResults();
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 100 &&
+          !isLoading &&
+          hasMore) {
+        _fetchResults();
+      }
+    });
+  }
+
+  Future<void> _fetchResults() async {
+    setState(() => isLoading = true);
+
+    // <-- simulate network delay
+    await Future.delayed(const Duration(seconds: 2));
+
+    final result = await searchController.searchWorkers(
+      widget.firstName,
+      widget.lastName,
+      widget.specialization,
+      widget.governorate,
+      widget.city,
+      widget.district,
+      widget.workerType,
+      widget.providerType,
+      false,
+      currentPage,
+    );
+
+    setState(() {
+      providers.addAll(result);
+      isLoading = false;
+      currentPage++;
+
+      if (result.length < pageSize) {
+        hasMore = false;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,46 +125,26 @@ class SearchResultsPage extends StatelessWidget {
                   '${providers.length} نتائج',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.filter_list,
-                        size: 18,
-                        color: Colors.black87,
-                      ),
-                      label: const Text(
-                        'تصفية',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.sort,
-                        size: 18,
-                        color: Colors.black87,
-                      ),
-                      label: const Text(
-                        'ترتيب',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ],
-                ),
+                const Expanded(child: SizedBox()),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: providers.length,
+              itemCount: providers.length + (isLoading ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
+                if (index >= providers.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
                 final provider = providers[index];
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -164,7 +229,7 @@ class SearchResultsPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "${provider.pay ?? '0'} ج ",
+                            _formatPay(provider),
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
@@ -214,149 +279,18 @@ class SearchResultsPage extends StatelessWidget {
       ),
     );
   }
-}
 
-class WorkerProfilePage extends StatelessWidget {
-  final ServiceProvider provider;
-
-  const WorkerProfilePage({super.key, required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F6),
-      appBar: AppBar(
-        title: const Text('ملف العامل', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.grey[200],
-                backgroundImage: provider.imageUrl != null
-                    ? NetworkImage(provider.imageUrl!)
-                    : null,
-                child: provider.imageUrl == null
-                    ? Icon(
-                        provider.isCompany ? Icons.business : Icons.person,
-                        size: 50,
-                        color: Colors.grey,
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              provider.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-            ),
-            Text(
-              provider.skill,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            _buildDetailsSection(provider),
-            const SizedBox(height: 24),
-            _buildAboutSection(provider),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailsSection(ServiceProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'التفاصيل',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          _detailRow(
-            Icons.phone,
-            'رقم الهاتف',
-            provider.mobileNumber ?? 'غير متوفر',
-          ),
-          _detailRow(
-            Icons.email,
-            'البريد الإلكتروني',
-            provider.email ?? 'غير متوفر',
-          ),
-          _detailRow(
-            Icons.location_on,
-            'منطقة الخدمة',
-            provider.locationOfServiceArea ?? provider.location,
-          ),
-          _detailRow(
-            Icons.attach_money,
-            'السعر',
-            {provider.pay ?? '0', ' ج '}.join(),
-          ),
-          _detailRow(
-            Icons.work,
-            'نوع الخدمة',
-            provider.typeOfService ?? 'غير متوفر',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _detailRow(IconData icon, String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blue, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text('$title: $value', style: const TextStyle(fontSize: 14)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutSection(ServiceProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'نبذة عني',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            provider.aboutMe ??
-                'لا توجد معلومات متاحة عن هذا الموفر. يرجى التواصل مباشرة لمزيد من التفاصيل.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
+  String _formatPay(ServiceProvider provider) {
+    final pay = provider.pay ?? '0';
+    if (provider.typeOfService == 'Worker') {
+      if (provider.workerType == 0) return '$pay ج باليومية';
+      if (provider.workerType == 1) return '$pay ج بالمشروع';
+      return '$pay ج';
+    }
+    if (provider.typeOfService == 'Engineer') return '$pay ج بالمرتب';
+    if (provider.typeOfService == 'Contractor' ||
+        provider.typeOfService == 'Company')
+      return '$pay ج بالمشروع';
+    return '$pay ج';
   }
 }

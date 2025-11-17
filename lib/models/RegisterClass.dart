@@ -1,15 +1,14 @@
 class RegisterUserDto {
   String firstName;
-  String lastName;
+  String? lastName;
   String email;
   String phoneNumber;
   String password;
-  double lat; // for locationCoords
-  double lng; // for locationCoords
-  String userType;
-  String location;
-  String bio;
-  String providerType;
+  String? governorate;
+  String? city;
+  String? district;
+  String? bio;
+  String? providerType;
   String? skill;
   int? workerType; // 0 = daily, 1 = fixed
   String? business;
@@ -20,16 +19,15 @@ class RegisterUserDto {
 
   RegisterUserDto({
     required this.firstName,
-    required this.lastName,
+    this.lastName,
     required this.email,
     required this.phoneNumber,
     required this.password,
-    required this.lat,
-    required this.lng,
-    required this.userType,
-    required this.location,
-    required this.bio,
-    required this.providerType,
+    this.governorate,
+    this.city,
+    this.district,
+    this.bio,
+    this.providerType,
     this.skill,
     this.workerType,
     this.business,
@@ -40,24 +38,49 @@ class RegisterUserDto {
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final userRegister = {
       "firstName": firstName,
-      "lastName": lastName,
+      "lastName": lastName ?? '',
       "email": email,
       "phoneNumber": phoneNumber,
       "password": password,
-      "locationCoords": {"lat": lat, "lng": lng},
-      "userType": userType,
-      "location": location,
+      "governorate": governorate,
+      "city": city,
+      "district": district,
       "bio": bio,
       "providerType": providerType,
       "skill": skill,
-      "workerType": workerType,
+      "workerType": workerType ?? 1,
       "business": business,
       "owner": owner,
       "pay": pay ?? 0.0,
       "specialization": specialization,
-      "referralUserName": referralUserName,
     };
+    if (referralUserName != null && referralUserName!.isNotEmpty) {
+      userRegister['referralUserName'] = referralUserName;
+    }
+    return userRegister;
+  }
+
+  factory RegisterUserDto.fromJson(Map<String, dynamic> json) {
+    return RegisterUserDto(
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      email: json['email'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
+      password: json['password'] ?? '',
+      governorate: json['governorate'] ?? '',
+      city: json['city'] ?? '',
+      district: json['district'] ?? '',
+      bio: json['bio'] ?? '',
+      providerType: json['providerType'] ?? '',
+      skill: json['skill'] ?? '',
+      workerType: json['workerType'] ?? 1,
+      business: json['business'] ?? '',
+      owner: json['owner'] ?? '',
+      pay: (json['pay'] != null) ? (json['pay'] as num).toDouble() : 0.0,
+      specialization: json['specialization'] ?? '',
+      referralUserName: json['referralUserName'] ?? '',
+    );
   }
 }

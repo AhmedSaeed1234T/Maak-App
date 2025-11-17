@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:abokamall/helpers/HttpHelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
@@ -7,13 +8,19 @@ import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class Searchcontroller {
+class searchcontroller {
   Future<List<ServiceProvider>> searchWorkers(
-    String? fullName,
+    String? firstName,
+    String? lastName,
     String? profession,
+
+    String? governorate,
+    String? city,
+    String? district,
     int? workerType,
-    String? location,
-    ProviderType ProviderType,
+    ProviderType? providerType,
+    bool basedOnPoints,
+    int pageNumber,
   ) async {
     try {
       List<ServiceProvider> providers = [];
@@ -22,27 +29,37 @@ class Searchcontroller {
       if (accessToken == null) {
         return [];
       }
+      ProviderType NewproviderType =
+          providerType ?? ProviderType.Workers; // default if null
+      // default if null
       final url = Uri.parse(
-        '$apiRoute/search/${ProviderType.name}',
-      ); // replace with your endpoint
-      debugPrint(ProviderType.toString());
-      final body = {
-        'workerType': workerType,
-        'profession': profession,
-        'location': location,
-        'pageNumber': 1,
-        'fullName': fullName,
-      };
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(body),
+        '$apiRoute/search/${NewproviderType.name.toLowerCase()}', // use instance, not type
       );
+      debugPrint(providerType!.name.toLowerCase());
 
+      final body = {
+        "firstName": firstName,
+        "lastName": lastName,
+        "profession": profession,
+        "workerType": workerType,
+        "governorate": governorate,
+        "city": city,
+        "district": district,
+        "basedOnPoints": basedOnPoints,
+        "pageNumber": pageNumber,
+      };
+      //Pagination should be implemented late
+      final response = await withTokenRetry((accessToken) async {
+        return await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(body),
+        );
+      });
+      debugPrint(response.statusCode.toString());
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         for (var item in data) {
@@ -52,7 +69,7 @@ class Searchcontroller {
         return providers;
       } else {
         // Handle error
-        print('Error: ${response.statusCode}');
+        print('Error: ${response.body}');
         return [];
       }
     } catch (e) {

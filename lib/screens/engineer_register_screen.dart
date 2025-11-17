@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
-import '../helpers/HelperMethods.dart'; // For getCurrentLocation()
 
 class EngineerRegisterScreen extends StatefulWidget {
   const EngineerRegisterScreen({super.key});
@@ -15,7 +14,6 @@ class EngineerRegisterScreen extends StatefulWidget {
 
 class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final registerController = getIt<RegisterController>();
-  final _formKey = GlobalKey<FormState>();
   File? _imageFile;
   final picker = ImagePicker();
 
@@ -36,10 +34,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final _specializationController = TextEditingController();
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
-  final _locationController = TextEditingController();
   final _referralController = TextEditingController();
-  bool _hidePassword = true;
-  bool _hideConfirmPassword = true;
+  final _governorateController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _districtController = TextEditingController();
 
   @override
   void initState() {
@@ -53,7 +51,9 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
           sessionEngineerData!['specialization'] ?? '';
       _salaryController.text = sessionEngineerData!['pay']?.toString() ?? '';
       _bioController.text = sessionEngineerData!['bio'] ?? '';
-      _locationController.text = sessionEngineerData!['location'] ?? '';
+      _governorateController.text = sessionEngineerData!['governorate'] ?? '';
+      _cityController.text = sessionEngineerData!['city'] ?? '';
+      _districtController.text = sessionEngineerData!['district'] ?? '';
       _passwordController.text = sessionEngineerData!['password'] ?? '';
       _referralController.text = sessionEngineerData!['referralCode'] ?? '';
     }
@@ -78,47 +78,41 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       return;
     }
 
-    // Get current location
-    final loc = await getCurrentLocation();
-    if (loc == null) {
-      _toast("يرجى تفعيل خدمات الموقع");
-      return;
-    }
-
-    final worker = RegisterUserDto(
+    final user = RegisterUserDto(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
       phoneNumber: _mobileController.text.trim(),
       password: _passwordController.text.trim(),
-      location: _locationController.text.trim(),
-      lat: loc["lat"],
-      lng: loc["lng"],
-      userType: "SP",
       providerType: userTypeIndex == 0 ? "Contractor" : "Engineer",
       specialization: _specializationController.text.trim(),
       workerType: 1,
       pay: double.tryParse(_salaryController.text.trim()) ?? 0,
       bio: _bioController.text.trim(),
       referralUserName: _referralController.text.trim(),
+      governorate: _governorateController.text.trim(),
+      city: _cityController.text.trim(),
+      district: _districtController.text.trim(),
     );
 
     // Save session
     sessionEngineerData = {
-      'firstName': worker.firstName,
-      'lastName': worker.lastName,
-      'email': worker.email,
-      'phoneNumber': worker.phoneNumber,
-      'specialization': worker.specialization,
-      'pay': worker.pay,
-      'bio': worker.bio,
-      'location': worker.location,
-      'password': worker.password,
-      'providerType': worker.providerType,
-      'referralCode': worker.referralUserName,
+      'firstName': user.firstName,
+      'lastName': user.lastName,
+      'email': user.email,
+      'phoneNumber': user.phoneNumber,
+      'specialization': user.specialization,
+      'pay': user.pay,
+      'bio': user.bio,
+      'governorate': user.governorate,
+      'city': user.city,
+      'district': user.district,
+      'password': user.password,
+      'providerType': user.providerType,
+      'referralCode': user.referralUserName,
     };
 
-    if (await registerController.registerUser(worker, _imageFile) == true) {
+    if (await registerController.registerUser(user, _imageFile) == true) {
       _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
@@ -141,230 +135,189 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       backgroundColor: const Color(0xFFF7FAFF),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundColor: Colors.grey[100],
-                  backgroundImage:
-                      _imageFile != null ? FileImage(_imageFile!) : null,
-                  child: _imageFile == null
-                      ? const Icon(
-                          Icons.camera_alt,
-                          color: Color(0xFF13A9F6),
-                          size: 32,
-                        )
-                      : null,
-                ),
-              ),
-              TextButton(onPressed: _pickImage, child: const Text('رفع صورة')),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: RadioListTile<int>(
-                      title: const Text('مقاول'),
-                      value: 0,
-                      groupValue: userTypeIndex,
-                      onChanged: (val) => setState(() => userTypeIndex = val!),
-                    ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<int>(
-                      title: const Text('مهندس'),
-                      value: 1,
-                      groupValue: userTypeIndex,
-                      onChanged: (val) => setState(() => userTypeIndex = val!),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _firstNameController,
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? "الاسم الاول مطلوب"
-                          : null,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم الاول',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lastNameController,
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? "الاسم الاخير مطلوب"
-                          : null,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم الاخير',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _emailController,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? "البريد الالكتروني مطلوب"
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: _pickImage,
+              child: CircleAvatar(
+                radius: 48,
+                backgroundColor: Colors.grey[100],
+                backgroundImage: _imageFile != null
+                    ? FileImage(_imageFile!)
                     : null,
-                decoration: const InputDecoration(
-                  labelText: 'البريد الالكتروني',
-                  border: OutlineInputBorder(),
-                ),
+                child: _imageFile == null
+                    ? const Icon(
+                        Icons.camera_alt,
+                        color: Color(0xFF13A9F6),
+                        size: 32,
+                      )
+                    : null,
               ),
+            ),
+            TextButton(onPressed: _pickImage, child: const Text('رفع صورة')),
+            const SizedBox(height: 16),
 
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _mobileController,
-                decoration: const InputDecoration(
-                  labelText: 'رقم الجوال',
-                  border: OutlineInputBorder(),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<int>(
+                    title: const Text('مقاول'),
+                    value: 0,
+                    groupValue: userTypeIndex,
+                    onChanged: (val) => setState(() => userTypeIndex = val!),
+                  ),
                 ),
-                keyboardType: TextInputType.phone,
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _specializationController,
-                decoration: const InputDecoration(
-                  labelText: 'التخصص',
-                  border: OutlineInputBorder(),
+                Expanded(
+                  child: RadioListTile<int>(
+                    title: const Text('مهندس'),
+                    value: 1,
+                    groupValue: userTypeIndex,
+                    onChanged: (val) => setState(() => userTypeIndex = val!),
+                  ),
                 ),
-              ),
+              ],
+            ),
 
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _salaryController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'الأجر',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _bioController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'نبذة عنك',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _referralController,
-                decoration: const InputDecoration(
-                  labelText: ' كيف عرفت هذا التطبيق؟',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'الموقع',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _hidePassword,
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "كلمة المرور مطلوبة";
-                  }
-                  if (v.length < 6) {
-                    return "كلمة المرور يجب ألا تقل عن 6 أحرف";
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  labelText: 'كلمة المرور',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _hidePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Colors.grey,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _firstNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'الاسم الاول',
+                      border: OutlineInputBorder(),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _hidePassword = !_hidePassword;
-                      });
-                    },
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: _hideConfirmPassword,
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "تأكيد كلمة المرور مطلوب";
-                  }
-                  if (v != _passwordController.text) {
-                    return "كلمات المرور غير متطابقة";
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  labelText: 'تأكيد كلمة المرور',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _hideConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Colors.grey,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _lastNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'الاسم الاخير',
+                      border: OutlineInputBorder(),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _hideConfirmPassword = !_hideConfirmPassword;
-                      });
-                    },
                   ),
                 ),
-              ),
+              ],
+            ),
 
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (!_formKey.currentState!.validate()) return;
-                    _registerEngineer();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF13A9F6),
-                  ),
-                  child: const Text('حفظ'),
-                ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(
+                labelText: 'البريد الالكتروني',
+                border: OutlineInputBorder(),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _mobileController,
+              decoration: const InputDecoration(
+                labelText: 'رقم الجوال',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _specializationController,
+              decoration: const InputDecoration(
+                labelText: 'التخصص',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _salaryController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'الأجر',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _bioController,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'نبذة عنك',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _referralController,
+              decoration: const InputDecoration(
+                labelText: 'كيف عرفت هذا التطبيق؟',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+            // Location fields
+            TextFormField(
+              controller: _governorateController,
+              decoration: const InputDecoration(
+                labelText: 'المحافظة',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _cityController,
+              decoration: const InputDecoration(
+                labelText: 'المدينة',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _districtController,
+              decoration: const InputDecoration(
+                labelText: 'الحي',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            TextFormField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'كلمة المرور',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'تأكيد كلمة المرور',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _registerEngineer,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF13A9F6),
+                ),
+                child: const Text('حفظ'),
+              ),
+            ),
+          ],
         ),
       ),
     );
