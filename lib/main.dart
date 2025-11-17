@@ -20,7 +20,6 @@ import 'screens/company_register_screen.dart';
 import 'screens/profile/profile_worker_screen.dart';
 import 'screens/profile/profile_engineer_screen.dart';
 import 'screens/profile/profile_company_screen.dart';
-// ... يمكن إضافة بقية الشاشات لاحقاً
 
 void main() {
   setupServiceLocator();
@@ -37,7 +36,7 @@ class MaakApp extends StatelessWidget {
       locale: const Locale('ar', 'EG'),
       supportedLocales: const [
         Locale('ar', 'EG'),
-        Locale('en', 'US'), // Good practice to add English as a fallback
+        Locale('en', 'US'), 
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -49,7 +48,7 @@ class MaakApp extends StatelessWidget {
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: 'Cairo', // تأكد من إضافة الخط لو متوفر
+        fontFamily: 'Cairo',
       ),
       initialRoute: '/splash',
       routes: {
@@ -73,7 +72,6 @@ class MaakApp extends StatelessWidget {
         '/profile_worker': (_) => const WorkerProfileScreen(),
         '/profile_engineer': (_) => const EngineerProfileScreen(),
         '/profile_company': (_) => const CompanyProfileScreen(),
-        // أضف بقية الشاشات هنا
       },
     );
   }

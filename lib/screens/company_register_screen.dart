@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
@@ -17,6 +15,7 @@ class CompanyRegisterScreen extends StatefulWidget {
 
 class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   final registerController = getIt<RegisterController>();
+  final _formKey = GlobalKey<FormState>();
   File? _imageFile;
   final picker = ImagePicker();
 
@@ -37,6 +36,8 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   final _passwordController = TextEditingController();
   final _salaryController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  bool _hidePassword = true;
+  bool _hideConfirmPassword = true;
 
   @override
   void initState() {
@@ -142,172 +143,226 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       backgroundColor: const Color(0xFFF7FAFF),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        child: Column(
-          children: [
-            // Referral input field
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // Image picker
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 48,
+                  backgroundColor: Colors.grey[100],
+                  backgroundImage:
+                      _imageFile != null ? FileImage(_imageFile!) : null,
+                  child: _imageFile == null
+                      ? const Icon(
+                          Icons.camera_alt,
+                          color: Color(0xFF13A9F6),
+                          size: 32,
+                        )
+                      : null,
+                ),
+              ),
+              TextButton(
+                onPressed: _pickImage,
+                child: const Text('رفع شعار/صورة الشركة'),
+              ),
+              const SizedBox(height: 16),
 
-            // Image picker
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: Colors.grey[100],
-                backgroundImage: _imageFile != null
-                    ? FileImage(_imageFile!)
+              // User type toggle
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<int>(
+                      title: const Text('شركة'),
+                      value: 0,
+                      groupValue: userTypeIndex,
+                      onChanged: (val) => setState(() => userTypeIndex = val!),
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<int>(
+                      title: const Text('متجر تجاري'),
+                      value: 1,
+                      groupValue: userTypeIndex,
+                      onChanged: (val) => setState(() => userTypeIndex = val!),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Form fields
+              TextFormField(
+                controller: _specializationController,
+                decoration: const InputDecoration(
+                  labelText: 'التخصص/مجال العمل',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _businessNameController,
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? "اسم الشركة/المؤسسة مطلوب"
+                          : null,
+                      decoration: const InputDecoration(
+                        labelText: 'اسم الشركة/المؤسسة',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _ownerNameController,
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? "اسم المالك مطلوب"
+                          : null,
+                      decoration: const InputDecoration(
+                        labelText: 'اسم المالك',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? "البريد الإلكتروني مطلوب"
                     : null,
-                child: _imageFile == null
-                    ? const Icon(
-                        Icons.camera_alt,
-                        color: Color(0xFF13A9F6),
-                        size: 32,
-                      )
-                    : null,
-              ),
-            ),
-            TextButton(
-              onPressed: _pickImage,
-              child: const Text('رفع شعار/صورة الشركة'),
-            ),
-            const SizedBox(height: 16),
-
-            // User type toggle
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<int>(
-                    title: const Text('شركة'),
-                    value: 0,
-                    groupValue: userTypeIndex,
-                    onChanged: (val) => setState(() => userTypeIndex = val!),
-                  ),
+                decoration: const InputDecoration(
+                  labelText: 'البريد الإلكتروني',
+                  border: OutlineInputBorder(),
                 ),
-                Expanded(
-                  child: RadioListTile<int>(
-                    title: const Text('متجر تجاري'),
-                    value: 1,
-                    groupValue: userTypeIndex,
-                    onChanged: (val) => setState(() => userTypeIndex = val!),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Form fields
-            TextFormField(
-              controller: _specializationController,
-              decoration: const InputDecoration(
-                labelText: 'التخصص/مجال العمل',
-                border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _businessNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'اسم الشركة/المؤسسة',
-                      border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _mobileController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'رقم الجوال',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _referralController,
+                decoration: const InputDecoration(
+                  labelText: 'كيف عرفت هذا التطبيق',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _locationController,
+                      decoration: const InputDecoration(
+                        labelText: 'الموقع/العنوان',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: _bioController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'نبذة عن الشركة',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _ownerNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'اسم المالك',
-                      border: OutlineInputBorder(),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _hidePassword,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return "كلمة المرور مطلوبة";
+                  }
+                  if (v.length < 6) {
+                    return "كلمة المرور يجب ألا تقل عن 6 أحرف";
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  labelText: 'كلمة المرور',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _hidePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.grey,
                     ),
+                    onPressed: () {
+                      setState(() {
+                        _hidePassword = !_hidePassword;
+                      });
+                    },
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'البريد الإلكتروني',
-                border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _mobileController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'رقم الجوال',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _referralController,
-              decoration: const InputDecoration(
-                labelText: 'كيف عرفت هذا التطبيق',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Location with icon
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _locationController,
-                    decoration: const InputDecoration(
-                      labelText: 'الموقع/العنوان',
-                      border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: _hideConfirmPassword,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return "تأكيد كلمة المرور مطلوب";
+                  }
+                  if (v != _passwordController.text) {
+                    return "كلمات المرور غير متطابقة";
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  labelText: 'تأكيد كلمة المرور',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _hideConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.grey,
                     ),
+                    onPressed: () {
+                      setState(() {
+                        _hideConfirmPassword = !_hideConfirmPassword;
+                      });
+                    },
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            TextFormField(
-              controller: _bioController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'نبذة عن الشركة',
-                border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'كلمة المرور',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'تأكيد كلمة المرور',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _registerCompany,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF13A9F6),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (!_formKey.currentState!.validate()) return;
+                    _registerCompany();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF13A9F6),
+                  ),
+                  child: const Text('حفظ'),
                 ),
-                child: const Text('حفظ'),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

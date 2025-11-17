@@ -24,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _hidePassword = true;
 
   @override
   void initState() {
@@ -89,6 +90,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     TextFormField(
                       controller: _nameController,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'الاسم مطلوب';
+                        }
+                        return null;
+                      },
                       decoration: const InputDecoration(
                         labelText: 'الاسم',
                         border: OutlineInputBorder(),
@@ -97,6 +104,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 14),
                     TextFormField(
                       controller: _emailController,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'البريد الإلكترونى مطلوب';
+                        }
+                        return null;
+                      },
                       decoration: const InputDecoration(
                         labelText: 'البريد الإلكترونى',
                         border: OutlineInputBorder(),
@@ -105,6 +118,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 14),
                     TextFormField(
                       controller: _addressController,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'العنوان مطلوب';
+                        }
+                        return null;
+                      },
                       decoration: const InputDecoration(
                         labelText: 'العنوان',
                         border: OutlineInputBorder(),
@@ -113,10 +132,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 14),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _hidePassword,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'كلمة المرور مطلوبة';
+                        }
+                        if (value.length < 6) {
+                          return 'كلمة المرور يجب ألا تقل عن 6 أحرف';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
                         labelText: 'كلمة المرور',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _hidePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _hidePassword = !_hidePassword;
+                            });
+                          },
+                        ),
                       ),
                     ),
                   ],
@@ -136,6 +177,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   onPressed: () {
+                    if (!_formKey.currentState!.validate()) {
+                      return;
+                    }
                     _RegisterScreenState.sessionUser['name'] = _nameController.text;
                     _RegisterScreenState.sessionUser['email'] = _emailController.text;
                     _RegisterScreenState.sessionUser['address'] = _addressController.text;

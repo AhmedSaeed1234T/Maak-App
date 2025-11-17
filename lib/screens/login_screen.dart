@@ -46,6 +46,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         TextFormField(
                           controller: _emailController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'البريد الإلكترونى أو الاسم مطلوب';
+                            }
+                            return null;
+                          },
                           decoration: const InputDecoration(
                             labelText: 'البريد الإلكترونى أو الاسم',
                             hintText: 'user@example.com',
@@ -56,6 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'كلمة المرور مطلوبة';
+                            }
+                            return null;
+                          },
                           decoration: InputDecoration(
                             labelText: 'كلمة المرور',
                             border: const OutlineInputBorder(),
@@ -88,8 +100,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             onPressed: () async {
+                              if (!_formKey.currentState!.validate()) {
+                                return;
+                              }
+
                               if (await loginController.login(
-                                    _emailController.text,
+                                    _emailController.text.trim(),
                                     _passwordController.text,
                                   ) ==
                                   true) {

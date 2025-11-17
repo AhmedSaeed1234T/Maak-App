@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
@@ -17,6 +15,7 @@ class WorkerRegisterScreen extends StatefulWidget {
 
 class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final registerController = getIt<RegisterController>();
+  final _formKey = GlobalKey<FormState>();
 
   // Image
   File? _imageFile;
@@ -36,6 +35,8 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _referralController = TextEditingController(); // New referral code
 
   String salaryType = "daily"; // daily = 0, fixed = 1
+  bool _hidePassword = true;
+  bool _hideConfirmPassword = true;
 
   // Pick image
   Future<void> _pickImage() async {
@@ -101,172 +102,231 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Image picker
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: Colors.grey[200],
-                backgroundImage: _imageFile != null
-                    ? FileImage(_imageFile!)
-                    : null,
-                child: _imageFile == null
-                    ? const Icon(Icons.camera_alt, size: 32, color: Colors.blue)
-                    : null,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // Image picker
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 48,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage:
+                      _imageFile != null ? FileImage(_imageFile!) : null,
+                  child: _imageFile == null
+                      ? const Icon(Icons.camera_alt,
+                          size: 32, color: Colors.blue)
+                      : null,
+                ),
               ),
-            ),
-            TextButton(onPressed: _pickImage, child: const Text("رفع صورة")),
-            const SizedBox(height: 16),
+              TextButton(onPressed: _pickImage, child: const Text("رفع صورة")),
+              const SizedBox(height: 16),
 
-            // Name fields
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _firstNameController,
-                    decoration: const InputDecoration(
-                      labelText: "الاسم الاول",
-                      border: OutlineInputBorder(),
+              // Name fields
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _firstNameController,
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? "الاسم الاول مطلوب"
+                          : null,
+                      decoration: const InputDecoration(
+                        labelText: "الاسم الاول",
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: _lastNameController,
-                    decoration: const InputDecoration(
-                      labelText: "الاسم الاخير",
-                      border: OutlineInputBorder(),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _lastNameController,
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? "الاسم الاخير مطلوب"
+                          : null,
+                      decoration: const InputDecoration(
+                        labelText: "الاسم الاخير",
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Email & phone
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? "البريد الالكتروني مطلوب"
+                    : null,
+                decoration: const InputDecoration(
+                  labelText: "البريد الالكتروني",
+                  border: OutlineInputBorder(),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: "رقم الجوال",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
 
-            // Email & phone
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: "البريد الالكتروني",
-                border: OutlineInputBorder(),
+              // Job & salary type
+              TextFormField(
+                controller: _jobController,
+                decoration: const InputDecoration(
+                  labelText: "المهنة",
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: "رقم الجوال",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile(
+                      title: const Text("يومي"),
+                      value: "daily",
+                      groupValue: salaryType,
+                      onChanged: (v) => setState(() => salaryType = v!),
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile(
+                      title: const Text("مقطوعية"),
+                      value: "fixed",
+                      groupValue: salaryType,
+                      onChanged: (v) => setState(() => salaryType = v!),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _salaryController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "الأجر",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
 
-            // Job & salary type
-            TextField(
-              controller: _jobController,
-              decoration: const InputDecoration(
-                labelText: "المهنة",
-                border: OutlineInputBorder(),
+              // Bio
+              TextFormField(
+                controller: _bioController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: "نبذة عنك",
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile(
-                    title: const Text("يومي"),
-                    value: "daily",
-                    groupValue: salaryType,
-                    onChanged: (v) => setState(() => salaryType = v!),
+              const SizedBox(height: 12),
+
+              // Referral code
+              TextFormField(
+                controller: _referralController,
+                decoration: const InputDecoration(
+                  labelText: " كيف عرفت هذا التطبيق؟",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Location
+              TextFormField(
+                controller: _locationController,
+                decoration: const InputDecoration(
+                  labelText: "الموقع",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Password
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _hidePassword,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return "كلمة المرور مطلوبة";
+                  }
+                  if (v.length < 6) {
+                    return "كلمة المرور يجب ألا تقل عن 6 أحرف";
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  labelText: "كلمة المرور",
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _hidePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _hidePassword = !_hidePassword;
+                      });
+                    },
                   ),
                 ),
-                Expanded(
-                  child: RadioListTile(
-                    title: const Text("مقطوعية"),
-                    value: "fixed",
-                    groupValue: salaryType,
-                    onChanged: (v) => setState(() => salaryType = v!),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: _hideConfirmPassword,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return "تأكيد كلمة المرور مطلوب";
+                  }
+                  if (v != _passwordController.text) {
+                    return "كلمات المرور غير متطابقة";
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  labelText: "تأكيد كلمة المرور",
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _hideConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _hideConfirmPassword = !_hideConfirmPassword;
+                      });
+                    },
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _salaryController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: "الأجر",
-                border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 20),
 
-            // Bio
-            TextField(
-              controller: _bioController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: "نبذة عنك",
-                border: OutlineInputBorder(),
+              // Submit button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (!_formKey.currentState!.validate()) return;
+                    _registerWorker();
+                  },
+                  child: const Text("حفظ"),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-
-            // Referral code
-            TextField(
-              controller: _referralController,
-              decoration: const InputDecoration(
-                labelText: " كيف عرفت هذا التطبيق؟",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Location
-            TextField(
-              controller: _locationController,
-              decoration: const InputDecoration(
-                labelText: "الموقع",
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Password
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "كلمة المرور",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "تأكيد كلمة المرور",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Submit button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _registerWorker,
-                child: const Text("حفظ"),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
