@@ -19,15 +19,12 @@ class _FiltersScreenState extends State<FiltersScreen> {
   final TextEditingController governorateController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController districtController = TextEditingController();
-
   late searchcontroller searchController;
-
   @override
   void initState() {
     searchController = getIt<searchcontroller>();
     super.initState();
   }
-
   @override
   void dispose() {
     firstNameController.dispose();
@@ -38,13 +35,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
     districtController.dispose();
     super.dispose();
   }
-
   int? _mapTypeOfServiceToWorkerType() {
     if (typeOfService == 'يومي') return 0;
     if (typeOfService == 'مقطوعية') return 1;
     return null;
   }
-
   ProviderType _mapProfessionToProviderType(String? profession) {
     switch (profession) {
       case 'مهندس':
@@ -60,7 +55,6 @@ class _FiltersScreenState extends State<FiltersScreen> {
         return ProviderType.Workers;
     }
   }
-
   Future<void> _applyFilters() async {
     if (selectedProfession == null) {
       ScaffoldMessenger.of(
@@ -68,7 +62,6 @@ class _FiltersScreenState extends State<FiltersScreen> {
       ).showSnackBar(const SnackBar(content: Text('يرجى اختيار التخصص')));
       return;
     }
-
     final workerType = _mapTypeOfServiceToWorkerType();
     final providerType = _mapProfessionToProviderType(selectedProfession);
     Navigator.push(
@@ -111,175 +104,246 @@ class _FiltersScreenState extends State<FiltersScreen> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 16,
+                  horizontal: 16,
+                  vertical: 20,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // First Name
-                    const Text(
-                      "الاسم الأول",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                    // Main Card containing filter fields
+                    Card(
+                      elevation: 8,
+                      shadowColor: const Color(0xFF13A9F6).withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    ),
-                    TextField(
-                      controller: firstNameController,
-                      decoration: const InputDecoration(
-                        hintText: 'ابحث بالاسم الأول...',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // First Name
+                            const Text(
+                              "الاسم الأول",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: firstNameController,
+                              decoration: InputDecoration(
+                                hintText: 'ابحث بالاسم الأول...',
+                                prefixIcon: const Icon(Icons.person, color: Color(0xFF13A9F6)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
 
-                    // Last Name
-                    if (selectedProfession != 'شركة' &&
-                        selectedProfession != 'متجر') ...[
-                      const Text(
-                        "اسم العائلة",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                            // Last Name
+                            if (selectedProfession != 'شركة' &&
+                                selectedProfession != 'متجر') ...[
+                              const Text(
+                                "اسم العائلة",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: lastNameController,
+                                decoration: InputDecoration(
+                                  hintText: 'ابحث باسم العائلة...',
+                                  prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF13A9F6)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+
+                            // Specialization
+                            const Text(
+                              "التخصص",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: specializationController,
+                              decoration: InputDecoration(
+                                hintText: 'ابحث التخصص ...',
+                                prefixIcon: const Icon(Icons.work, color: Color(0xFF13A9F6)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Profession Radio Buttons (styled group)
+                            const Text(
+                              'التخصصات',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: const Color(0xFFE0E0E0)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                children: [
+                                  RadioListTile<String>(
+                                    title: const Text('عامل'),
+                                    value: 'عامل',
+                                    groupValue: selectedProfession,
+                                    onChanged: (val) => setState(() => selectedProfession = val),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  RadioListTile<String>(
+                                    title: const Text('مقاول'),
+                                    value: 'مقاول',
+                                    groupValue: selectedProfession,
+                                    onChanged: (val) => setState(() => selectedProfession = val),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  RadioListTile<String>(
+                                    title: const Text('شركة'),
+                                    value: 'شركة',
+                                    groupValue: selectedProfession,
+                                    onChanged: (val) => setState(() => selectedProfession = val),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  RadioListTile<String>(
+                                    title: const Text('مهندس'),
+                                    value: 'مهندس',
+                                    groupValue: selectedProfession,
+                                    onChanged: (val) => setState(() => selectedProfession = val),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  RadioListTile<String>(
+                                    title: const Text('متجر'),
+                                    value: 'متجر',
+                                    groupValue: selectedProfession,
+                                    onChanged: (val) => setState(() => selectedProfession = val),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Location fields
+                            const Text(
+                              'المحافظة',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: governorateController,
+                              decoration: InputDecoration(
+                                hintText: 'مثال: القاهرة',
+                                prefixIcon: const Icon(Icons.map, color: Color(0xFF13A9F6)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            const Text(
+                              'المدينة',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: cityController,
+                              decoration: InputDecoration(
+                                hintText: 'مثال: مدينة نصر',
+                                prefixIcon: const Icon(Icons.location_city, color: Color(0xFF13A9F6)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            const Text(
+                              'الحي',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: districtController,
+                              decoration: InputDecoration(
+                                hintText: 'مثال: التجمع الخامس',
+                                prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF13A9F6)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Worker Type (only for عامل)
+                            if (selectedProfession == 'عامل') ...[
+                              const Text(
+                                'نوع الخدمة',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  children: [
+                                    RadioListTile<String>(
+                                      title: const Text('يومي'),
+                                      value: 'يومي',
+                                      groupValue: typeOfService,
+                                      onChanged: (val) => setState(() => typeOfService = val),
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                    RadioListTile<String>(
+                                      title: const Text('مقطوعية'),
+                                      value: 'مقطوعية',
+                                      groupValue: typeOfService,
+                                      onChanged: (val) => setState(() => typeOfService = val),
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      TextField(
-                        controller: lastNameController,
-                        decoration: const InputDecoration(
-                          hintText: 'ابحث باسم العائلة...',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-
-                    // Specialization
-                    const Text(
-                      "التخصص",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
                     ),
-                    TextField(
-                      controller: specializationController,
-                      decoration: const InputDecoration(
-                        hintText: 'ابحث التخصص ...',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Profession Radio Buttons
-                    RadioListTile<String>(
-                      title: const Text('عامل'),
-                      value: 'عامل',
-                      groupValue: selectedProfession,
-                      onChanged: (val) =>
-                          setState(() => selectedProfession = val),
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('مقاول'),
-                      value: 'مقاول',
-                      groupValue: selectedProfession,
-                      onChanged: (val) =>
-                          setState(() => selectedProfession = val),
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('شركة'),
-                      value: 'شركة',
-                      groupValue: selectedProfession,
-                      onChanged: (val) =>
-                          setState(() => selectedProfession = val),
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('مهندس'),
-                      value: 'مهندس',
-                      groupValue: selectedProfession,
-                      onChanged: (val) =>
-                          setState(() => selectedProfession = val),
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('متجر'),
-                      value: 'متجر',
-                      groupValue: selectedProfession,
-                      onChanged: (val) =>
-                          setState(() => selectedProfession = val),
-                    ),
-
-                    const SizedBox(height: 12),
-                    // Location fields
-                    const Text(
-                      'المحافظة',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    TextField(
-                      controller: governorateController,
-                      decoration: const InputDecoration(
-                        hintText: 'مثال: القاهرة',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    const Text(
-                      'المدينة',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    TextField(
-                      controller: cityController,
-                      decoration: const InputDecoration(
-                        hintText: 'مثال: مدينة نصر',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    const Text(
-                      'الحي',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    TextField(
-                      controller: districtController,
-                      decoration: const InputDecoration(
-                        hintText: 'مثال: التجمع الخامس',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Worker Type (only for عامل)
-                    if (selectedProfession == 'عامل') ...[
-                      const Text(
-                        'نوع الخدمة',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      RadioListTile<String>(
-                        title: const Text('يومي'),
-                        value: 'يومي',
-                        groupValue: typeOfService,
-                        onChanged: (val) => setState(() => typeOfService = val),
-                      ),
-                      RadioListTile<String>(
-                        title: const Text('مقطوعية'),
-                        value: 'مقطوعية',
-                        groupValue: typeOfService,
-                        onChanged: (val) => setState(() => typeOfService = val),
-                      ),
-                    ],
                   ],
                 ),
               ),

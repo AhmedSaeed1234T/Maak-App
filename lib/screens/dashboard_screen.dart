@@ -90,62 +90,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           children: [
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'ابحث عن عامل، مهندس، شركة...',
-                filled: true,
-                fillColor: Colors.white,
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (v) => setState(() => search = v),
-              onTap: () => Navigator.pushNamed(context, '/filters'),
-            ),
-            const SizedBox(height: 15),
-            SizedBox(
-              height: 38,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: tabs.length,
-                itemBuilder: (ctx, i) => GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      tabIndex = i;
-                    });
-                    _loadFeaturedProviders(providerTypes[i], true);
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 12),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 7,
+            // Search and categories card (visual only)
+            Card(
+              elevation: 6,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'ابحث عن عامل، مهندس، شركة...',
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: const Icon(Icons.search, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (v) => setState(() => search = v),
+                      onTap: () => Navigator.pushNamed(context, '/filters'),
                     ),
-                    decoration: BoxDecoration(
-                      color: tabIndex == i
-                          ? const Color(0xFF13A9F6)
-                          : const Color(0xFFE8F0F8),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Text(
-                      tabs[i],
-                      style: TextStyle(
-                        color: tabIndex == i ? Colors.white : Colors.black54,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: tabs.length,
+                        itemBuilder: (ctx, i) => GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              tabIndex = i;
+                            });
+                            _loadFeaturedProviders(providerTypes[i], true);
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: tabIndex == i
+                                  ? const Color(0xFF13A9F6)
+                                  : const Color(0xFFF3F7FB),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              tabs[i],
+                              style: TextStyle(
+                                color: tabIndex == i ? Colors.white : Colors.black87,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 25),
+
+            const SizedBox(height: 10),
             const Text(
               "مقدمو الخدمة",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
 
             // Loading effect
             if (isLoading)
@@ -173,46 +188,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         );
                       },
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: Colors.white,
-                            backgroundImage:
-                                provider.imageUrl != null &&
-                                    provider.imageUrl!.isNotEmpty
-                                ? NetworkImage(provider.imageUrl!)
-                                : null,
-                            child:
-                                provider.imageUrl == null ||
-                                    provider.imageUrl!.isEmpty
-                                ? const Icon(
-                                    Icons.person,
-                                    size: 40,
-                                    color: Color(0xFF13A9F6),
-                                  )
-                                : null,
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Container(
+                          width: 140,
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Material(
+                                shape: const CircleBorder(),
+                                elevation: 6,
+                                color: Colors.white,
+                                child: CircleAvatar(
+                                  radius: 36,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: provider.imageUrl != null &&
+                                          provider.imageUrl!.isNotEmpty
+                                      ? NetworkImage(provider.imageUrl!)
+                                      : null,
+                                  child: provider.imageUrl == null || provider.imageUrl!.isEmpty
+                                      ? const Icon(
+                                          Icons.person,
+                                          size: 36,
+                                          color: Color(0xFF13A9F6),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                provider.name,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                provider.skill,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            provider.name ?? '',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            provider.skill,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.black45,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     );
                   },
-                  separatorBuilder: (_, __) => const SizedBox(width: 20),
+                  separatorBuilder: (_, __) => const SizedBox(width: 16),
                 ),
               ),
           ],
