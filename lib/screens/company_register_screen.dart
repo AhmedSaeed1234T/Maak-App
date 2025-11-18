@@ -127,163 +127,380 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
       ),
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: Colors.grey[200],
-                backgroundImage: _imageFile != null
-                    ? FileImage(_imageFile!)
-                    : null,
-                child: _imageFile == null
-                    ? const Icon(Icons.camera_alt, size: 32, color: Colors.blue)
-                    : null,
+            // Profile Image with Shadow
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF13A9F6).withOpacity(0.2),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundColor: const Color(0xFFE8F4FF),
+                  backgroundImage: _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : null,
+                  child: _imageFile == null
+                      ? const Icon(Icons.business, color: Color(0xFF13A9F6), size: 40)
+                      : null,
+                ),
               ),
             ),
-            TextButton(
+            const SizedBox(height: 12),
+            TextButton.icon(
               onPressed: _pickImage,
-              child: const Text("رفع شعار/صورة الشركة"),
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text("اختر شعار الشركة"),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF13A9F6),
+              ),
             ),
+            const SizedBox(height: 24),
 
-            const SizedBox(height: 16),
-            // Business and owner
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: "اسم الشركة/المؤسسة",
-                border: OutlineInputBorder(),
+            // Main Card
+            Card(
+              elevation: 8,
+              shadowColor: const Color(0xFF13A9F6).withOpacity(0.1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _ownerController,
-              decoration: const InputDecoration(
-                labelText: "اسم المالك",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _businessController,
-              decoration: const InputDecoration(
-                labelText: "اسم التخصص",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: "البريد الإلكتروني",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _mobileController,
-              decoration: const InputDecoration(
-                labelText: "رقم الجوال",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _referralController,
-              decoration: const InputDecoration(
-                labelText: "كيف عرفت هذا التطبيق؟",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<int>(
-                    title: const Text('شركة'),
-                    value: 0,
-                    groupValue: userTypeIndex,
-                    onChanged: (val) => setState(() => userTypeIndex = val!),
-                  ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    // Business Type Selection
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFE0E0E0)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<int>(
+                              title: const Text('شركة'),
+                              value: 0,
+                              groupValue: userTypeIndex,
+                              onChanged: (val) => setState(() => userTypeIndex = val!),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<int>(
+                              title: const Text('متجر'),
+                              value: 1,
+                              groupValue: userTypeIndex,
+                              onChanged: (val) => setState(() => userTypeIndex = val!),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Company Name
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: "اسم الشركة/المؤسسة",
+                        prefixIcon: const Icon(Icons.business, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Owner Name
+                    TextFormField(
+                      controller: _ownerController,
+                      decoration: InputDecoration(
+                        labelText: "اسم المالك",
+                        prefixIcon: const Icon(Icons.person, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Business Field/Specialization
+                    TextFormField(
+                      controller: _businessController,
+                      decoration: InputDecoration(
+                        labelText: "اسم التخصص",
+                        prefixIcon: const Icon(Icons.work, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Email
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: "البريد الإلكتروني",
+                        prefixIcon: const Icon(Icons.email, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Phone
+                    TextFormField(
+                      controller: _mobileController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: "رقم الجوال",
+                        prefixIcon: const Icon(Icons.phone, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Bio
+                    TextFormField(
+                      controller: _bioController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: "نبذة عن الشركة",
+                        prefixIcon: const Icon(Icons.description, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Referral
+                    TextFormField(
+                      controller: _referralController,
+                      decoration: InputDecoration(
+                        labelText: "كيف عرفت هذا التطبيق؟",
+                        prefixIcon: const Icon(Icons.share, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Location fields
+                    TextFormField(
+                      controller: _governorateController,
+                      decoration: InputDecoration(
+                        labelText: "المحافظة",
+                        prefixIcon: const Icon(Icons.location_on, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _cityController,
+                      decoration: InputDecoration(
+                        labelText: "المدينة",
+                        prefixIcon: const Icon(Icons.location_city, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _districtController,
+                      decoration: InputDecoration(
+                        labelText: "الحي",
+                        prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Password
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: "كلمة المرور",
+                        prefixIcon: const Icon(Icons.lock, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Confirm Password
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: "تأكيد كلمة المرور",
+                        prefixIcon: const Icon(Icons.lock, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _registerCompany,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF13A9F6),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Text(
+                          'حفظ',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: RadioListTile<int>(
-                    title: const Text('سوق'),
-                    value: 1,
-                    groupValue: userTypeIndex,
-                    onChanged: (val) => setState(() => userTypeIndex = val!),
-                  ),
-                ),
-              ],
-            ),
-
-            // Location fields
-            TextFormField(
-              controller: _governorateController,
-              decoration: const InputDecoration(
-                labelText: "المحافظة",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _cityController,
-              decoration: const InputDecoration(
-                labelText: "المدينة",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _districtController,
-              decoration: const InputDecoration(
-                labelText: "الحي",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Bio
-            TextFormField(
-              controller: _bioController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: "نبذة عن الشركة",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Passwords
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "كلمة المرور",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "تأكيد كلمة المرور",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Submit
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _registerCompany,
-                child: const Text("حفظ"),
               ),
             ),
           ],

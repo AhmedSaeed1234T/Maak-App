@@ -84,28 +84,61 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
         elevation: 0,
         foregroundColor: Colors.black,
       ),
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Image picker
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundColor: Colors.grey[200],
-                  backgroundImage:
-                      _imageFile != null ? FileImage(_imageFile!) : null,
-                  child: _imageFile == null
-                      ? const Icon(Icons.camera_alt,
-                          size: 32, color: Colors.blue)
-                      : null,
+              // Profile Image Section with Shadow
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF13A9F6).withOpacity(0.2),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundImage:
+                        _imageFile != null ? FileImage(_imageFile!) : null,
+                    backgroundColor: const Color(0xFFE8F4FF),
+                    child: _imageFile == null
+                        ? const Icon(Icons.camera_alt, size: 40, color: Color(0xFF13A9F6))
+                        : null,
+                  ),
                 ),
               ),
-              TextButton(onPressed: _pickImage, child: const Text("رفع صورة")),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: _pickImage,
+                icon: const Icon(Icons.edit, size: 18),
+                label: const Text("اختر صورتك"),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF13A9F6),
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Main Card with elevation
+              Card(
+                elevation: 8,
+                shadowColor: const Color(0xFF13A9F6).withOpacity(0.1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
 
               // Name fields
               Row(
@@ -116,123 +149,245 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                       validator: (v) => v == null || v.trim().isEmpty
                           ? "الاسم الاول مطلوب"
                           : null,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: "الاسم الاول",
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
                       controller: _lastNameController,
                       validator: (v) => v == null || v.trim().isEmpty
                           ? "الاسم الاخير مطلوب"
                           : null,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: "الاسم الاخير",
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person, color: Color(0xFF13A9F6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Email & phone
+              // Email
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) => v == null || v.trim().isEmpty
                     ? "البريد الالكتروني مطلوب"
                     : null,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "البريد الالكتروني",
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.email, color: Color(0xFF13A9F6)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+
+              // Phone
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "رقم الجوال",
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.phone, color: Color(0xFF13A9F6)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Job & salary type
+              // Job
               TextFormField(
                 controller: _jobController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "المهنة",
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.work, color: Color(0xFF13A9F6)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: RadioListTile(
-                      title: const Text("يومي"),
-                      value: "daily",
-                      groupValue: salaryType,
-                      onChanged: (v) => setState(() => salaryType = v!),
+              const SizedBox(height: 16),
+
+              // Salary Type Radio
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile(
+                        title: const Text("يومي"),
+                        value: "daily",
+                        groupValue: salaryType,
+                        onChanged: (v) => setState(() => salaryType = v!),
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: RadioListTile(
-                      title: const Text("مقطوعية"),
-                      value: "fixed",
-                      groupValue: salaryType,
-                      onChanged: (v) => setState(() => salaryType = v!),
+                    Expanded(
+                      child: RadioListTile(
+                        title: const Text("مقطوعية"),
+                        value: "fixed",
+                        groupValue: salaryType,
+                        onChanged: (v) => setState(() => salaryType = v!),
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+
+              // Salary
               TextFormField(
                 controller: _salaryController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "الأجر",
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.monetization_on, color: Color(0xFF13A9F6)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Bio
               TextFormField(
                 controller: _bioController,
-                maxLines: 2,
-                decoration: const InputDecoration(
+                maxLines: 3,
+                decoration: InputDecoration(
                   labelText: "نبذة عنك",
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.description, color: Color(0xFF13A9F6)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Referral code
               TextFormField(
                 controller: _referralController,
-                decoration: const InputDecoration(
-                  labelText: " كيف عرفت هذا التطبيق؟",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: "كيف عرفت هذا التطبيق؟",
+                  prefixIcon: const Icon(Icons.share, color: Color(0xFF13A9F6)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Location
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "الموقع",
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF13A9F6)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Password
               TextFormField(
@@ -249,13 +404,13 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                 },
                 decoration: InputDecoration(
                   labelText: "كلمة المرور",
-                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock, color: Color(0xFF13A9F6)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _hidePassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: Colors.grey,
+                      color: const Color(0xFF13A9F6),
                     ),
                     onPressed: () {
                       setState(() {
@@ -263,9 +418,23 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                       });
                     },
                   ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+
+              // Confirm Password
               TextFormField(
                 controller: _confirmPasswordController,
                 obscureText: _hideConfirmPassword,
@@ -280,13 +449,13 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                 },
                 decoration: InputDecoration(
                   labelText: "تأكيد كلمة المرور",
-                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock, color: Color(0xFF13A9F6)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _hideConfirmPassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: Colors.grey,
+                      color: const Color(0xFF13A9F6),
                     ),
                     onPressed: () {
                       setState(() {
@@ -294,19 +463,47 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                       });
                     },
                   ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // Submit button
               SizedBox(
                 width: double.infinity,
+                height: 56,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF13A9F6),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
                   onPressed: () {
                     if (!_formKey.currentState!.validate()) return;
                     _registerWorker();
                   },
-                  child: const Text("حفظ"),
+                  child: const Text(
+                    "حفظ",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+                    ],
+                  ),
                 ),
               ),
             ],
