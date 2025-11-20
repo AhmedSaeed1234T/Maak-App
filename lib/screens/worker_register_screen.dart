@@ -13,6 +13,8 @@ class WorkerRegisterScreen extends StatefulWidget {
 class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final registerController = getIt<RegisterController>();
   final _formKey = GlobalKey<FormState>();
+  // Common styles
+  final Color _primaryColor = const Color(0xFF13A9F6);
   // Image
   File? _imageFile;
   final picker = ImagePicker();
@@ -37,6 +39,29 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
     if (picked != null) {
       setState(() => _imageFile = File(picked.path));
     }
+  }
+
+  InputDecoration _buildDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: _primaryColor),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: _primaryColor, width: 2),
+      ),
+    );
   }
   // Show simple toast
   void _toast(String msg) {
@@ -117,13 +142,16 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              Text('انقر لتغيير الصورة', style: TextStyle(color: Colors.black54, fontSize: 13)),
+              const SizedBox(height: 8),
               TextButton.icon(
                 onPressed: _pickImage,
                 icon: const Icon(Icons.edit, size: 18),
                 label: const Text("اختر صورتك"),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF13A9F6),
+                  foregroundColor: _primaryColor,
+                  textStyle: const TextStyle(fontSize: 14),
                 ),
               ),
               const SizedBox(height: 28),
@@ -140,6 +168,13 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                   child: Column(
                     children: [
 
+              // Section header
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text('معلومات الحساب', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
+              ),
+              const SizedBox(height: 12),
+
               // Name fields
               Row(
                 children: [
@@ -149,22 +184,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                       validator: (v) => v == null || v.trim().isEmpty
                           ? "الاسم الاول مطلوب"
                           : null,
-                      decoration: InputDecoration(
-                        labelText: "الاسم الاول",
-                        prefixIcon: const Icon(Icons.person, color: Color(0xFF13A9F6)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                        ),
-                      ),
+                      decoration: _buildDecoration("الاسم الاول", Icons.person),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -174,22 +194,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                       validator: (v) => v == null || v.trim().isEmpty
                           ? "الاسم الاخير مطلوب"
                           : null,
-                      decoration: InputDecoration(
-                        labelText: "الاسم الاخير",
-                        prefixIcon: const Icon(Icons.person, color: Color(0xFF13A9F6)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                        ),
-                      ),
+                      decoration: _buildDecoration("الاسم الاخر", Icons.person),
                     ),
                   ),
                 ],
@@ -203,22 +208,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                 validator: (v) => v == null || v.trim().isEmpty
                     ? "البريد الالكتروني مطلوب"
                     : null,
-                decoration: InputDecoration(
-                  labelText: "البريد الالكتروني",
-                  prefixIcon: const Icon(Icons.email, color: Color(0xFF13A9F6)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                  ),
-                ),
+                decoration: _buildDecoration("البريد الالكتروني", Icons.email),
               ),
               const SizedBox(height: 16),
 
@@ -226,53 +216,24 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: "رقم الجوال",
-                  prefixIcon: const Icon(Icons.phone, color: Color(0xFF13A9F6)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                  ),
-                ),
+                decoration: _buildDecoration("رقم الجوال", Icons.phone),
               ),
               const SizedBox(height: 16),
 
               // Job
               TextFormField(
                 controller: _jobController,
-                decoration: InputDecoration(
-                  labelText: "المهنة",
-                  prefixIcon: const Icon(Icons.work, color: Color(0xFF13A9F6)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                  ),
-                ),
+                decoration: _buildDecoration("المهنة", Icons.work),
               ),
               const SizedBox(height: 16),
 
               // Salary Type Radio
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   border: Border.all(color: const Color(0xFFE0E0E0)),
                   borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
                 ),
                 child: Row(
                   children: [
@@ -303,22 +264,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
               TextFormField(
                 controller: _salaryController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: "الأجر",
-                  prefixIcon: const Icon(Icons.monetization_on, color: Color(0xFF13A9F6)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                  ),
-                ),
+                decoration: _buildDecoration("الأجر", Icons.monetization_on).copyWith(hintText: 'مثال: 100'),
               ),
               const SizedBox(height: 16),
 
@@ -326,66 +272,21 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
               TextFormField(
                 controller: _bioController,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: "نبذة عنك",
-                  prefixIcon: const Icon(Icons.description, color: Color(0xFF13A9F6)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                  ),
-                ),
+                decoration: _buildDecoration("نبذة عنك", Icons.description),
               ),
               const SizedBox(height: 16),
 
               // Referral code
               TextFormField(
                 controller: _referralController,
-                decoration: InputDecoration(
-                  labelText: "كيف عرفت هذا التطبيق؟",
-                  prefixIcon: const Icon(Icons.share, color: Color(0xFF13A9F6)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                  ),
-                ),
+                decoration: _buildDecoration("كيف عرفت هذا التطبيق؟", Icons.share).copyWith(helperText: 'مثال: صديق / اعلان'),
               ),
               const SizedBox(height: 16),
 
               // Location
               TextFormField(
                 controller: _locationController,
-                decoration: InputDecoration(
-                  labelText: "الموقع",
-                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF13A9F6)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                  ),
-                ),
+                decoration: _buildDecoration("الموقع", Icons.location_on),
               ),
               const SizedBox(height: 16),
 
@@ -402,33 +303,19 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                   }
                   return null;
                 },
-                decoration: InputDecoration(
-                  labelText: "كلمة المرور",
-                  prefixIcon: const Icon(Icons.lock, color: Color(0xFF13A9F6)),
+                decoration: _buildDecoration("كلمة المرور", Icons.lock).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _hidePassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: const Color(0xFF13A9F6),
+                      color: _primaryColor,
                     ),
                     onPressed: () {
                       setState(() {
                         _hidePassword = !_hidePassword;
                       });
                     },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
                   ),
                 ),
               ),
@@ -447,33 +334,19 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                   }
                   return null;
                 },
-                decoration: InputDecoration(
-                  labelText: "تأكيد كلمة المرور",
-                  prefixIcon: const Icon(Icons.lock, color: Color(0xFF13A9F6)),
+                decoration: _buildDecoration("تأكيد كلمة المرور", Icons.lock).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _hideConfirmPassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: const Color(0xFF13A9F6),
+                      color: _primaryColor,
                     ),
                     onPressed: () {
                       setState(() {
                         _hideConfirmPassword = !_hideConfirmPassword;
                       });
                     },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
                   ),
                 ),
               ),

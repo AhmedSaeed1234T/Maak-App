@@ -171,6 +171,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    const primary = Color(0xFF13A9F6);
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Colors.white,
@@ -178,7 +179,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const CircularProgressIndicator(),
+              CircularProgressIndicator(color: primary),
               const SizedBox(height: 16),
               Text(
                 'جاري تحميل الملف الشخصي...',
@@ -222,58 +223,68 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             const Divider(height: 32, thickness: 1),
             // Provider-Specific Section
             _buildProviderSpecificSection(providerType),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _changePassword,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 24),
+            // Change Password Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _changePassword,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF13A9F6),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
                 ),
+                child: const Text('تغيير كلمة المرور', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
-              child: Text("تغيير كلمة المرور"),
             ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _logout,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 16),
+            // Logout Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _logout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade500,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
                 ),
+                child: const Text('تسجيل الخروج', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
-              child: Text("تسجيل الخروج"),
             ),
-            const SizedBox(height: 32),
-
+            const SizedBox(height: 24),
             // Save Button
-            ElevatedButton(
-              onPressed: _isSaving ? null : _saveProfile,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: _hasChanges ? null : Colors.grey,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _saveProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _hasChanges ? const Color(0xFF13A9F6) : Colors.grey[400],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: _hasChanges ? 4 : 0,
                 ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _hasChanges ? 'حفظ التغييرات' : 'لا توجد تغييرات',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
-              child: _isSaving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      _hasChanges ? 'حفظ التغييرات' : 'لا توجد تغييرات',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
             ),
 
             const SizedBox(height: 16),
@@ -354,12 +365,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   Widget _buildSharedFieldsSection() {
+    const primary = Color(0xFF13A9F6);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.person_outline, color: Theme.of(context).primaryColor),
+            Icon(Icons.person_outline, color: primary),
             const SizedBox(width: 8),
             Text(
               'المعلومات الأساسية',
@@ -479,7 +491,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           children: [
             Icon(
               Icons.location_on_outlined,
-              color: Theme.of(context).primaryColor,
+              color: const Color(0xFF13A9F6),
             ),
             const SizedBox(width: 8),
             Text(
@@ -555,12 +567,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   Widget _buildWorkerSection() {
+    const primary = Color(0xFF13A9F6);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.work_outline, color: Theme.of(context).primaryColor),
+            Icon(Icons.work_outline, color: primary),
             const SizedBox(width: 8),
             Text(
               'معلومات العامل',
@@ -815,7 +828,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
+            icon: const Icon(Icons.edit, color: Color(0xFF13A9F6)),
             onPressed: onEdit,
           ),
         ],
@@ -883,51 +896,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
     // ✅ Remove this:
     // controller.dispose();
-  }
-
-  Future<void> _showWorkerTypeDialog() async {
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('نوع العمل'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('عمل فردي'),
-              leading: Radio<int>(
-                value: 1,
-                groupValue: _workerTypes,
-                onChanged: (value) {
-                  setState(() => _workerTypes = value!);
-                  _markAsChanged();
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-            ListTile(
-              title: const Text('عمل جماعي (فريق)'),
-              leading: Radio<int>(
-                value: 2,
-                groupValue: _workerTypes,
-                onChanged: (value) {
-                  setState(() => _workerTypes = value!);
-                  _markAsChanged();
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _logout() async {

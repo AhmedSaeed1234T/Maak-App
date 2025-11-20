@@ -59,39 +59,103 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const primary = Color(0xFF13A9F6);
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('خيارات الدفع', style: TextStyle(color: Colors.black)),
+        title: const Text('خيارات الدفع', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 0.5,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPaymentOption(
-              title: 'الدفع بفودافون كاش',
-              subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة.',
-              value: 'vodafone_cash',
-              onTap: () => _showPaymentDialog('vodafone_cash'),
+            // Header Section
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [primary, primary.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
+              ),
+              child: const Icon(Icons.credit_card, color: Colors.white, size: 35),
             ),
             const SizedBox(height: 20),
+            const Text(
+              'طرق الدفع المتاحة',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'اختر طريقة دفع مفضلة لتحديث اشتراكك',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 28),
+            // Payment Options
+            _buildPaymentOption(
+              title: 'الدفع بفودافون كاش',
+              subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
+              value: 'vodafone_cash',
+              icon: Icons.phone_android,
+              onTap: () => _showPaymentDialog('vodafone_cash'),
+            ),
+            const SizedBox(height: 16),
             _buildPaymentOption(
               title: 'الدفع بإنستا باي',
-              subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة.',
+              subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
               value: 'instapay',
+              icon: Icons.credit_card,
               onTap: () => _showPaymentDialog('instapay'),
             ),
-            const Spacer(),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.support_agent),
-              label: const Text('خدمة العملاء'),
-              onPressed: _openWhatsapp,
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
+            const SizedBox(height: 32),
+            // Customer Service Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.support_agent, size: 22),
+                label: const Text('تواصل مع خدمة العملاء عبر واتساب', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                onPressed: _openWhatsapp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 3,
+                ),
               ),
             ),
+            const SizedBox(height: 16),
+            // Info Box
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: primary.withOpacity(0.3), width: 1),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, color: primary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'بيانات الدفع محفوظة بشكل آمن وسري',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -101,36 +165,51 @@ class _PaymentScreenState extends State<PaymentScreen> {
     required String title,
     required String subtitle,
     required String value,
+    required IconData icon,
     required VoidCallback onTap,
   }) {
+    const primary = Color(0xFF13A9F6);
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _selectedPaymentMethod == value ? const Color(0xFF13A9F6) : Colors.grey[300]!,
+            color: _selectedPaymentMethod == value ? primary : Colors.grey[300]!,
+            width: _selectedPaymentMethod == value ? 2 : 1,
           ),
+          boxShadow: _selectedPaymentMethod == value
+              ? [BoxShadow(color: primary.withOpacity(0.1), blurRadius: 8, spreadRadius: 1)]
+              : [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 4, spreadRadius: 0)],
         ),
         child: Row(
           children: [
-            const Icon(Icons.payment, size: 40, color: Color(0xFF13A9F6)),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: primary.withOpacity(0.15),
+              ),
+              child: Icon(icon, size: 26, color: primary),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(color: Colors.black54)),
+                  Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                 ],
               ),
             ),
             Radio<String>(
               value: value,
               groupValue: _selectedPaymentMethod,
+              activeColor: primary,
               onChanged: (_) {
                 onTap();
               },

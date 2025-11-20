@@ -6,6 +6,7 @@ class WorkerProfilePage extends StatelessWidget {
   const WorkerProfilePage({super.key, required this.provider});
   @override
   Widget build(BuildContext context) {
+    const primary = Color(0xFF13A9F6);
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       appBar: AppBar(
@@ -20,19 +21,26 @@ class WorkerProfilePage extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
             Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.grey[200],
-                backgroundImage: provider.imageUrl != null
-                    ? NetworkImage(provider.imageUrl!)
-                    : null,
-                child: provider.imageUrl == null
-                    ? Icon(
-                        provider.isCompany ? Icons.business : Icons.person,
-                        size: 50,
-                        color: Colors.grey,
-                      )
-                    : null,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: primary.withOpacity(0.16), blurRadius: 14, offset: Offset(0,6))],
+                ),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: provider.imageUrl != null
+                      ? NetworkImage(provider.imageUrl!)
+                      : null,
+                  child: provider.imageUrl == null
+                      ? Icon(
+                          provider.isCompany ? Icons.business : Icons.person,
+                          size: 50,
+                          color: Colors.grey[700],
+                        )
+                      : null,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -54,6 +62,7 @@ class WorkerProfilePage extends StatelessWidget {
     );
   }
   Widget _buildDetailsSection(ServiceProvider provider) {
+    const primary = Color(0xFF13A9F6);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -72,37 +81,53 @@ class WorkerProfilePage extends StatelessWidget {
             Icons.phone,
             'رقم الهاتف',
             provider.mobileNumber ?? 'غير متوفر',
+            primary,
           ),
+          const Divider(),
           _detailRow(
             Icons.email,
             'البريد الإلكتروني',
             provider.email ?? 'غير متوفر',
+            primary,
           ),
+          const Divider(),
           _detailRow(
             Icons.location_on,
             'منطقة الخدمة',
             provider.locationOfServiceArea ?? provider.location,
+            primary,
           ),
-          _detailRow(Icons.attach_money, 'السعر', formatPay(provider)),
+          const Divider(),
+          _detailRow(Icons.attach_money, 'السعر', formatPay(provider), primary),
+          const Divider(),
           _detailRow(
             Icons.work,
             'نوع الخدمة',
             translateProviderTypeToArabic(provider.typeOfService!),
+            primary,
           ),
         ],
       ),
     );
   }
 
-  Widget _detailRow(IconData icon, String title, String value) {
+  Widget _detailRow(IconData icon, String title, String value, Color color) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blue, size: 20),
-          const SizedBox(width: 10),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text('$title: $value', style: const TextStyle(fontSize: 14)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(value, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+              ],
+            ),
           ),
         ],
       ),

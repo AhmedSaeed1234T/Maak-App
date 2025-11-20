@@ -83,17 +83,19 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const primary = Color(0xFF13A9F6);
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        title: const Text('الفلاتر', style: TextStyle(color: Colors.black)),
+        title: const Text('خيارات البحث', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        elevation: 0,
+        elevation: 0.5,
         actions: [
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, color: Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -103,242 +105,101 @@ class _FiltersScreenState extends State<FiltersScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 20,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // First Name
+                    // Header with Icon
+                    Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: primary.withOpacity(0.15),
+                          ),
+                          child: const Icon(Icons.filter_list, color: primary, size: 26),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'البحث المتقدم',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                              ),
+                              Text(
+                                'قم بتصفية النتائج حسب احتياجاتك',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
                     // Main Card containing filter fields
                     Card(
-                      elevation: 8,
-                      shadowColor: const Color(0xFF13A9F6).withOpacity(0.1),
+                      elevation: 2,
+                      shadowColor: primary.withOpacity(0.1),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(18),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // First Name
-                            const Text(
-                              "الاسم الأول",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                            _buildSectionLabel("الاسم الأول"),
                             const SizedBox(height: 8),
-                            TextField(
-                              controller: firstNameController,
-                              decoration: InputDecoration(
-                                hintText: 'ابحث بالاسم الأول...',
-                                prefixIcon: const Icon(Icons.person, color: Color(0xFF13A9F6)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            _buildTextField(firstNameController, 'ابحث بالاسم الأول...', Icons.person),
+                            const SizedBox(height: 16),
 
                             // Last Name
                             if (selectedProfession != 'شركة' &&
                                 selectedProfession != 'متجر') ...[
-                              const Text(
-                                "اسم العائلة",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
+                              _buildSectionLabel("اسم العائلة"),
                               const SizedBox(height: 8),
-                              TextField(
-                                controller: lastNameController,
-                                decoration: InputDecoration(
-                                  hintText: 'ابحث باسم العائلة...',
-                                  prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF13A9F6)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
+                              _buildTextField(lastNameController, 'ابحث باسم العائلة...', Icons.person_outline),
+                              const SizedBox(height: 16),
                             ],
 
                             // Specialization
-                            const Text(
-                              "التخصص",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                            _buildSectionLabel("التخصص"),
                             const SizedBox(height: 8),
-                            TextField(
-                              controller: specializationController,
-                              decoration: InputDecoration(
-                                hintText: 'ابحث التخصص ...',
-                                prefixIcon: const Icon(Icons.work, color: Color(0xFF13A9F6)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            _buildTextField(specializationController, 'ابحث التخصص ...', Icons.work),
+                            const SizedBox(height: 16),
 
-                            // Profession Radio Buttons (styled group)
-                            const Text(
-                              'التخصصات',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: const Color(0xFFE0E0E0)),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                children: [
-                                  RadioListTile<String>(
-                                    title: const Text('عامل'),
-                                    value: 'عامل',
-                                    groupValue: selectedProfession,
-                                    onChanged: (val) => setState(() => selectedProfession = val),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('مقاول'),
-                                    value: 'مقاول',
-                                    groupValue: selectedProfession,
-                                    onChanged: (val) => setState(() => selectedProfession = val),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('شركة'),
-                                    value: 'شركة',
-                                    groupValue: selectedProfession,
-                                    onChanged: (val) => setState(() => selectedProfession = val),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('مهندس'),
-                                    value: 'مهندس',
-                                    groupValue: selectedProfession,
-                                    onChanged: (val) => setState(() => selectedProfession = val),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('متجر'),
-                                    value: 'متجر',
-                                    groupValue: selectedProfession,
-                                    onChanged: (val) => setState(() => selectedProfession = val),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            // Profession Radio Buttons
+                            _buildSectionLabel('التخصصات'),
+                            const SizedBox(height: 10),
+                            _buildProfessionRadioGroup(),
+                            const SizedBox(height: 16),
 
                             // Location fields
-                            const Text(
-                              'المحافظة',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                            _buildSectionLabel('المحافظة'),
                             const SizedBox(height: 8),
-                            TextField(
-                              controller: governorateController,
-                              decoration: InputDecoration(
-                                hintText: 'مثال: القاهرة',
-                                prefixIcon: const Icon(Icons.map, color: Color(0xFF13A9F6)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            _buildTextField(governorateController, 'مثال: القاهرة', Icons.map),
+                            const SizedBox(height: 16),
 
-                            const Text(
-                              'المدينة',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                            _buildSectionLabel('المدينة'),
                             const SizedBox(height: 8),
-                            TextField(
-                              controller: cityController,
-                              decoration: InputDecoration(
-                                hintText: 'مثال: مدينة نصر',
-                                prefixIcon: const Icon(Icons.location_city, color: Color(0xFF13A9F6)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            _buildTextField(cityController, 'مثال: مدينة نصر', Icons.location_city),
+                            const SizedBox(height: 16),
 
-                            const Text(
-                              'الحي',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                            _buildSectionLabel('الحي'),
                             const SizedBox(height: 8),
-                            TextField(
-                              controller: districtController,
-                              decoration: InputDecoration(
-                                hintText: 'مثال: التجمع الخامس',
-                                prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF13A9F6)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
+                            _buildTextField(districtController, 'مثال: التجمع الخامس', Icons.location_on_outlined),
+                            const SizedBox(height: 16),
 
                             // Worker Type (only for عامل)
                             if (selectedProfession == 'عامل') ...[
-                              const Text(
-                                'نوع الخدمة',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xFFE0E0E0)),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  children: [
-                                    RadioListTile<String>(
-                                      title: const Text('يومي'),
-                                      value: 'يومي',
-                                      groupValue: typeOfService,
-                                      onChanged: (val) => setState(() => typeOfService = val),
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                    RadioListTile<String>(
-                                      title: const Text('مقطوعية'),
-                                      value: 'مقطوعية',
-                                      groupValue: typeOfService,
-                                      onChanged: (val) => setState(() => typeOfService = val),
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              _buildSectionLabel('نوع الخدمة'),
+                              const SizedBox(height: 10),
+                              _buildServiceTypeRadioGroup(),
                             ],
                           ],
                         ),
@@ -350,7 +211,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
             ),
             // Buttons
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               color: Colors.white,
               child: Row(
                 children: [
@@ -370,18 +231,24 @@ class _FiltersScreenState extends State<FiltersScreen> {
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.black54,
+                        side: const BorderSide(color: Color(0xFFE0E0E0)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('مسح الفلاتر'),
+                      child: const Text('مسح الكل', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF13A9F6),
+                        backgroundColor: primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 3,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: _applyFilters,
-                      child: const Text('تطبيق الفلاتر'),
+                      child: const Text('تطبيق الفلاتر', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
                     ),
                   ),
                 ],
@@ -389,6 +256,107 @@ class _FiltersScreenState extends State<FiltersScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, color: const Color(0xFF13A9F6)),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfessionRadioGroup() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _buildRadioTile('عامل', 'عامل'),
+          _buildRadioTile('مقاول', 'مقاول'),
+          _buildRadioTile('شركة', 'شركة'),
+          _buildRadioTile('مهندس', 'مهندس'),
+          _buildRadioTile('متجر', 'متجر'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRadioTile(String title, String value) {
+    const primary = Color(0xFF13A9F6);
+    return RadioListTile<String>(
+      title: Text(title, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+      value: value,
+      groupValue: selectedProfession,
+      activeColor: primary,
+      onChanged: (val) => setState(() => selectedProfession = val),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      dense: true,
+    );
+  }
+
+  Widget _buildServiceTypeRadioGroup() {
+    const primary = Color(0xFF13A9F6);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          RadioListTile<String>(
+            title: const Text('يومي', style: TextStyle(fontSize: 14, color: Colors.black87)),
+            value: 'يومي',
+            groupValue: typeOfService,
+            activeColor: primary,
+            onChanged: (val) => setState(() => typeOfService = val),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            dense: true,
+          ),
+          RadioListTile<String>(
+            title: const Text('مقطوعية', style: TextStyle(fontSize: 14, color: Colors.black87)),
+            value: 'مقطوعية',
+            groupValue: typeOfService,
+            activeColor: primary,
+            onChanged: (val) => setState(() => typeOfService = val),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            dense: true,
+          ),
+        ],
       ),
     );
   }

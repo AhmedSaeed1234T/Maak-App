@@ -20,15 +20,12 @@ import 'screens/company_register_screen.dart';
 import 'screens/profile/profile_worker_screen.dart';
 import 'screens/profile/profile_engineer_screen.dart';
 import 'screens/profile/profile_company_screen.dart';
-
 void main() {
   setupServiceLocator();
   runApp(const MaakApp());
 }
-
 class MaakApp extends StatelessWidget {
   const MaakApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
