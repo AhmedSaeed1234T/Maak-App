@@ -20,7 +20,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   static Map<String, dynamic>? sessionCompanyData;
   static File? sessionImage;
 
-  int userTypeIndex = 0; 
+  int userTypeIndex = 0;
 
   // Controllers
   final _businessController = TextEditingController();
@@ -81,7 +81,10 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       _toast("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
-
+    if (_imageFile == null) {
+      _toast("يرجى اختيار صورة للملف الشخصي");
+      return;
+    }
     if (_passwordController.text != _confirmPasswordController.text) {
       _toast("كلمات المرور غير متطابقة");
       return;
@@ -136,7 +139,11 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       appBar: AppBar(
         title: const Text(
           "تسجيل شركة/متجر",
-          style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -160,14 +167,28 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withOpacity(0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.business, color: Colors.white, size: 40),
+                child: const Icon(
+                  Icons.business,
+                  color: Colors.white,
+                  size: 40,
+                ),
               ),
               const SizedBox(height: 24),
               const Text(
                 'إنشاء حساب الشركة',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -175,7 +196,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 28),
-              
+
               // Profile Image
               GestureDetector(
                 onTap: _pickImage,
@@ -193,7 +214,9 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                   child: CircleAvatar(
                     radius: 55,
                     backgroundColor: Color(0xFFF4F7FA),
-                    backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
+                    backgroundImage: _imageFile != null
+                        ? FileImage(_imageFile!)
+                        : null,
                     child: _imageFile == null
                         ? Icon(Icons.business, color: primary, size: 38)
                         : null,
@@ -205,7 +228,10 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                 onPressed: _pickImage,
                 icon: const Icon(Icons.edit, size: 18),
                 label: const Text("اختر شعار الشركة"),
-                style: TextButton.styleFrom(foregroundColor: primary, textStyle: const TextStyle(fontSize: 14)),
+                style: TextButton.styleFrom(
+                  foregroundColor: primary,
+                  textStyle: const TextStyle(fontSize: 14),
+                ),
               ),
               const SizedBox(height: 28),
 
@@ -213,7 +239,9 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
               Card(
                 elevation: 2,
                 shadowColor: primary.withOpacity(0.1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -222,7 +250,10 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                       _buildSectionLabel('نوع الحساب'),
                       const SizedBox(height: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: const Color(0xFFE0E0E0)),
                           borderRadius: BorderRadius.circular(12),
@@ -231,23 +262,43 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                           children: [
                             Expanded(
                               child: RadioListTile<int>(
-                                title: const Text('شركة', style: TextStyle(fontSize: 14, color: Colors.black87)),
+                                title: const Text(
+                                  'شركة',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                                 value: 0,
                                 groupValue: userTypeIndex,
                                 activeColor: primary,
-                                onChanged: (val) => setState(() => userTypeIndex = val!),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                onChanged: (val) =>
+                                    setState(() => userTypeIndex = val!),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
                                 dense: true,
                               ),
                             ),
                             Expanded(
                               child: RadioListTile<int>(
-                                title: const Text('متجر', style: TextStyle(fontSize: 14, color: Colors.black87)),
+                                title: const Text(
+                                  'متجر',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                                 value: 1,
                                 groupValue: userTypeIndex,
                                 activeColor: primary,
-                                onChanged: (val) => setState(() => userTypeIndex = val!),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                onChanged: (val) =>
+                                    setState(() => userTypeIndex = val!),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
                                 dense: true,
                               ),
                             ),
@@ -259,40 +310,89 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                       // Business Info
                       _buildSectionLabel('معلومات الشركة *'),
                       const SizedBox(height: 10),
-                      _buildTextField(_nameController, "اسم الشركة/المؤسسة *", Icons.business, isRequired: true),
+                      _buildTextField(
+                        _nameController,
+                        "اسم الشركة/المؤسسة *",
+                        Icons.business,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_ownerController, "اسم المالك *", Icons.person, isRequired: true),
+                      _buildTextField(
+                        _ownerController,
+                        "اسم المالك *",
+                        Icons.person,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_businessController, "اسم التخصص *", Icons.work, isRequired: true),
+                      _buildTextField(
+                        _businessController,
+                        "اسم التخصص *",
+                        Icons.work,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 20),
 
                       // Contact Info
                       _buildSectionLabel('معلومات الاتصال'),
                       const SizedBox(height: 10),
-                      _buildTextField(_emailController, "البريد الإلكتروني *", Icons.email, isRequired: true),
+                      _buildTextField(
+                        _emailController,
+                        "البريد الإلكتروني *",
+                        Icons.email,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_mobileController, "رقم الجوال *", Icons.phone, keyboardType: TextInputType.phone, isRequired: true),
+                      _buildTextField(
+                        _mobileController,
+                        "رقم الجوال *",
+                        Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextFieldMultiline(_bioController, "نبذة عن الشركة", Icons.description, lines: 3),
+                      _buildTextFieldMultiline(
+                        _bioController,
+                        "نبذة عن الشركة",
+                        Icons.description,
+                        lines: 3,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_referralController, "كيف عرفت هذا التطبيق؟", Icons.share),
+                      _buildTextField(
+                        _referralController,
+                        "كيف عرفت هذا التطبيق؟",
+                        Icons.share,
+                      ),
                       const SizedBox(height: 20),
 
                       // Location
                       _buildSectionLabel('الموقع الجغرافي'),
                       const SizedBox(height: 10),
-                      _buildTextField(_governorateController, "المحافظة", Icons.location_on),
+                      _buildTextField(
+                        _governorateController,
+                        "المحافظة",
+                        Icons.location_on,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_cityController, "المدينة", Icons.location_city),
+                      _buildTextField(
+                        _cityController,
+                        "المدينة",
+                        Icons.location_city,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_districtController, "الحي", Icons.location_on_outlined),
+                      _buildTextField(
+                        _districtController,
+                        "الحي",
+                        Icons.location_on_outlined,
+                      ),
                       const SizedBox(height: 20),
 
                       // Passwords
                       _buildSectionLabel('كلمة المرور *'),
                       const SizedBox(height: 10),
                       _buildPasswordField(
-                        _passwordController, 
+                        _passwordController,
                         "كلمة المرور *",
                         isPassword: true,
                         isVisible: _isPasswordVisible,
@@ -305,13 +405,14 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                       ),
                       const SizedBox(height: 16),
                       _buildPasswordField(
-                        _confirmPasswordController, 
+                        _confirmPasswordController,
                         "تأكيد كلمة المرور *",
                         isPassword: false,
                         isVisible: _isConfirmPasswordVisible,
                         onToggleVisibility: () {
                           setState(() {
-                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            _isConfirmPasswordVisible =
+                                !_isConfirmPasswordVisible;
                           });
                         },
                         isRequired: true,
@@ -327,10 +428,18 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             elevation: 4,
                           ),
-                          child: const Text('حفظ البيانات', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'حفظ البيانات',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -349,7 +458,11 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       alignment: Alignment.centerRight,
       child: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          color: Colors.black87,
+        ),
       ),
     );
   }
@@ -377,7 +490,10 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
         prefixIcon: Icon(icon, color: const Color(0xFF13A9F6)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -421,7 +537,10 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -440,7 +559,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   }
 
   Widget _buildPasswordField(
-    TextEditingController controller, 
+    TextEditingController controller,
     String label, {
     bool isPassword = true,
     required bool isVisible,
@@ -473,7 +592,10 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

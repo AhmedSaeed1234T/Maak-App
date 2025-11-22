@@ -31,8 +31,10 @@ class RegisterController {
           debugPrint(
             "Something happened while uploading image: $uploadedImageUrl",
           );
+          return true;
+        } else {
+          return false;
         }
-        return true;
       } else {
         print('Failed to register: ${response.body}');
         return false;

@@ -46,18 +46,27 @@ class ServiceProvider {
     }
   }
 
+  static String getLocation(Map<String, dynamic> json) {
+    final parts = ['governorate', 'city', 'district']
+        .map((key) {
+          return (json[key] == null || json[key] == "")
+              ? 'غير محدد'
+              : json[key];
+        }) // provide default
+        .toList();
+    return parts.join(' - '); // join with dash
+  }
+
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
     return ServiceProvider(
       name: json['name'] ?? '',
       skill: json['skill'] ?? '',
-      location:
-          '${json['governorate'] ?? 'غير محدد'} - ${json['city'] ?? 'غير محدد'} - ${json['district'] ?? 'غير محدد'}' ??
-          '',
+      location: getLocation(json),
       pay: json['pay']?.toString(),
       owner: json['owner']?.toString(),
       imageUrl: json['imageUrl'],
       isCompany: json['isCompany'] ?? false,
-      mobileNumber: json['mobileNumber']?.toString(),
+      mobileNumber: json['mobileNumber']?.toString().substring(2),
       email: json['email']?.toString(),
       locationOfServiceArea: json['locationOfServiceArea']?.toString(),
       typeOfService: json['typeOfService'] ?? '',

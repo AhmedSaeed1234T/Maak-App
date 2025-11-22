@@ -1,6 +1,7 @@
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:flutter/material.dart';
+
 class WorkerProfilePage extends StatelessWidget {
   final ServiceProvider provider;
   const WorkerProfilePage({super.key, required this.provider});
@@ -25,7 +26,13 @@ class WorkerProfilePage extends StatelessWidget {
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: primary.withOpacity(0.16), blurRadius: 14, offset: Offset(0,6))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withOpacity(0.16),
+                      blurRadius: 14,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: CircleAvatar(
                   radius: 50,
@@ -61,6 +68,7 @@ class WorkerProfilePage extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildDetailsSection(ServiceProvider provider) {
     const primary = Color(0xFF13A9F6);
     return Container(
@@ -98,8 +106,24 @@ class WorkerProfilePage extends StatelessWidget {
             primary,
           ),
           const Divider(),
-          _detailRow(Icons.attach_money, 'السعر', formatPay(provider), primary),
-          const Divider(),
+          if (!provider.isCompany) ...[
+            _detailRow(
+              Icons.attach_money,
+              'السعر',
+              formatPay(provider),
+              primary,
+            ),
+            const Divider(),
+          ],
+          if (provider.isCompany) ...[
+            _detailRow(
+              Icons.person,
+              'المالك',
+              provider.owner ?? 'غير متوفر',
+              primary,
+            ),
+            const Divider(),
+          ],
           _detailRow(
             Icons.work,
             'نوع الخدمة',
@@ -123,9 +147,18 @@ class WorkerProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(value, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+                Text(
+                  value,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                ),
               ],
             ),
           ),
@@ -133,6 +166,7 @@ class WorkerProfilePage extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildAboutSection(ServiceProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -140,6 +174,7 @@ class WorkerProfilePage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
+      width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

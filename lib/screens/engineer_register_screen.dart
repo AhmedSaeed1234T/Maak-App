@@ -83,7 +83,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       _toast("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
-
+    if (_imageFile == null) {
+      _toast("يرجى اختيار صورة للملف الشخصي");
+      return;
+    }
     if (_passwordController.text != _confirmPasswordController.text) {
       _toast("كلمات المرور غير متطابقة");
       return;
@@ -139,7 +142,11 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       appBar: AppBar(
         title: const Text(
           'تسجيل مقاول/مهندس',
-          style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -163,14 +170,28 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withOpacity(0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.engineering, color: Colors.white, size: 40),
+                child: const Icon(
+                  Icons.engineering,
+                  color: Colors.white,
+                  size: 40,
+                ),
               ),
               const SizedBox(height: 24),
               const Text(
                 'إنشاء حسابك',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -178,7 +199,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 28),
-              
+
               // Profile Image
               GestureDetector(
                 onTap: _pickImage,
@@ -196,7 +217,9 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                   child: CircleAvatar(
                     radius: 55,
                     backgroundColor: Color(0xFFF4F7FA),
-                    backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
+                    backgroundImage: _imageFile != null
+                        ? FileImage(_imageFile!)
+                        : null,
                     child: _imageFile == null
                         ? Icon(Icons.camera_alt, color: primary, size: 38)
                         : null,
@@ -208,7 +231,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                 onPressed: _pickImage,
                 icon: const Icon(Icons.edit, size: 18),
                 label: const Text("اختر صورتك"),
-                style: TextButton.styleFrom(foregroundColor: primary, textStyle: const TextStyle(fontSize: 14)),
+                style: TextButton.styleFrom(
+                  foregroundColor: primary,
+                  textStyle: const TextStyle(fontSize: 14),
+                ),
               ),
               const SizedBox(height: 28),
 
@@ -216,7 +242,9 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
               Card(
                 elevation: 2,
                 shadowColor: primary.withOpacity(0.1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -225,7 +253,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                       _buildSectionLabel('نوع الحساب'),
                       const SizedBox(height: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: const Color(0xFFE0E0E0)),
                           borderRadius: BorderRadius.circular(12),
@@ -234,23 +265,43 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                           children: [
                             Expanded(
                               child: RadioListTile<int>(
-                                title: const Text('مقاول', style: TextStyle(fontSize: 14, color: Colors.black87)),
+                                title: const Text(
+                                  'مقاول',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                                 value: 0,
                                 groupValue: userTypeIndex,
                                 activeColor: primary,
-                                onChanged: (val) => setState(() => userTypeIndex = val!),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                onChanged: (val) =>
+                                    setState(() => userTypeIndex = val!),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
                                 dense: true,
                               ),
                             ),
                             Expanded(
                               child: RadioListTile<int>(
-                                title: const Text('مهندس', style: TextStyle(fontSize: 14, color: Colors.black87)),
+                                title: const Text(
+                                  'مهندس',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                                 value: 1,
                                 groupValue: userTypeIndex,
                                 activeColor: primary,
-                                onChanged: (val) => setState(() => userTypeIndex = val!),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                onChanged: (val) =>
+                                    setState(() => userTypeIndex = val!),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
                                 dense: true,
                               ),
                             ),
@@ -264,45 +315,104 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          Expanded(child: _buildTextField(_firstNameController, 'الاسم الأول *', Icons.person, isRequired: true)),
+                          Expanded(
+                            child: _buildTextField(
+                              _firstNameController,
+                              'الاسم الأول *',
+                              Icons.person,
+                              isRequired: true,
+                            ),
+                          ),
                           const SizedBox(width: 12),
-                          Expanded(child: _buildTextField(_lastNameController, 'الاسم الأخير *', Icons.person, isRequired: true)),
+                          Expanded(
+                            child: _buildTextField(
+                              _lastNameController,
+                              'الاسم الأخير *',
+                              Icons.person,
+                              isRequired: true,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField(_emailController, 'البريد الإلكتروني *', Icons.email, isRequired: true),
+                      _buildTextField(
+                        _emailController,
+                        'البريد الإلكتروني *',
+                        Icons.email,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_mobileController, 'رقم الجوال *', Icons.phone, keyboardType: TextInputType.phone, isRequired: true),
+                      _buildTextField(
+                        _mobileController,
+                        'رقم الجوال *',
+                        Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 20),
 
                       // Professional Info
                       _buildSectionLabel('معلومات مهنية'),
                       const SizedBox(height: 10),
-                      _buildTextField(_specializationController, 'التخصص *', Icons.school, isRequired: true),
+                      _buildTextField(
+                        _specializationController,
+                        'التخصص *',
+                        Icons.school,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_salaryController, 'الأجر *', Icons.monetization_on, keyboardType: TextInputType.number, isRequired: true),
+                      _buildTextField(
+                        _salaryController,
+                        'الأجر *',
+                        Icons.monetization_on,
+                        keyboardType: TextInputType.number,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextFieldMultiline(_bioController, 'نبذة عنك', Icons.description, lines: 3),
+                      _buildTextFieldMultiline(
+                        _bioController,
+                        'نبذة عنك',
+                        Icons.description,
+                        lines: 3,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_referralController, 'كيف عرفت هذا التطبيق؟', Icons.share),
+                      _buildTextField(
+                        _referralController,
+                        'كيف عرفت هذا التطبيق؟',
+                        Icons.share,
+                      ),
                       const SizedBox(height: 20),
 
                       // Location
                       _buildSectionLabel('الموقع الجغرافي'),
                       const SizedBox(height: 10),
-                      _buildTextField(_governorateController, 'المحافظة', Icons.location_on),
+                      _buildTextField(
+                        _governorateController,
+                        'المحافظة',
+                        Icons.location_on,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_cityController, 'المدينة', Icons.location_city),
+                      _buildTextField(
+                        _cityController,
+                        'المدينة',
+                        Icons.location_city,
+                        isRequired: true,
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_districtController, 'الحي', Icons.location_on_outlined),
+                      _buildTextField(
+                        _districtController,
+                        'الحي',
+                        Icons.location_on_outlined,
+                      ),
                       const SizedBox(height: 20),
 
                       // Passwords
                       _buildSectionLabel('كلمة المرور *'),
                       const SizedBox(height: 10),
                       _buildPasswordField(
-                        _passwordController, 
-                        'كلمة المرور *', 
+                        _passwordController,
+                        'كلمة المرور *',
                         isPassword: true,
                         isVisible: _isPasswordVisible,
                         onToggleVisibility: () {
@@ -314,13 +424,14 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                       ),
                       const SizedBox(height: 16),
                       _buildPasswordField(
-                        _confirmPasswordController, 
+                        _confirmPasswordController,
                         'تأكيد كلمة المرور *',
                         isPassword: false,
                         isVisible: _isConfirmPasswordVisible,
                         onToggleVisibility: () {
                           setState(() {
-                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            _isConfirmPasswordVisible =
+                                !_isConfirmPasswordVisible;
                           });
                         },
                         isRequired: true,
@@ -336,10 +447,18 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             elevation: 4,
                           ),
-                          child: const Text('حفظ البيانات', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'حفظ البيانات',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -358,7 +477,11 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       alignment: Alignment.centerRight,
       child: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          color: Colors.black87,
+        ),
       ),
     );
   }
@@ -386,7 +509,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
         prefixIcon: Icon(icon, color: const Color(0xFF13A9F6)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -430,7 +556,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -449,7 +578,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   }
 
   Widget _buildPasswordField(
-    TextEditingController controller, 
+    TextEditingController controller,
     String label, {
     bool isPassword = true,
     required bool isVisible,
@@ -482,7 +611,10 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

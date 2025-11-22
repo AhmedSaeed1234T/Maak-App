@@ -5,11 +5,13 @@ import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
+
 class WorkerRegisterScreen extends StatefulWidget {
   const WorkerRegisterScreen({super.key});
   @override
   State<WorkerRegisterScreen> createState() => _WorkerRegisterScreenState();
 }
+
 class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final registerController = getIt<RegisterController>();
   final _formKey = GlobalKey<FormState>();
@@ -28,7 +30,10 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _jobController = TextEditingController();
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _governorateController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _districtController = TextEditingController();
+
   final _referralController = TextEditingController(); // New referral code
   String salaryType = "daily"; // daily = 0, fixed = 1
   bool _hidePassword = true;
@@ -63,25 +68,31 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       ),
     );
   }
+
   // Show simple toast
   void _toast(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
+
   // Register worker
   Future<void> _registerWorker() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       _toast("كلمات المرور غير متطابقة");
       return;
     }
-    final loc = await getCurrentLocation();
-    if (loc == null) return; // Stop if location not available
+    if (_imageFile == null) {
+      _toast("يرجى اختيار صورة للملف الشخصي");
+      return;
+    }
     final user = RegisterUserDto(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
       password: _passwordController.text.trim(),
-      district: _locationController.text.trim(),
+      district: _districtController.text.trim(),
+      governorate: _governorateController.text.trim(),
+      city: _cityController.text.trim(),
       providerType: "Worker",
       skill: _jobController.text.trim(),
       workerType: salaryType == "daily" ? 0 : 1,
@@ -133,17 +144,25 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                   onTap: _pickImage,
                   child: CircleAvatar(
                     radius: 60,
-                    backgroundImage:
-                        _imageFile != null ? FileImage(_imageFile!) : null,
+                    backgroundImage: _imageFile != null
+                        ? FileImage(_imageFile!)
+                        : null,
                     backgroundColor: const Color(0xFFE8F4FF),
                     child: _imageFile == null
-                        ? const Icon(Icons.camera_alt, size: 40, color: Color(0xFF13A9F6))
+                        ? const Icon(
+                            Icons.camera_alt,
+                            size: 40,
+                            color: Color(0xFF13A9F6),
+                          )
                         : null,
                   ),
                 ),
               ),
               const SizedBox(height: 8),
-              Text('انقر لتغيير الصورة', style: TextStyle(color: Colors.black54, fontSize: 13)),
+              Text(
+                'انقر لتغيير الصورة',
+                style: TextStyle(color: Colors.black54, fontSize: 13),
+              ),
               const SizedBox(height: 8),
               TextButton.icon(
                 onPressed: _pickImage,
@@ -167,214 +186,288 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-
-              // Section header
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text('معلومات الحساب', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
-              ),
-              const SizedBox(height: 12),
-
-              // Name fields
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _firstNameController,
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? "الاسم الاول مطلوب"
-                          : null,
-                      decoration: _buildDecoration("الاسم الاول", Icons.person),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lastNameController,
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? "الاسم الاخير مطلوب"
-                          : null,
-                      decoration: _buildDecoration("الاسم الاخر", Icons.person),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Email
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? "البريد الالكتروني مطلوب"
-                    : null,
-                decoration: _buildDecoration("البريد الالكتروني", Icons.email),
-              ),
-              const SizedBox(height: 16),
-
-              // Phone
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: _buildDecoration("رقم الجوال", Icons.phone),
-              ),
-              const SizedBox(height: 16),
-
-              // Job
-              TextFormField(
-                controller: _jobController,
-                decoration: _buildDecoration("المهنة", Icons.work),
-              ),
-              const SizedBox(height: 16),
-
-              // Salary Type Radio
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile(
-                        title: const Text("يومي"),
-                        value: "daily",
-                        groupValue: salaryType,
-                        onChanged: (v) => setState(() => salaryType = v!),
-                        contentPadding: EdgeInsets.zero,
+                      // Section header
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'معلومات الحساب',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: RadioListTile(
-                        title: const Text("مقطوعية"),
-                        value: "fixed",
-                        groupValue: salaryType,
-                        onChanged: (v) => setState(() => salaryType = v!),
-                        contentPadding: EdgeInsets.zero,
+                      const SizedBox(height: 12),
+
+                      // Name fields
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _firstNameController,
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? "الاسم الاول مطلوب"
+                                  : null,
+                              decoration: _buildDecoration(
+                                "الاسم الاول",
+                                Icons.person,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _lastNameController,
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? "الاسم الاخير مطلوب"
+                                  : null,
+                              decoration: _buildDecoration(
+                                "الاسم الاخر",
+                                Icons.person,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-              // Salary
-              TextFormField(
-                controller: _salaryController,
-                keyboardType: TextInputType.number,
-                decoration: _buildDecoration("الأجر", Icons.monetization_on).copyWith(hintText: 'مثال: 100'),
-              ),
-              const SizedBox(height: 16),
+                      // Email
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? "البريد الالكتروني مطلوب"
+                            : null,
+                        decoration: _buildDecoration(
+                          "البريد الالكتروني",
+                          Icons.email,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
-              // Bio
-              TextFormField(
-                controller: _bioController,
-                maxLines: 3,
-                decoration: _buildDecoration("نبذة عنك", Icons.description),
-              ),
-              const SizedBox(height: 16),
+                      // Phone
+                      TextFormField(
+                        controller: _phoneController,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? "رقم الجوال مطلوب"
+                            : null,
+                        keyboardType: TextInputType.phone,
+                        decoration: _buildDecoration("رقم الجوال", Icons.phone),
+                      ),
+                      const SizedBox(height: 16),
 
-              // Referral code
-              TextFormField(
-                controller: _referralController,
-                decoration: _buildDecoration("كيف عرفت هذا التطبيق؟", Icons.share).copyWith(helperText: 'مثال: صديق / اعلان'),
-              ),
-              const SizedBox(height: 16),
+                      // Job
+                      TextFormField(
+                        controller: _jobController,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? "المهنة مطلوبة"
+                            : null,
+                        decoration: _buildDecoration("المهنة", Icons.work),
+                      ),
+                      const SizedBox(height: 16),
 
-              // Location
-              TextFormField(
-                controller: _locationController,
-                decoration: _buildDecoration("الموقع", Icons.location_on),
-              ),
-              const SizedBox(height: 16),
+                      // Salary Type Radio
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFE0E0E0)),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: RadioListTile(
+                                title: const Text("يومي"),
+                                value: "daily",
+                                groupValue: salaryType,
+                                onChanged: (v) =>
+                                    setState(() => salaryType = v!),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            Expanded(
+                              child: RadioListTile(
+                                title: const Text("مقطوعية"),
+                                value: "fixed",
+                                groupValue: salaryType,
+                                onChanged: (v) =>
+                                    setState(() => salaryType = v!),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
-              // Password
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _hidePassword,
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "كلمة المرور مطلوبة";
-                  }
-                  if (v.length < 6) {
-                    return "كلمة المرور يجب ألا تقل عن 6 أحرف";
-                  }
-                  return null;
-                },
-                decoration: _buildDecoration("كلمة المرور", Icons.lock).copyWith(
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _hidePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: _primaryColor,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _hidePassword = !_hidePassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
+                      // Salary
+                      TextFormField(
+                        controller: _salaryController,
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? "الأجر مطلوب"
+                            : null,
+                        decoration: _buildDecoration(
+                          "الأجر",
+                          Icons.monetization_on,
+                        ).copyWith(hintText: 'مثال: 100'),
+                      ),
+                      const SizedBox(height: 16),
 
-              // Confirm Password
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: _hideConfirmPassword,
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "تأكيد كلمة المرور مطلوب";
-                  }
-                  if (v != _passwordController.text) {
-                    return "كلمات المرور غير متطابقة";
-                  }
-                  return null;
-                },
-                decoration: _buildDecoration("تأكيد كلمة المرور", Icons.lock).copyWith(
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _hideConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: _primaryColor,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _hideConfirmPassword = !_hideConfirmPassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
+                      // Bio
+                      TextFormField(
+                        controller: _bioController,
+                        maxLines: 3,
+                        decoration: _buildDecoration(
+                          "نبذة عنك",
+                          Icons.description,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
-              // Submit button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF13A9F6),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
-                  ),
-                  onPressed: () {
-                    if (!_formKey.currentState!.validate()) return;
-                    _registerWorker();
-                  },
-                  child: const Text(
-                    "حفظ",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
+                      // Referral code
+                      TextFormField(
+                        controller: _referralController,
+                        decoration: _buildDecoration(
+                          "كيف عرفت هذا التطبيق؟",
+                          Icons.share,
+                        ).copyWith(helperText: 'مثال: صديق / اعلان'),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Location
+                      TextFormField(
+                        controller: _governorateController,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? "المحافظة مطلوبة"
+                            : null,
+                        decoration: _buildDecoration(
+                          "المحافظة",
+                          Icons.location_on,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _cityController,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? "المدينة مطلوبة"
+                            : null,
+                        decoration: _buildDecoration(
+                          "المدينة",
+                          Icons.location_city,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _districtController,
+                        decoration: _buildDecoration(
+                          "الحي",
+                          Icons.location_on_outlined,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Password
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _hidePassword,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return "كلمة المرور مطلوبة";
+                          }
+                          if (v.length < 6) {
+                            return "كلمة المرور يجب ألا تقل عن 6 أحرف";
+                          }
+                          return null;
+                        },
+                        decoration: _buildDecoration("كلمة المرور", Icons.lock)
+                            .copyWith(
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _hidePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                  color: _primaryColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _hidePassword = !_hidePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Confirm Password
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: _hideConfirmPassword,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return "تأكيد كلمة المرور مطلوب";
+                          }
+                          if (v != _passwordController.text) {
+                            return "كلمات المرور غير متطابقة";
+                          }
+                          return null;
+                        },
+                        decoration:
+                            _buildDecoration(
+                              "تأكيد كلمة المرور",
+                              Icons.lock,
+                            ).copyWith(
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _hideConfirmPassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                  color: _primaryColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _hideConfirmPassword =
+                                        !_hideConfirmPassword;
+                                  });
+                                },
+                              ),
+                            ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Submit button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF13A9F6),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 4,
+                          ),
+                          onPressed: () {
+                            if (!_formKey.currentState!.validate()) return;
+                            _registerWorker();
+                          },
+                          child: const Text(
+                            "حفظ",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

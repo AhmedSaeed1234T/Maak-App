@@ -18,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<ServiceProvider> featuredProviders = [];
   int tabIndex = 0;
   late final searchcontroller searchController;
-  bool isLoading = false; 
+  bool isLoading = false;
 
   final List<String> tabs = [
     'المقاولين',
@@ -76,7 +76,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('لوحة التحكم', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'الصفحة الرئيسية',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0.5,
         actions: [
@@ -102,26 +109,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     shape: BoxShape.circle,
                     color: primary.withOpacity(0.15),
                   ),
-                  child: const Icon(Icons.home_outlined, color: primary, size: 24),
+                  child: const Icon(
+                    Icons.home_outlined,
+                    color: primary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('أهلاً بك!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
-                      Text('اكتشف مقدمي الخدمات المتاحين', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      const Text(
+                        'أهلاً بك!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'اكتشف مقدمي الخدمات المتاحين',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Search and categories card
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -133,18 +156,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         filled: true,
                         fillColor: Color(0xFFF5F7FA),
                         prefixIcon: const Icon(Icons.search, color: primary),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE0E0E0),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE0E0E0),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: primary, width: 2),
+                          borderSide: const BorderSide(
+                            color: primary,
+                            width: 2,
+                          ),
                         ),
                       ),
                       onChanged: (v) => setState(() => search = v),
@@ -163,16 +196,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           },
                           child: Container(
                             margin: const EdgeInsets.only(left: 10),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
-                              color: tabIndex == i ? primary : Color(0xFFF5F7FA),
+                              color: tabIndex == i
+                                  ? primary
+                                  : Color(0xFFF5F7FA),
                               borderRadius: BorderRadius.circular(20),
-                              border: tabIndex != i ? Border.all(color: Color(0xFFE0E0E0), width: 1) : null,
+                              border: tabIndex != i
+                                  ? Border.all(
+                                      color: Color(0xFFE0E0E0),
+                                      width: 1,
+                                    )
+                                  : null,
                             ),
                             child: Text(
                               tabs[i],
                               style: TextStyle(
-                                color: tabIndex == i ? Colors.white : Colors.black87,
+                                color: tabIndex == i
+                                    ? Colors.white
+                                    : Colors.black87,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
@@ -190,8 +235,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('مقدمو الخدمة المميزون', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
-                Text('عرض الكل', style: TextStyle(fontSize: 12, color: primary, fontWeight: FontWeight.w600)),
+                const Text(
+                  'مقدمو الخدمة المميزون',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  'عرض الكل',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -207,7 +266,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 240,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: featuredProviders.length >= 10 ? 10 : featuredProviders.length,
+                  itemCount: featuredProviders.length >= 10
+                      ? 10
+                      : featuredProviders.length,
                   itemBuilder: (ctx, i) {
                     final provider = featuredProviders[i];
                     return GestureDetector(
@@ -215,7 +276,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => WorkerProfilePage(provider: provider),
+                            builder: (context) =>
+                                WorkerProfilePage(provider: provider),
                           ),
                         );
                       },
@@ -225,7 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
                 ),
               ),
-            
+
             const SizedBox(height: 24),
           ],
         ),
@@ -239,12 +301,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 3,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onPressed: () => Navigator.pushNamed(context, '/payment'),
-                child: const Text('الدفع', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'الدفع',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -253,11 +320,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: primary,
                   side: const BorderSide(color: primary, width: 1.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onPressed: () => Navigator.pushNamed(context, '/payment'),
-                child: const Text('خدمة العملاء', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'خدمة العملاء',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
@@ -291,7 +363,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: CircleAvatar(
                 radius: 40,
                 backgroundColor: Color(0xFFF5F7FA),
-                backgroundImage: provider.imageUrl != null && provider.imageUrl!.isNotEmpty
+                backgroundImage:
+                    provider.imageUrl != null && provider.imageUrl!.isNotEmpty
                     ? NetworkImage(provider.imageUrl!)
                     : null,
                 child: provider.imageUrl == null || provider.imageUrl!.isEmpty
@@ -305,7 +378,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -313,20 +390,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '⭐ 4.8',
-                style: TextStyle(fontSize: 11, color: primary, fontWeight: FontWeight.w600),
-              ),
-            ),
           ],
         ),
       ),
