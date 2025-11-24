@@ -1,6 +1,7 @@
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -20,10 +21,12 @@ import 'screens/company_register_screen.dart';
 import 'screens/profile/profile_worker_screen.dart';
 import 'screens/profile/profile_engineer_screen.dart';
 import 'screens/profile/profile_company_screen.dart';
+
 void main() {
   setupServiceLocator();
   runApp(const MaakApp());
 }
+
 class MaakApp extends StatelessWidget {
   const MaakApp({super.key});
   @override
@@ -31,10 +34,7 @@ class MaakApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       locale: const Locale('ar', 'EG'),
-      supportedLocales: const [
-        Locale('ar', 'EG'),
-        Locale('en', 'US'), 
-      ],
+      supportedLocales: const [Locale('ar', 'EG'), Locale('en', 'US')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -43,13 +43,11 @@ class MaakApp extends StatelessWidget {
       builder: (context, child) {
         return Directionality(textDirection: TextDirection.rtl, child: child!);
       },
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Cairo',
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Cairo'),
       initialRoute: '/splash',
       routes: {
         '/splash': (_) => const SplashScreen(),
+        '/onboarding': (_) => const OnboardingScreen(),
         '/login': (_) => const LoginScreen(),
         '/register': (_) => const RegisterScreen(),
         '/select_account_type': (_) => const SelectAccountTypeScreen(),

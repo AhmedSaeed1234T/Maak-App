@@ -122,12 +122,12 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       'name': _nameController.text,
     };
 
-    final ok = await registerController.registerUser(company, _imageFile);
-    if (ok == true) {
+    final result = await registerController.registerUser(company, _imageFile);
+    if (result.success) {
       _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
-      _toast("حدث خطأ يرجى إعادة التسجيل");
+      _toast(result.arabicErrorMessage);
     }
   }
 

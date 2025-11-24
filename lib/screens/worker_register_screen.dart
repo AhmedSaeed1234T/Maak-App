@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
@@ -101,13 +100,13 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       referralUserName: _referralController.text.trim(), // Added referral
     );
 
-    final ok = await registerController.registerUser(user, _imageFile);
+    final result = await registerController.registerUser(user, _imageFile);
 
-    if (ok == true) {
+    if (result.success) {
       _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
-      _toast("حدث خطأ يرجي اعادة التسجيل");
+      _toast(result.arabicErrorMessage);
     }
   }
 

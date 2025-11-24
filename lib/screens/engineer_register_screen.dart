@@ -126,11 +126,13 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       'referralCode': user.referralUserName,
     };
 
-    if (await registerController.registerUser(user, _imageFile) == true) {
+    final result = await registerController.registerUser(user, _imageFile);
+
+    if (result.success) {
       _toast("تم تسجيل بياناتك بنجاح");
       Navigator.pop(context);
     } else {
-      _toast("حدث خطأ يرجي اعادة التسجيل");
+      _toast(result.arabicErrorMessage);
     }
   }
 

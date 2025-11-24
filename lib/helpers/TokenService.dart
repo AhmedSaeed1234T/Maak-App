@@ -67,12 +67,14 @@ class TokenService {
   Future<bool> refreshAccessToken() async {
     final refreshToken = await getRefreshToken();
     if (refreshToken == null) return false;
+    debugPrint("Sending to api currently");
     try {
       final response = await http.post(
         Uri.parse('$apiRoute/auth/refresh'),
         body: jsonEncode({'refreshToken': refreshToken}),
         headers: {'Content-Type': 'application/json'},
       );
+      debugPrint(response.toString());
       if (response.statusCode != 200) {
         debugPrint('Token refresh failed: ${response.body}');
         return false;
