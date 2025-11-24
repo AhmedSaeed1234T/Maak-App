@@ -18,6 +18,7 @@ class TokenService {
   // Keys for storage
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
+  static const _refreshTokenSavedAtKey = 'refresh_token_saved_at';
 
   /// Save both tokens
   Future<void> saveTokens({
@@ -29,9 +30,13 @@ class TokenService {
     _refreshToken = refreshToken;
     await _storage.write(key: _accessTokenKey, value: accessToken);
     await _storage.write(key: _refreshTokenKey, value: refreshToken);
+    await _storage.write(
+      key: _refreshTokenSavedAtKey,
+      value: DateTime.now().millisecondsSinceEpoch.toString(),
+    );
   }
 
-  /// Save both tokens
+  /// Save accessToken only
   Future<void> saveAccessToken({required String accessToken}) async {
     _accessToken = accessToken;
     await _storage.write(key: _accessTokenKey, value: accessToken);
@@ -62,6 +67,18 @@ class TokenService {
     _refreshToken = null;
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _refreshTokenSavedAtKey);
+  }
+
+  /// Returns true if the refreshToken was saved less than 2 weeks ago.
+  Future<bool> isRefreshTokenLocallyValid() async {
+    final token = await getRefreshToken();
+    final savedAtStr = await _storage.read(key: _refreshTokenSavedAtKey);
+    if (token == null || savedAtStr == null) return false;
+    final savedAt = int.tryParse(savedAtStr) ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
+    return (now - savedAt) < twoWeeksMs;
   }
 
   Future<bool> refreshAccessToken() async {

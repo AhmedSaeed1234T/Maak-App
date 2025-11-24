@@ -5,15 +5,25 @@ import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
+import 'package:abokamall/services/UserListCache.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:abokamall/helpers/HttpHelperMethods.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/helpers/apiroute.dart';
+import 'package:abokamall/helpers/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class searchcontroller {
+  final UserListCacheService _cacheService = getIt<UserListCacheService>();
+
   Future<List<ServiceProvider>> searchWorkers(
     String? firstName,
     String? lastName,
     String? profession,
-
     String? governorate,
     String? city,
     String? district,
@@ -23,19 +33,14 @@ class searchcontroller {
     int pageNumber,
   ) async {
     try {
-      List<ServiceProvider> providers = [];
       final tokenService = getIt<TokenService>();
       final accessToken = await tokenService.getAccessToken();
-      if (accessToken == null) {
-        return [];
-      }
-      ProviderType NewproviderType =
-          providerType ?? ProviderType.Workers; // default if null
-      // default if null
-      final url = Uri.parse(
-        '$apiRoute/search/${NewproviderType.name.toLowerCase()}', // use instance, not type
-      );
-      debugPrint(providerType!.name.toLowerCase());
+
+      // If no token, return cached users
+      if (accessToken == null) return _cacheService.loadCachedUsers();
+
+      ProviderType type = providerType ?? ProviderType.Workers;
+      final url = Uri.parse('$apiRoute/search/${type.name.toLowerCase()}');
 
       final body = {
         "firstName": firstName,
@@ -48,33 +53,40 @@ class searchcontroller {
         "basedOnPoints": basedOnPoints,
         "pageNumber": pageNumber,
       };
-      //Pagination should be implemented late
-      final response = await withTokenRetry((accessToken) async {
+
+      final response = await withTokenRetry((token) async {
         return await http.post(
           url,
           headers: {
-            'Authorization': 'Bearer $accessToken',
+            'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },
           body: jsonEncode(body),
         );
       });
-      debugPrint(response.statusCode.toString());
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        for (var item in data) {
-          providers.add(ServiceProvider.fromJson(item));
-        }
-        debugPrint(providers.toString());
+        final data = jsonDecode(response.body) as List;
+
+        final providers = data
+            .map(
+              (item) => ServiceProvider.fromJson(
+                item,
+              ).copyWith(cachedAt: DateTime.now()),
+            )
+            .toList();
+
+        // Cache the results for offline use
+        await _cacheService.cacheUsers(providers);
+
         return providers;
       } else {
-        // Handle error
-        print('Error: ${response.body}');
-        return [];
+        debugPrint('Search API error: ${response.body}');
+        return _cacheService.loadCachedUsers(); // fallback offline
       }
     } catch (e) {
-      debugPrint(e.toString());
-      return [];
+      debugPrint('Search error: $e');
+      return _cacheService.loadCachedUsers(); // fallback offline
     }
   }
 }

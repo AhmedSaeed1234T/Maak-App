@@ -39,6 +39,9 @@ dependencies:
   get_it: any
   flutter_secure_storage: any
   shared_preferences: ^2.2.2
+  connectivity_plus: ^5.0.2
+  hive_flutter: any
+  hive: any
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +53,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  hive_generator: any # for generating adapters
+  build_runner: any
+  analyzer: any
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

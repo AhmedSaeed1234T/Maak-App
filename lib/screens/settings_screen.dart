@@ -4,14 +4,36 @@ import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/models/UserProfile.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
   @override
   State<ProfileSettingsPage> createState() => _ProfileSettingsPageState();
 }
+
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
+  bool _isConnected = true;
+  Future<void> _checkConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+
+    setState(() {
+      _isConnected = connectivityResult != ConnectivityResult.none;
+    });
+
+    // Optional: show warning when offline
+    if (!_isConnected && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
   final ProfileController _controller = getIt<ProfileController>();
 
   bool _isLoading = true;
@@ -35,8 +57,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   void initState() {
     super.initState();
+    _checkConnection();
     _loadProfile();
   }
+
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
 
@@ -93,9 +117,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       });
     }
   }
+
   void _markAsChanged() {
     setState(() => _hasChanges = true);
   }
+
   Future<void> _saveProfile() async {
     if (!_hasChanges) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -233,10 +259,15 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF13A9F6),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 2,
                 ),
-                child: const Text('تغيير كلمة المرور', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'تغيير كلمة المرور',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -249,10 +280,15 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade500,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 2,
                 ),
-                child: const Text('تسجيل الخروج', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'تسجيل الخروج',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -263,9 +299,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _saveProfile,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _hasChanges ? const Color(0xFF13A9F6) : Colors.grey[400],
+                  backgroundColor: _hasChanges
+                      ? const Color(0xFF13A9F6)
+                      : Colors.grey[400],
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: _hasChanges ? 4 : 0,
                 ),
                 child: _isSaving
@@ -489,10 +529,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
         Row(
           children: [
-            Icon(
-              Icons.location_on_outlined,
-              color: const Color(0xFF13A9F6),
-            ),
+            Icon(Icons.location_on_outlined, color: const Color(0xFF13A9F6)),
             const SizedBox(width: 8),
             Text(
               'العنوان',

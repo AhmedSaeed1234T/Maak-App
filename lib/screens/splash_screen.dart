@@ -2,6 +2,7 @@ import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -38,33 +39,58 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  Future<bool> _isConnected() async {
+    final ConnectivityResult result = await Connectivity().checkConnectivity();
+    return result != ConnectivityResult.none;
+  }
+
   Future<void> _handleStartupFlow() async {
     try {
-      // Track the very first launch so we can show onboarding only once.
       final prefs = await SharedPreferences.getInstance();
-
       final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
-
-      // Slight delay so the splash is visible and the animation plays.
       await Future.delayed(const Duration(milliseconds: 800));
-
       if (!mounted) return;
-
       if (isFirstLaunch) {
         await prefs.setBool('is_first_launch', false);
         Navigator.pushReplacementNamed(context, '/onboarding');
         return;
       }
 
-      // Attempt to refresh the access token; fall back to login on failure.
-      debugPrint("I'm attempting refreshing wait");
+      // Network check
+      final hasNet = await _isConnected();
       final tokenService = getIt<TokenService>();
+      if (!hasNet) {
+        // Offline!
+        final isLocallyValid = await tokenService.isRefreshTokenLocallyValid();
+        if (isLocallyValid) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/login');
+            Future.delayed(const Duration(milliseconds: 200), () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('يجب الاتصال بالانترنت')),
+              );
+            });
+          }
+        }
+        return;
+      }
+      // Online flow - just try to refresh as before
+      debugPrint("I'm attempting refreshing wait");
       final refreshed = await tokenService.refreshAccessToken();
       if (!mounted) return;
       if (refreshed) {
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         Navigator.pushReplacementNamed(context, '/login');
+        if (mounted) {
+          Future.delayed(const Duration(milliseconds: 200), () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('حدث خطأ في الاتصال بالخادم')),
+            );
+          });
+        }
       }
     } catch (e, stack) {
       debugPrint('Splash flow failed: $e');

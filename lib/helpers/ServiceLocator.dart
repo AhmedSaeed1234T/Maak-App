@@ -1,9 +1,10 @@
-import 'package:abokamall/controllers/DashboardController.dart';
 import 'package:abokamall/controllers/LoginController.dart';
 import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/controllers/RegisterController.dart';
 import 'package:abokamall/controllers/SearchController.dart';
 import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/services/ProfileCacheService.dart';
+import 'package:abokamall/services/UserListCache.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
@@ -15,4 +16,6 @@ void setupServiceLocator() async {
   getIt.registerLazySingleton<ProfileController>(() => ProfileController());
   getIt.registerSingleton<TokenService>(TokenService());
   getIt.registerLazySingleton<searchcontroller>(() => searchcontroller());
+  getIt.registerSingleton<ProfileCacheService>(ProfileCacheService());
+  getIt.registerSingleton<UserListCacheService>(UserListCacheService());
 }

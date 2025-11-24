@@ -1,6 +1,11 @@
 import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/models/SearchResultDto.dart';
+import 'package:abokamall/models/ServiceProviderDto.dart';
+import 'package:abokamall/models/Subscription.dart';
+import 'package:abokamall/models/UserProfile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
@@ -22,8 +27,17 @@ import 'screens/profile/profile_worker_screen.dart';
 import 'screens/profile/profile_engineer_screen.dart';
 import 'screens/profile/profile_company_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(SubscriptionAdapter());
+  Hive.registerAdapter(ServiceProviderDtoAdapter());
+  Hive.registerAdapter(UserProfileAdapter());
+  Hive.registerAdapter(ServiceProviderAdapter());
+  await Hive.openBox<UserProfile>('currentUserProfile');
+  await Hive.openBox<ServiceProvider>('serviceProviderBox');
   setupServiceLocator();
+
   runApp(const MaakApp());
 }
 

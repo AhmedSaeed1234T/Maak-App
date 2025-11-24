@@ -7,15 +7,21 @@ import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/models/UserProfile.dart';
+import 'package:abokamall/services/ProfileCacheService.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ProfileController {
-  /// Helper method to wrap requests with token refresh
+  final ProfileCacheService _cacheService = getIt<ProfileCacheService>();
 
-  /// Fetch profile
-  Future<UserProfile?> fetchProfile() async {
+  /// Fetch profile with caching and offline support
+  Future<UserProfile?> fetchProfile({bool forceRefresh = false}) async {
     try {
+      // If we have valid cache and not forcing refresh, return cached
+      if (!forceRefresh && _cacheService.hasValidCache) {
+        return _cacheService.loadCachedProfile();
+      }
+
       final url = Uri.parse('$apiRoute/profile');
 
       final response = await withTokenRetry(
@@ -30,18 +36,25 @@ class ProfileController {
 
       if (response.statusCode != 200) {
         debugPrint('Profile fetch failed: ${response.body}');
-        return null;
+        // If API fails, return cached profile (if available)
+        return _cacheService.loadCachedProfile();
       }
 
       final data = jsonDecode(response.body);
-      return UserProfile.fromJson(data);
+      UserProfile profile = UserProfile.fromJson(data);
+
+      // Cache the profile
+      await _cacheService.cacheProfile(profile);
+
+      return profile;
     } catch (e) {
       debugPrint('Error fetching profile: $e');
-      return null;
+      // Return cached profile if offline / error
+      return _cacheService.loadCachedProfile();
     }
   }
 
-  /// Update profile
+  /// Update profile and refresh cache
   Future<bool> updateProfile({
     required String firstName,
     required String lastName,
@@ -97,6 +110,9 @@ class ProfileController {
         return false;
       }
 
+      // After successful update, refetch and cache profile
+      await fetchProfile(forceRefresh: true);
+
       return true;
     } catch (e) {
       debugPrint('Error updating profile: $e');
@@ -104,6 +120,7 @@ class ProfileController {
     }
   }
 
+  /// Logout
   Future<bool> logout() async {
     try {
       final tokenService = getIt<TokenService>();
@@ -117,11 +134,14 @@ class ProfileController {
         debugPrint('logout failed: ${response.body}');
         return false;
       }
+
       await tokenService.clearTokens();
+      // Clear cached profile on logout
+      await _cacheService.clearCache();
 
       return true;
     } catch (e) {
-      return false; // refresh failed
+      return false;
     }
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/models/RegisterClass.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +26,10 @@ class RegisterResult {
         return 'رقم الهاتف موجود بالفعل';
       case 'EmailAlreadyExists':
         return 'البريد الإلكتروني موجود بالفعل';
+      case 'ImageIsNull':
+        return 'يرجى رفع صورة الملف الشخصي';
+      case 'InvalidPaymentValue':
+        return 'قيمة الدفع غير صحيحة';
       default:
         return 'حدث خطأ في التسجيل: $errorCode';
     }
@@ -41,24 +44,54 @@ class RegisterController {
     final url = Uri.parse('$apiRoute/Auth/register');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(user.toJson()),
-      );
-      debugPrint(user.toJson().toString());
+      var request = http.MultipartRequest('POST', url);
+
+      // Add DTO fields as individual form fields
+      request.fields['firstName'] = user.firstName;
+      if (user.lastName != null) request.fields['lastName'] = user.lastName!;
+      request.fields['email'] = user.email;
+      request.fields['phoneNumber'] = user.phoneNumber;
+      request.fields['password'] = user.password;
+      if (user.governorate != null)
+        request.fields['governorate'] = user.governorate!;
+      if (user.city != null) request.fields['city'] = user.city!;
+      if (user.district != null) request.fields['district'] = user.district!;
+      if (user.bio != null) request.fields['bio'] = user.bio!;
+      if (user.providerType != null)
+        request.fields['providerType'] = user.providerType!;
+      if (user.skill != null) request.fields['skill'] = user.skill!;
+      if (user.workerType != null)
+        request.fields['workerType'] = user.workerType.toString();
+      if (user.business != null) request.fields['business'] = user.business!;
+      if (user.owner != null) request.fields['owner'] = user.owner!;
+      if (user.pay != null) request.fields['pay'] = user.pay.toString();
+      if (user.specialization != null)
+        request.fields['specialization'] = user.specialization!;
+      if (user.referralUserName != null && user.referralUserName!.isNotEmpty) {
+        request.fields['referralUserName'] = user.referralUserName!;
+      }
+      // Add other fields like Specialization, Owner, Business, etc., if needed
+
+      // Add profile image
+      if (profileImage != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'imageFile', // must match backend parameter name
+            profileImage.path,
+          ),
+        );
+      }
+
+      // Send request
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint('Status code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        String? uploadedImageUrl;
-        if (profileImage != null) {
-          uploadedImageUrl = await uploadProfileImage(profileImage);
-          debugPrint(
-            "Something happened while uploading image: $uploadedImageUrl",
-          );
-        }
         return RegisterResult(success: true);
       } else {
-        // Parse error response
         String? errorCode;
         String? errorMessage;
 
@@ -66,8 +99,7 @@ class RegisterController {
           final errorData = jsonDecode(response.body);
           errorCode = errorData['errorCode'];
           errorMessage = errorData['message'];
-        } catch (e) {
-          // If JSON parsing fails, use the raw response body
+        } catch (_) {
           errorMessage = response.body;
         }
 
