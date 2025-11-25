@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:abokamall/helpers/HttpHelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
@@ -19,8 +21,9 @@ import 'package:http/http.dart' as http;
 
 class searchcontroller {
   final UserListCacheService _cacheService = getIt<UserListCacheService>();
+  final TokenService _tokenService = getIt<TokenService>();
 
-  Future<List<ServiceProvider>> searchWorkers(
+  Future<List<ServiceProvider>> searchWorkers({
     String? firstName,
     String? lastName,
     String? profession,
@@ -29,18 +32,20 @@ class searchcontroller {
     String? district,
     int? workerType,
     ProviderType? providerType,
-    bool basedOnPoints,
-    int pageNumber,
-  ) async {
+    bool basedOnPoints = false,
+    int pageNumber = 1,
+  }) async {
     try {
-      final tokenService = getIt<TokenService>();
-      final accessToken = await tokenService.getAccessToken();
+      final accessToken = await _tokenService.getAccessToken();
+      final type = providerType ?? ProviderType.Workers;
+      final cacheKey = type.name.toLowerCase();
 
-      // If no token, return cached users
-      if (accessToken == null) return _cacheService.loadCachedUsers();
+      // If no token, return cached users for this provider type
+      if (accessToken == null) {
+        return _cacheService.loadCachedUsers(cacheKey);
+      }
 
-      ProviderType type = providerType ?? ProviderType.Workers;
-      final url = Uri.parse('$apiRoute/search/${type.name.toLowerCase()}');
+      final url = Uri.parse('$apiRoute/search/$cacheKey');
 
       final body = {
         "firstName": firstName,
@@ -55,14 +60,21 @@ class searchcontroller {
       };
 
       final response = await withTokenRetry((token) async {
-        return await http.post(
-          url,
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode(body),
-        );
+        return await http
+            .post(
+              url,
+              headers: {
+                'Authorization': 'Bearer $token',
+                'Content-Type': 'application/json',
+              },
+              body: jsonEncode(body),
+            )
+            .timeout(
+              const Duration(seconds: 8),
+              onTimeout: () {
+                throw TimeoutException("Request timed out");
+              },
+            );
       });
 
       if (response.statusCode == 200) {
@@ -76,17 +88,46 @@ class searchcontroller {
             )
             .toList();
 
-        // Cache the results for offline use
-        await _cacheService.cacheUsers(providers);
+        // Cache the results by provider type
+
+        // if they are the users in the main screen so cache them , search will cook things up
+        if (basedOnPoints == true) {
+          await _cacheService.cacheUsers(cacheKey, providers);
+        }
 
         return providers;
       } else {
         debugPrint('Search API error: ${response.body}');
-        return _cacheService.loadCachedUsers(); // fallback offline
+        if (basedOnPoints) {
+          return _cacheService.loadCachedUsers(cacheKey);
+        } else {
+          return []; // In case the user searched when the server is down
+        }
+      }
+    } on SocketException catch (e) {
+      debugPrint('Socket Timeout :  $e');
+      final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
+      if (basedOnPoints) {
+        return _cacheService.loadCachedUsers(cacheKey);
+      } else {
+        return []; // In case the user searched when the server is down
+      }
+    } on TimeoutException catch (e) {
+      debugPrint(' Timeout Exception:  $e');
+      final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
+      if (basedOnPoints) {
+        return _cacheService.loadCachedUsers(cacheKey);
+      } else {
+        return []; // In case the user searched when the server is down
       }
     } catch (e) {
       debugPrint('Search error: $e');
-      return _cacheService.loadCachedUsers(); // fallback offline
+      final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
+      if (basedOnPoints) {
+        return _cacheService.loadCachedUsers(cacheKey);
+      } else {
+        return []; // In case the user searched when the server is down
+      }
     }
   }
 }

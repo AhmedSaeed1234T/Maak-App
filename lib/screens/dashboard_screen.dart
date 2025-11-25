@@ -1,9 +1,11 @@
+import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/controllers/SearchController.dart';
-import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -15,10 +17,16 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String search = '';
+  Map<ProviderType, List<ServiceProvider>> cachedProviders = {};
   List<ServiceProvider> featuredProviders = [];
   int tabIndex = 0;
   late final searchcontroller searchController;
   bool isLoading = false;
+  bool hasInternet = true;
+  late final ProfileController profileController;
+
+  late final Connectivity _connectivity;
+  late final Stream<ConnectivityResult> _connectivityStream;
 
   final List<String> tabs = [
     'المقاولين',
@@ -40,34 +48,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     searchController = getIt<searchcontroller>();
-    _loadFeaturedProviders(providerTypes[0], true);
+    _connectivity = Connectivity();
+
+    // Listen for connectivity changes
+    _connectivityStream = _connectivity.onConnectivityChanged;
+    _connectivityStream.listen(_onConnectivityChanged);
+    profileController = getIt<ProfileController>();
+    // Load all provider types initially
+    _loadProfile();
+    _preloadAllProviders();
   }
 
-  Future<void> _loadFeaturedProviders(
-    ProviderType type,
-    bool basedOnPoints,
-  ) async {
-    setState(() => isLoading = true); // show loader
+  Future<void> _loadProfile() async {
+    await profileController.fetchProfile();
+  }
 
-    // simulate network delay if needed
-    await Future.delayed(const Duration(milliseconds: 500));
-    final providers = await searchController.searchWorkers(
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      type,
-      basedOnPoints,
-      1,
-    );
+  Future<void> _preloadAllProviders() async {
+    setState(() => isLoading = true);
+
+    for (var type in providerTypes) {
+      try {
+        final providers = await searchController.searchWorkers(
+          providerType: type,
+          basedOnPoints: true,
+        );
+        cachedProviders[type] = providers;
+      } catch (_) {
+        // Keep old cache if fetch fails
+        cachedProviders[type] = cachedProviders[type] ?? [];
+      }
+    }
 
     setState(() {
-      featuredProviders = providers;
-      isLoading = false; // hide loader
+      featuredProviders = cachedProviders[providerTypes[tabIndex]] ?? [];
+      isLoading = false;
     });
+  }
+
+  void _onConnectivityChanged(ConnectivityResult result) {
+    final connected = result != ConnectivityResult.none;
+    if (connected && !hasInternet) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم الاتصال بالإنترنت'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      _preloadAllProviders();
+    }
+    setState(() => hasInternet = connected);
+  }
+
+  Future<void> _loadFeaturedProviders(ProviderType type) async {
+    setState(() {
+      featuredProviders = cachedProviders[type] ?? [];
+      isLoading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -94,7 +136,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _loadFeaturedProviders(providerTypes[tabIndex], true),
+        onRefresh: hasInternet
+            ? () async => await _preloadAllProviders()
+            : () async {},
         color: primary,
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -139,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Search and categories card
+            // Search & categories
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(
@@ -150,40 +194,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'ابحث عن خدمة...',
-                        filled: true,
-                        fillColor: Color(0xFFF5F7FA),
-                        prefixIcon: const Icon(Icons.search, color: primary),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
+                    if (hasInternet) ...[
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'ابحث عن خدمة...',
+                          filled: true,
+                          fillColor: const Color(0xFFF5F7FA),
+                          prefixIcon: const Icon(Icons.search, color: primary),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE0E0E0),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE0E0E0),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: primary,
+                              width: 2,
+                            ),
                           ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: primary,
-                            width: 2,
-                          ),
-                        ),
+                        onChanged: (v) => setState(() => search = v),
+                        onTap: () => Navigator.pushNamed(context, '/filters'),
                       ),
-                      onChanged: (v) => setState(() => search = v),
-                      onTap: () => Navigator.pushNamed(context, '/filters'),
-                    ),
-                    const SizedBox(height: 14),
+
+                      const SizedBox(height: 14),
+                    ],
                     SizedBox(
                       height: 42,
                       child: ListView.builder(
@@ -192,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         itemBuilder: (ctx, i) => GestureDetector(
                           onTap: () {
                             setState(() => tabIndex = i);
-                            _loadFeaturedProviders(providerTypes[i], true);
+                            _loadFeaturedProviders(providerTypes[i]);
                           },
                           child: Container(
                             margin: const EdgeInsets.only(left: 10),
@@ -203,11 +250,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             decoration: BoxDecoration(
                               color: tabIndex == i
                                   ? primary
-                                  : Color(0xFFF5F7FA),
+                                  : const Color(0xFFF5F7FA),
                               borderRadius: BorderRadius.circular(20),
                               border: tabIndex != i
                                   ? Border.all(
-                                      color: Color(0xFFE0E0E0),
+                                      color: const Color(0xFFE0E0E0),
                                       width: 1,
                                     )
                                   : null,
@@ -230,8 +277,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
+
+            // Featured providers
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -244,7 +292,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  'عرض الكل',
+                  '',
                   style: TextStyle(
                     fontSize: 12,
                     color: primary,
@@ -255,7 +303,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Loading effect
             if (isLoading)
               const SizedBox(
                 height: 200,
@@ -272,22 +319,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   itemBuilder: (ctx, i) {
                     final provider = featuredProviders[i];
                     return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                WorkerProfilePage(provider: provider),
-                          ),
-                        );
-                      },
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WorkerProfilePage(provider: provider),
+                        ),
+                      ),
                       child: _buildProviderCard(provider),
                     );
                   },
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
                 ),
               ),
-
             const SizedBox(height: 24),
           ],
         ),
@@ -360,16 +403,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: Color(0xFFF5F7FA),
-                backgroundImage:
-                    provider.imageUrl != null && provider.imageUrl!.isNotEmpty
-                    ? NetworkImage(provider.imageUrl!)
-                    : null,
-                child: provider.imageUrl == null || provider.imageUrl!.isEmpty
-                    ? const Icon(Icons.person, size: 40, color: primary)
-                    : null,
+              child: SizedBox(
+                width: 80,
+                height: 80,
+                child: ClipOval(
+                  child:
+                      provider.imageUrl != null && provider.imageUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: provider.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: const Color(0xFFF5F7FA),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: const Color(0xFFF5F7FA),
+                            child: const Icon(
+                              Icons.person,
+                              size: 40,
+                              color: primary,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: const Color(0xFFF5F7FA),
+                          child: const Icon(
+                            Icons.person,
+                            size: 40,
+                            color: primary,
+                          ),
+                        ),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -390,7 +456,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: Colors.black54,
                 fontWeight: FontWeight.bold,

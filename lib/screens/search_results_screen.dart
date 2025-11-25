@@ -56,24 +56,31 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   Future<void> _fetchResults() async {
+    if (!mounted) {
+      debugPrint("The api has been done doing for real");
+      return;
+    }
     setState(() => isLoading = true);
 
     // <-- simulate network delay
     await Future.delayed(const Duration(seconds: 2));
 
     final result = await searchController.searchWorkers(
-      widget.firstName,
-      widget.lastName,
-      widget.specialization,
-      widget.governorate,
-      widget.city,
-      widget.district,
-      widget.workerType,
-      widget.providerType,
-      false,
-      currentPage,
+      firstName: widget.firstName,
+      lastName: widget.lastName,
+      profession: widget.specialization,
+      governorate: widget.governorate,
+      city: widget.city,
+      district: widget.district,
+      workerType: widget.workerType,
+      providerType: widget.providerType,
+      basedOnPoints: false,
+      pageNumber: currentPage,
     );
-
+    if (!mounted) {
+      debugPrint("The api has been done doing for real");
+      return;
+    }
     setState(() {
       providers.addAll(result);
       isLoading = false;
@@ -123,7 +130,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                   const SizedBox(height: 16),
                   Text(
                     'لم يتم العثور على نتائج',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -137,13 +148,20 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               children: [
                 Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '${providers.length} نتائج',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const Expanded(child: SizedBox()),
                     ],
@@ -159,7 +177,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       if (index >= providers.length) {
                         return Padding(
                           padding: const EdgeInsets.all(12),
-                          child: Center(child: CircularProgressIndicator(color: primary)),
+                          child: Center(
+                            child: CircularProgressIndicator(color: primary),
+                          ),
                         );
                       }
 
@@ -173,7 +193,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     );
   }
 
-  Widget _buildProviderCard(BuildContext context, ServiceProvider provider, Color primary) {
+  Widget _buildProviderCard(
+    BuildContext context,
+    ServiceProvider provider,
+    Color primary,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -208,7 +232,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                         shape: BoxShape.circle,
                         color: Colors.orange.withOpacity(0.15),
                       ),
-                      child: Icon(Icons.business, color: Colors.orange, size: 24),
+                      child: Icon(
+                        Icons.business,
+                        color: Colors.orange,
+                        size: 24,
+                      ),
                     )
                   : CircleAvatar(
                       radius: 28,
@@ -217,7 +245,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                           : null,
                       backgroundColor: Colors.grey[200],
                       child: provider.imageUrl == null
-                          ? Icon(Icons.person, color: Colors.grey[600], size: 28)
+                          ? Icon(
+                              Icons.person,
+                              color: Colors.grey[600],
+                              size: 28,
+                            )
                           : null,
                     ),
               const SizedBox(width: 14),
@@ -236,10 +268,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                     const SizedBox(height: 4),
                     Text(
                       provider.skill,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
@@ -303,7 +332,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       ),
                       child: const Text(
                         'عرض',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

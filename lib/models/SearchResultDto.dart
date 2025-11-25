@@ -115,19 +115,19 @@ class ServiceProvider extends HiveObject {
     return ServiceProvider(
       name: json['name'] ?? '',
       skill: json['skill'] ?? '',
-      location: getLocation(json),
+      location: json['location'] ?? getLocation(json),
       pay: json['pay']?.toString(),
       owner: json['owner']?.toString(),
       imageUrl: json['imageUrl'],
       isCompany: json['isCompany'] ?? false,
-      mobileNumber: json['mobileNumber']?.toString().substring(2),
+      mobileNumber: json['mobileNumber']?.toString(),
       email: json['email']?.toString(),
-      locationOfServiceArea: json['locationOfServiceArea']?.toString(),
+      locationOfServiceArea: json['locationOfServiceArea'] ?? getLocation(json),
       typeOfService: json['typeOfService'] ?? '',
       aboutMe: json['aboutMe']?.toString(),
       workerType: json['workerType'],
       cachedAt: DateTime.now(), // mark cache time
-      userName: json['userName'],
+      userName: json['userName'] ?? '',
     );
   }
 

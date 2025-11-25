@@ -114,6 +114,9 @@ class ProfileController {
       await fetchProfile(forceRefresh: true);
 
       return true;
+    } on SocketException catch (e) {
+      debugPrint('Socket Timeout :  $e');
+      return false;
     } catch (e) {
       debugPrint('Error updating profile: $e');
       return false;
@@ -140,6 +143,8 @@ class ProfileController {
       await _cacheService.clearCache();
 
       return true;
+    } on SocketException catch (e) {
+      return false;
     } catch (e) {
       return false;
     }

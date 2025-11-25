@@ -1,5 +1,6 @@
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class WorkerProfilePage extends StatelessWidget {
@@ -34,19 +35,40 @@ class WorkerProfilePage extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey[200],
-                  backgroundImage: provider.imageUrl != null
-                      ? NetworkImage(provider.imageUrl!)
-                      : null,
-                  child: provider.imageUrl == null
-                      ? Icon(
-                          provider.isCompany ? Icons.business : Icons.person,
-                          size: 50,
-                          color: Colors.grey[700],
-                        )
-                      : null,
+                child: SizedBox(
+                  width: 160,
+                  height: 160,
+                  child: ClipOval(
+                    child:
+                        provider.imageUrl != null &&
+                            provider.imageUrl!.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: provider.imageUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: const Color(0xFFF5F7FA),
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: const Color(0xFFF5F7FA),
+                              child: const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: primary,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: const Color(0xFFF5F7FA),
+                            child: const Icon(
+                              Icons.person,
+                              size: 40,
+                              color: primary,
+                            ),
+                          ),
+                  ),
                 ),
               ),
             ),

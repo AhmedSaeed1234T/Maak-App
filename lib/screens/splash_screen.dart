@@ -83,7 +83,12 @@ class _SplashScreenState extends State<SplashScreen>
       if (refreshed) {
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
-        Navigator.pushReplacementNamed(context, '/login');
+        final isLocallyValid = await tokenService.isRefreshTokenLocallyValid();
+        if (isLocallyValid) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
         if (mounted) {
           Future.delayed(const Duration(milliseconds: 200), () {
             ScaffoldMessenger.of(context).showSnackBar(

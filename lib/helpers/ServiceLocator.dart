@@ -10,12 +10,13 @@ import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
 
-void setupServiceLocator() async {
+Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<RegisterController>(() => RegisterController());
   getIt.registerLazySingleton<LoginController>(() => LoginController());
   getIt.registerLazySingleton<ProfileController>(() => ProfileController());
   getIt.registerSingleton<TokenService>(TokenService());
   getIt.registerLazySingleton<searchcontroller>(() => searchcontroller());
   getIt.registerSingleton<ProfileCacheService>(ProfileCacheService());
-  getIt.registerSingleton<UserListCacheService>(UserListCacheService());
+  final userListCacheService = await UserListCacheService.create();
+  getIt.registerSingleton<UserListCacheService>(userListCacheService);
 }

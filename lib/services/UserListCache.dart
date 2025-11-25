@@ -1,35 +1,58 @@
 import 'package:abokamall/models/SearchResultDto.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class UserListCacheService {
   static const String boxName = 'serviceProviderBox';
   static const int cacheTTLInDays = 2;
 
-  late Box<ServiceProvider> _box;
+  late final Box<List<dynamic>> _box;
 
-  UserListCacheService() {
-    _box = Hive.box<ServiceProvider>(boxName);
-  }
+  UserListCacheService._(this._box);
 
-  /// Cache a list of service providers
-  Future<void> cacheUsers(List<ServiceProvider> users) async {
-    await _box.clear(); // Clear old cache
-    for (var user in users) {
-      await _box.put(user.userName, user); // Use unique key (name or id)
+  /// Async factory to create the service and open the box if needed
+  static Future<UserListCacheService> create() async {
+    Box<List<dynamic>> box;
+    if (Hive.isBoxOpen(boxName)) {
+      box = Hive.box<List<dynamic>>(boxName);
+    } else {
+      box = await Hive.openBox<List<dynamic>>(boxName);
     }
+    return UserListCacheService._(box);
   }
 
-  /// Load users from cache (valid only if TTL not expired)
-  List<ServiceProvider> loadCachedUsers() {
+  /// Save a list of providers for a given type
+  Future<void> cacheUsers(
+    String providerType,
+    List<ServiceProvider> users,
+  ) async {
+    final jsonList = users.map((u) => u.toJson()).toList();
+    await _box.put(providerType, jsonList);
+  }
+
+  /// Load cached users for a given type
+  List<ServiceProvider> loadCachedUsers(String providerType) {
+    final cachedData =
+        _box.get(providerType, defaultValue: <dynamic>[]) as List;
     final now = DateTime.now();
-    return _box.values
-        .where((user) => now.difference(user.cachedAt).inDays <= cacheTTLInDays)
+
+    return cachedData
+        .map((json) {
+          // force type-safe conversion
+          final safeJson = Map<String, dynamic>.from(json as Map);
+          return ServiceProvider.fromJson(safeJson);
+        })
+        .where((u) => now.difference(u.cachedAt).inDays <= cacheTTLInDays)
         .toList();
   }
 
-  /// Check if we have valid cached users
-  bool get hasValidCache => loadCachedUsers().isNotEmpty;
+  /// Check if cache is valid for a type
+  bool hasValidCache(String providerType) =>
+      loadCachedUsers(providerType).isNotEmpty;
 
-  /// Clear cache
-  Future<void> clearCache() async => await _box.clear();
+  /// Clear cache for a type
+  Future<void> clearCache(String providerType) async =>
+      await _box.delete(providerType);
+
+  /// Clear all cache
+  Future<void> clearAllCache() async => await _box.clear();
 }

@@ -4,6 +4,7 @@ import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/models/UserProfile.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -250,14 +251,17 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             // Provider-Specific Section
             _buildProviderSpecificSection(providerType),
             const SizedBox(height: 24),
+
             // Change Password Button
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _changePassword,
+                onPressed: _isConnected ? _changePassword : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF13A9F6),
+                  backgroundColor: _isConnected
+                      ? const Color(0xFF13A9F6)
+                      : Colors.grey[400],
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -276,9 +280,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _logout,
+                onPressed: _isConnected ? _logout : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade500,
+                  backgroundColor: _isConnected
+                      ? Colors.red.shade500
+                      : Colors.grey[400],
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -297,7 +303,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _isSaving ? null : _saveProfile,
+                onPressed: _isConnected
+                    ? (_isSaving ? null : _saveProfile)
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _hasChanges
                       ? const Color(0xFF13A9F6)
@@ -359,7 +367,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   backgroundColor: Colors.grey[200],
                   backgroundImage: _newProfileImage != null
                       ? FileImage(_newProfileImage!)
-                      : (imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null)
+                      : (imageUrl.isNotEmpty
+                                ? CachedNetworkImageProvider(imageUrl)
+                                : null)
                             as ImageProvider?,
                   child: _newProfileImage == null && imageUrl.isEmpty
                       ? Icon(Icons.person, size: 60, color: Colors.grey[400])
@@ -864,10 +874,12 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit, color: Color(0xFF13A9F6)),
-            onPressed: onEdit,
-          ),
+          if (_isConnected) ...[
+            IconButton(
+              icon: const Icon(Icons.edit, color: Color(0xFF13A9F6)),
+              onPressed: onEdit,
+            ),
+          ],
         ],
       ),
     );

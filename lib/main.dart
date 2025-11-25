@@ -29,14 +29,21 @@ import 'screens/profile/profile_company_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive first
   await Hive.initFlutter();
   Hive.registerAdapter(SubscriptionAdapter());
   Hive.registerAdapter(ServiceProviderDtoAdapter());
   Hive.registerAdapter(UserProfileAdapter());
   Hive.registerAdapter(ServiceProviderAdapter());
-  await Hive.openBox<UserProfile>('currentUserProfile');
-  await Hive.openBox<ServiceProvider>('serviceProviderBox');
-  setupServiceLocator();
+
+  // Open boxes
+  if (!Hive.isBoxOpen('currentUserProfile')) {
+    await Hive.openBox<UserProfile>('currentUserProfile');
+  }
+  await Hive.openBox<List<dynamic>>('serviceProviderBox');
+  // Then set up service locator
+  await setupServiceLocator();
 
   runApp(const MaakApp());
 }
