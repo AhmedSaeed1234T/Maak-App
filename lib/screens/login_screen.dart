@@ -1,4 +1,5 @@
 import 'package:abokamall/controllers/LoginController.dart';
+import 'package:abokamall/helpers/OpenWhatsapp.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:flutter/material.dart';
 
@@ -169,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 12),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: GestureDetector(
+                      child: InkWell(
                         onTap: () {
                           Navigator.pushNamed(context, '/forgot');
                         },
@@ -186,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: GestureDetector(
+                      child: InkWell(
                         onTap: () {
                           Navigator.pushNamed(context, '/select_account_type');
                         },
@@ -245,7 +246,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+
               // Info Box
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.support_agent, size: 22),
+                  label: const Text(
+                    'تواصل مع خدمة العملاء عبر واتساب',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  onPressed: () async => await openWhatsapp(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF25D366),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 3,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(

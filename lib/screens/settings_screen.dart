@@ -29,7 +29,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات"),
-          backgroundColor: Colors.orange,
+          backgroundColor: Colors.black,
         ),
       );
     }
@@ -128,7 +128,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('لا توجد تغييرات للحفظ'),
-          backgroundColor: Colors.orange,
+          backgroundColor: Colors.black,
         ),
       );
       return;
@@ -253,11 +253,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             const SizedBox(height: 24),
 
             // Change Password Button
-            SizedBox(
+            /*SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _isConnected ? _changePassword : null,
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _isConnected
                       ? const Color(0xFF13A9F6)
@@ -274,31 +274,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 ),
               ),
             ),
+            */
             const SizedBox(height: 16),
             // Logout Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isConnected ? _logout : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isConnected
-                      ? Colors.red.shade500
-                      : Colors.grey[400],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  'تسجيل الخروج',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Save Button
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -334,7 +312,31 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       ),
               ),
             ),
+            const SizedBox(height: 24),
 
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isConnected ? _logout : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isConnected
+                      ? Colors.red.shade500
+                      : Colors.grey[400],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'تسجيل الخروج',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+
+            // Save Button
             const SizedBox(height: 16),
           ],
         ),
@@ -380,7 +382,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: _pickImage,
+                  onTap: (_isConnected) ? _pickImage : null,
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -948,7 +950,18 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   void _logout() async {
-    await _controller.logout();
+    bool allowed = await _controller.logout();
+    if (allowed == false) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('لا يوجد اتصال بالإنترنت - تعذر تسجيل الخروج'),
+            backgroundColor: Colors.black,
+          ),
+        );
+      }
+      return;
+    }
     Navigator.pushNamedAndRemoveUntil(context, '/splash', (route) => false);
   }
 

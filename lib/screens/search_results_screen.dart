@@ -114,12 +114,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           'نتائج البحث',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: providers.isEmpty && !isLoading
           ? Center(
@@ -151,20 +145,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${providers.length} نتائج',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const Expanded(child: SizedBox()),
-                    ],
                   ),
                 ),
                 Expanded(
@@ -247,7 +227,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       child: provider.imageUrl == null
                           ? Icon(
                               Icons.person,
-                              color: Colors.grey[600],
+                              color: Colors.blue[600],
+
                               size: 28,
                             )
                           : null,
@@ -297,7 +278,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _formatPay(provider),
+                    (provider.isCompany) ? "" : _formatPay(provider),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,

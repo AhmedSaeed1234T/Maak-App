@@ -1,9 +1,11 @@
 import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/controllers/SearchController.dart';
+import 'package:abokamall/helpers/NetworkStatus.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
+import 'package:abokamall/services/UserListCache.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<ServiceProvider> featuredProviders = [];
   int tabIndex = 0;
   late final searchcontroller searchController;
+  late final UserListCacheService userListCacheService;
   bool isLoading = false;
   bool hasInternet = true;
   late final ProfileController profileController;
@@ -47,6 +50,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    userListCacheService = getIt<UserListCacheService>();
+
     searchController = getIt<searchcontroller>();
     _connectivity = Connectivity();
 
@@ -67,15 +72,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => isLoading = true);
 
     for (var type in providerTypes) {
-      try {
-        final providers = await searchController.searchWorkers(
-          providerType: type,
-          basedOnPoints: true,
+      // Load from cache first
+      final cached = userListCacheService.loadCachedUsers(
+        type.name.toLowerCase(),
+      );
+
+      // If cache is expired and no internet, show message
+      if (cached.isEmpty &&
+          userListCacheService.isCacheExpired(type.name.toLowerCase()) &&
+          !hasInternet) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'انتهت صلاحية البيانات المخزنة مؤقتًا. يرجى الاتصال بالإنترنت.',
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
         );
-        cachedProviders[type] = providers;
-      } catch (_) {
-        // Keep old cache if fetch fails
-        cachedProviders[type] = cachedProviders[type] ?? [];
+      }
+
+      // Try fetching from server if internet is available
+      if (hasInternet) {
+        try {
+          final providers = await searchController.searchWorkers(
+            serverActionError: ServerActionError.unknown,
+            context: context,
+            providerType: type,
+            basedOnPoints: true,
+          );
+          cachedProviders[type] = providers;
+
+          // Cache the latest results
+          await userListCacheService.cacheUsers(type.toString(), providers);
+        } catch (_) {
+          // Keep old cache if fetch fails
+          cachedProviders[type] = cached.isNotEmpty ? cached : [];
+        }
+      } else {
+        // No internet, use cached data
+        cachedProviders[type] = cached;
       }
     }
 
@@ -313,9 +349,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 240,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: featuredProviders.length >= 10
-                      ? 10
-                      : featuredProviders.length,
+                  itemCount: featuredProviders.length,
                   itemBuilder: (ctx, i) {
                     final provider = featuredProviders[i];
                     return GestureDetector(
@@ -393,16 +427,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: primary.withOpacity(0.1),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle),
               child: SizedBox(
                 width: 80,
                 height: 80,
@@ -418,21 +443,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: CircularProgressIndicator(),
                             ),
                           ),
-                          errorWidget: (context, url, error) => Container(
-                            color: const Color(0xFFF5F7FA),
-                            child: const Icon(
-                              Icons.person,
-                              size: 40,
-                              color: primary,
-                            ),
+                          errorWidget: (context, url, error) {
+                            return provider.isCompany
+                                ? Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.orange.withOpacity(0.15),
+                                    ),
+                                    child: Icon(
+                                      Icons.business,
+                                      color: Colors.orange,
+                                      size: 24,
+                                    ),
+                                  )
+                                : CircleAvatar(
+                                    radius: 28,
+                                    backgroundColor: Colors.grey[200],
+                                    child: Icon(
+                                      Icons.person,
+                                      color: Colors.blue[600],
+                                      size: 28,
+                                    ),
+                                  );
+                          },
+                        )
+                      : provider.isCompany
+                      ? Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.orange.withOpacity(0.15),
+                          ),
+                          child: Icon(
+                            Icons.business,
+                            color: Colors.orange,
+                            size: 24,
                           ),
                         )
-                      : Container(
-                          color: const Color(0xFFF5F7FA),
-                          child: const Icon(
+                      : CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.grey[200],
+                          child: Icon(
                             Icons.person,
-                            size: 40,
-                            color: primary,
+                            color: Colors.blue[600],
+                            size: 28,
                           ),
                         ),
                 ),

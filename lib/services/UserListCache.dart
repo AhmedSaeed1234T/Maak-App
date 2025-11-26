@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class UserListCacheService {
   static const String boxName = 'serviceProviderBox';
-  static const int cacheTTLInDays = 2;
+  static const double cacheTTLInDays = 0.001;
 
   late final Box<List<dynamic>> _box;
 
@@ -29,25 +29,52 @@ class UserListCacheService {
     await _box.put(providerType, jsonList);
   }
 
-  /// Load cached users for a given type
+  /// Load cached users for a given type (only valid entries)
   List<ServiceProvider> loadCachedUsers(String providerType) {
     final cachedData =
         _box.get(providerType, defaultValue: <dynamic>[]) as List;
     final now = DateTime.now();
 
-    return cachedData
-        .map((json) {
-          // force type-safe conversion
-          final safeJson = Map<String, dynamic>.from(json as Map);
-          return ServiceProvider.fromJson(safeJson);
-        })
-        .where((u) => now.difference(u.cachedAt).inDays <= cacheTTLInDays)
-        .toList();
+    final validProviders = <ServiceProvider>[];
+    final expiredProviders = <ServiceProvider>[];
+
+    for (var json in cachedData) {
+      final safeJson = Map<String, dynamic>.from(json as Map);
+      final provider = ServiceProvider.fromJson(safeJson);
+      if (now.difference(provider.cachedAt).inDays <= cacheTTLInDays) {
+        validProviders.add(provider);
+      } else {
+        expiredProviders.add(provider);
+      }
+    }
+
+    // Remove expired entries from Hive
+    if (expiredProviders.isNotEmpty) {
+      final jsonList = validProviders.map((u) => u.toJson()).toList();
+      _box.put(providerType, jsonList);
+    }
+
+    return validProviders;
   }
 
-  /// Check if cache is valid for a type
+  /// Check if cache exists and is still valid
   bool hasValidCache(String providerType) =>
       loadCachedUsers(providerType).isNotEmpty;
+
+  /// Check if cache exists but is expired
+  bool isCacheExpired(String providerType) {
+    final cachedData =
+        _box.get(providerType, defaultValue: <dynamic>[]) as List;
+    if (cachedData.isEmpty) return false; // No cache at all
+
+    final now = DateTime.now();
+    // If any cached item is expired, we treat the cache as expired
+    return cachedData.any((json) {
+      final safeJson = Map<String, dynamic>.from(json as Map);
+      final provider = ServiceProvider.fromJson(safeJson);
+      return now.difference(provider.cachedAt).inDays > cacheTTLInDays;
+    });
+  }
 
   /// Clear cache for a type
   Future<void> clearCache(String providerType) async =>

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:abokamall/helpers/HttpHelperMethods.dart';
+import 'package:abokamall/helpers/NetworkStatus.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
@@ -24,6 +25,8 @@ class searchcontroller {
   final TokenService _tokenService = getIt<TokenService>();
 
   Future<List<ServiceProvider>> searchWorkers({
+    ServerActionError? serverActionError,
+    BuildContext? context,
     String? firstName,
     String? lastName,
     String? profession,
@@ -79,7 +82,7 @@ class searchcontroller {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
-
+        debugPrint('Search API response data: ${data.length} items found');
         final providers = data
             .map(
               (item) => ServiceProvider.fromJson(
@@ -97,6 +100,8 @@ class searchcontroller {
 
         return providers;
       } else {
+        serverActionError = ServerActionError.unknown;
+
         debugPrint('Search API error: ${response.body}');
         if (basedOnPoints) {
           return _cacheService.loadCachedUsers(cacheKey);
@@ -105,6 +110,8 @@ class searchcontroller {
         }
       }
     } on SocketException catch (e) {
+      serverActionError = ServerActionError.networkError;
+
       debugPrint('Socket Timeout :  $e');
       final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
       if (basedOnPoints) {
@@ -114,6 +121,8 @@ class searchcontroller {
       }
     } on TimeoutException catch (e) {
       debugPrint(' Timeout Exception:  $e');
+      serverActionError = ServerActionError.timeout;
+
       final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
       if (basedOnPoints) {
         return _cacheService.loadCachedUsers(cacheKey);

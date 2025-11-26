@@ -8,6 +8,7 @@ import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/models/UserProfile.dart';
 import 'package:abokamall/services/ProfileCacheService.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -126,6 +127,10 @@ class ProfileController {
   /// Logout
   Future<bool> logout() async {
     try {
+      // I need to add network check here
+      if (Connectivity().checkConnectivity() == ConnectivityResult.none) {
+        return false;
+      }
       final tokenService = getIt<TokenService>();
       final refreshToken = await tokenService.getRefreshToken();
       final response = await http.post(

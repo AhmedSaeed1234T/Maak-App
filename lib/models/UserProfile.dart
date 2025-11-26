@@ -69,7 +69,7 @@ class UserProfile extends HiveObject {
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       email: json['email'] ?? '',
-      phoneNumber: json['phoneNumber'] ?? '',
+      phoneNumber: json['phoneNumber'].substring(2) ?? '',
       imageUrl: json['imageUrl'] ?? '',
       points: json['points'] ?? 0,
       subscription: json['subscription'] != null
@@ -91,7 +91,7 @@ class UserProfile extends HiveObject {
       'firstName': firstName,
       'lastName': lastName,
       'email': email,
-      'phoneNumber': phoneNumber,
+      'phoneNumber': phoneNumber.substring(2),
       'imageUrl': imageUrl,
       'points': points,
       'subscription': subscription?.toJson(),

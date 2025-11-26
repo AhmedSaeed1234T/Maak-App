@@ -104,6 +104,7 @@ class ServiceProvider extends HiveObject {
   }
 
   // JSON -> Model
+  // JSON -> Model
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
     String getLocation(Map<String, dynamic> json) {
       final parts = ['governorate', 'city', 'district'].map((key) {
@@ -120,18 +121,20 @@ class ServiceProvider extends HiveObject {
       owner: json['owner']?.toString(),
       imageUrl: json['imageUrl'],
       isCompany: json['isCompany'] ?? false,
-      mobileNumber: json['mobileNumber']?.toString(),
+      mobileNumber: json['mobileNumber']?.toString().substring(2),
       email: json['email']?.toString(),
       locationOfServiceArea: json['locationOfServiceArea'] ?? getLocation(json),
       typeOfService: json['typeOfService'] ?? '',
       aboutMe: json['aboutMe']?.toString(),
       workerType: json['workerType'],
-      cachedAt: DateTime.now(), // mark cache time
+      cachedAt: json['cachedAt'] != null
+          ? DateTime.parse(json['cachedAt'])
+          : DateTime.now(),
       userName: json['userName'] ?? '',
     );
   }
 
-  // Model -> JSON
+  // Model -> JSON// Model -> JSON
   Map<String, dynamic> toJson() {
     return {
       'name': name,
@@ -141,12 +144,14 @@ class ServiceProvider extends HiveObject {
       'owner': owner,
       'imageUrl': imageUrl,
       'isCompany': isCompany,
-      'mobileNumber': mobileNumber,
+      'mobileNumber': mobileNumber?.substring(2),
       'email': email,
       'locationOfServiceArea': locationOfServiceArea,
       'typeOfService': typeOfService,
       'aboutMe': aboutMe,
       'workerType': workerType,
+      'cachedAt': cachedAt.toIso8601String(), // REQUIRED
+      'userName': userName,
     };
   }
 

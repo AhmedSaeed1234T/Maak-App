@@ -9,6 +9,7 @@ class FiltersScreen extends StatefulWidget {
   @override
   State<FiltersScreen> createState() => _FiltersScreenState();
 }
+
 class _FiltersScreenState extends State<FiltersScreen> {
   String? selectedProfession;
   String? typeOfService;
@@ -25,6 +26,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
     searchController = getIt<searchcontroller>();
     super.initState();
   }
+
   @override
   void dispose() {
     firstNameController.dispose();
@@ -35,11 +37,13 @@ class _FiltersScreenState extends State<FiltersScreen> {
     districtController.dispose();
     super.dispose();
   }
+
   int? _mapTypeOfServiceToWorkerType() {
     if (typeOfService == 'يومي') return 0;
     if (typeOfService == 'مقطوعية') return 1;
     return null;
   }
+
   ProviderType _mapProfessionToProviderType(String? profession) {
     switch (profession) {
       case 'مهندس':
@@ -55,6 +59,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
         return ProviderType.Workers;
     }
   }
+
   Future<void> _applyFilters() async {
     if (selectedProfession == null) {
       ScaffoldMessenger.of(
@@ -90,22 +95,30 @@ class _FiltersScreenState extends State<FiltersScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        title: const Text('خيارات البحث', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'خيارات البحث',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         elevation: 0.5,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -119,7 +132,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             shape: BoxShape.circle,
                             color: primary.withOpacity(0.15),
                           ),
-                          child: const Icon(Icons.filter_list, color: primary, size: 26),
+                          child: const Icon(
+                            Icons.filter_list,
+                            color: primary,
+                            size: 26,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -128,11 +145,18 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             children: [
                               const Text(
                                 'البحث المتقدم',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
                               ),
                               Text(
                                 'قم بتصفية النتائج حسب احتياجاتك',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
                               ),
                             ],
                           ),
@@ -155,7 +179,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             // First Name
                             _buildSectionLabel("الاسم الأول"),
                             const SizedBox(height: 8),
-                            _buildTextField(firstNameController, 'ابحث بالاسم الأول...', Icons.person),
+                            _buildTextField(
+                              firstNameController,
+                              'ابحث بالاسم الأول...',
+                              Icons.person,
+                            ),
                             const SizedBox(height: 16),
 
                             // Last Name
@@ -163,14 +191,22 @@ class _FiltersScreenState extends State<FiltersScreen> {
                                 selectedProfession != 'متجر') ...[
                               _buildSectionLabel("اسم العائلة"),
                               const SizedBox(height: 8),
-                              _buildTextField(lastNameController, 'ابحث باسم العائلة...', Icons.person_outline),
+                              _buildTextField(
+                                lastNameController,
+                                'ابحث باسم العائلة...',
+                                Icons.person_outline,
+                              ),
                               const SizedBox(height: 16),
                             ],
 
                             // Specialization
                             _buildSectionLabel("التخصص"),
                             const SizedBox(height: 8),
-                            _buildTextField(specializationController, 'ابحث التخصص ...', Icons.work),
+                            _buildTextField(
+                              specializationController,
+                              'ابحث التخصص ...',
+                              Icons.work,
+                            ),
                             const SizedBox(height: 16),
 
                             // Profession Radio Buttons
@@ -182,17 +218,29 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             // Location fields
                             _buildSectionLabel('المحافظة'),
                             const SizedBox(height: 8),
-                            _buildTextField(governorateController, 'مثال: القاهرة', Icons.map),
+                            _buildTextField(
+                              governorateController,
+                              'مثال: القاهرة',
+                              Icons.map,
+                            ),
                             const SizedBox(height: 16),
 
                             _buildSectionLabel('المدينة'),
                             const SizedBox(height: 8),
-                            _buildTextField(cityController, 'مثال: مدينة نصر', Icons.location_city),
+                            _buildTextField(
+                              cityController,
+                              'مثال: مدينة نصر',
+                              Icons.location_city,
+                            ),
                             const SizedBox(height: 16),
 
                             _buildSectionLabel('الحي'),
                             const SizedBox(height: 8),
-                            _buildTextField(districtController, 'مثال: التجمع الخامس', Icons.location_on_outlined),
+                            _buildTextField(
+                              districtController,
+                              'مثال: التجمع الخامس',
+                              Icons.location_on_outlined,
+                            ),
                             const SizedBox(height: 16),
 
                             // Worker Type (only for عامل)
@@ -232,10 +280,18 @@ class _FiltersScreenState extends State<FiltersScreen> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.black54,
                         side: const BorderSide(color: Color(0xFFE0E0E0)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('مسح الكل', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'مسح الكل',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -243,12 +299,21 @@ class _FiltersScreenState extends State<FiltersScreen> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 3,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: _applyFilters,
-                      child: const Text('تطبيق الفلاتر', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                      child: const Text(
+                        'تطبيق الفلاتر',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -271,7 +336,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, IconData icon) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint,
+    IconData icon,
+  ) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
@@ -279,7 +348,10 @@ class _FiltersScreenState extends State<FiltersScreen> {
         prefixIcon: Icon(icon, color: const Color(0xFF13A9F6)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
@@ -318,7 +390,10 @@ class _FiltersScreenState extends State<FiltersScreen> {
   Widget _buildRadioTile(String title, String value) {
     const primary = Color(0xFF13A9F6);
     return RadioListTile<String>(
-      title: Text(title, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 14, color: Colors.black87),
+      ),
       value: value,
       groupValue: selectedProfession,
       activeColor: primary,
@@ -339,21 +414,33 @@ class _FiltersScreenState extends State<FiltersScreen> {
       child: Column(
         children: [
           RadioListTile<String>(
-            title: const Text('يومي', style: TextStyle(fontSize: 14, color: Colors.black87)),
+            title: const Text(
+              'يومي',
+              style: TextStyle(fontSize: 14, color: Colors.black87),
+            ),
             value: 'يومي',
             groupValue: typeOfService,
             activeColor: primary,
             onChanged: (val) => setState(() => typeOfService = val),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 4,
+              vertical: 2,
+            ),
             dense: true,
           ),
           RadioListTile<String>(
-            title: const Text('مقطوعية', style: TextStyle(fontSize: 14, color: Colors.black87)),
+            title: const Text(
+              'مقطوعية',
+              style: TextStyle(fontSize: 14, color: Colors.black87),
+            ),
             value: 'مقطوعية',
             groupValue: typeOfService,
             activeColor: primary,
             onChanged: (val) => setState(() => typeOfService = val),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 4,
+              vertical: 2,
+            ),
             dense: true,
           ),
         ],

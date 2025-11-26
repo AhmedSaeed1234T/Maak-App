@@ -25,16 +25,7 @@ class WorkerProfilePage extends StatelessWidget {
             Center(
               child: Container(
                 padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: primary.withOpacity(0.16),
-                      blurRadius: 14,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle),
                 child: SizedBox(
                   width: 160,
                   height: 160,
@@ -60,12 +51,26 @@ class WorkerProfilePage extends StatelessWidget {
                               ),
                             ),
                           )
-                        : Container(
-                            color: const Color(0xFFF5F7FA),
-                            child: const Icon(
+                        : provider.isCompany
+                        ? Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.orange.withOpacity(0.15),
+                            ),
+                            child: Icon(
+                              Icons.business,
+                              color: Colors.orange,
+                              size: 50,
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Colors.grey[200],
+                            child: Icon(
                               Icons.person,
-                              size: 40,
-                              color: primary,
+                              color: Colors.grey[600],
+                              size: 28,
                             ),
                           ),
                   ),
