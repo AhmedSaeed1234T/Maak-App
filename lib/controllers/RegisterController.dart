@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:abokamall/helpers/apiroute.dart';
+import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/models/RegisterClass.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -30,6 +31,8 @@ class RegisterResult {
         return 'يرجى رفع صورة الملف الشخصي';
       case 'InvalidPaymentValue':
         return 'قيمة الدفع غير صحيحة';
+      case 'InvalidInput':
+        return 'هناك خطأ في البيانات المدخلة , اعد كتابتها بشكل سليم';
       default:
         return 'حدث خطأ في التسجيل: $errorCode';
     }
@@ -88,8 +91,19 @@ class RegisterController {
 
       debugPrint('Status code: ${response.statusCode}');
       debugPrint('Body: ${response.body}');
-
+      final data = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final expiryDate =
+            DateTime.tryParse(data['expiryDate']) ??
+            DateTime.now().add(Duration(days: 30));
+        debugPrint("Print now");
+        debugPrint(expiryDate.toString());
+        debugPrint(user.email);
+        debugPrint(user.phoneNumber);
+
+        await saveSubscriptionForUser(user.email, expiryDate);
+        await saveSubscriptionForUser(user.phoneNumber, expiryDate);
+
         return RegisterResult(success: true);
       } else {
         String? errorCode;

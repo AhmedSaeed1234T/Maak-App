@@ -115,7 +115,7 @@ class WorkerProfilePage extends StatelessWidget {
           _detailRow(
             Icons.phone,
             'رقم الهاتف',
-            provider.mobileNumber ?? 'غير متوفر',
+            provider.mobileNumber.toString().substring(2),
             primary,
           ),
           const Divider(),

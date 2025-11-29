@@ -1,11 +1,15 @@
 import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/backgroundServices.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:abokamall/models/ServiceProviderDto.dart';
 import 'package:abokamall/models/Subscription.dart';
 import 'package:abokamall/models/UserProfile.dart';
+import 'package:abokamall/screens/subscription_test_screen.dart';
+import 'package:abokamall/services/NotificationService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
@@ -29,7 +33,23 @@ import 'screens/profile/profile_company_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // await NotificationService.initialize();
 
+  // Initialize WorkManager
+  /*
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false, // Production mode
+  );
+
+  // Register a periodic task to check subscription daily
+  Workmanager().registerPeriodicTask(
+    "subscriptionCheckTask",
+    checkSubscriptionTask,
+    frequency: const Duration(hours: 24), // runs daily
+    initialDelay: const Duration(minutes: 5), // first run delay
+  );
+  */
   // Initialize Hive first
   await Hive.initFlutter();
   Hive.registerAdapter(SubscriptionAdapter());

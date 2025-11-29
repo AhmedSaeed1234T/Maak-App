@@ -1,3 +1,5 @@
+import 'package:abokamall/helpers/ContextFunctions.dart';
+import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
@@ -33,7 +35,7 @@ class SearchResultsPage extends StatefulWidget {
 class _SearchResultsPageState extends State<SearchResultsPage> {
   final searchController = getIt<searchcontroller>();
   final ScrollController _scrollController = ScrollController();
-
+  late TokenService tokenService = getIt<TokenService>();
   List<ServiceProvider> providers = [];
   bool isLoading = false;
   bool hasMore = true;
@@ -42,6 +44,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   @override
   void initState() {
+    tokenService = getIt<TokenService>();
+
+    checkSessionValidity(context, tokenService);
     super.initState();
     _fetchResults();
 

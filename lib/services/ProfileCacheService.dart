@@ -4,8 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 class ProfileCacheService {
   static const String boxName = 'currentUserProfile';
   static const String key = 'profile';
-  static const int cacheTTLInDays = 2;
-
+  static const Duration cacheTTL = Duration(days: 2);
   late Box<UserProfile> _box;
 
   ProfileCacheService() {
@@ -14,6 +13,7 @@ class ProfileCacheService {
 
   /// Save profile to cache
   Future<void> cacheProfile(UserProfile profile) async {
+    profile.cachedAt = DateTime.now(); // Ensure cachedAt is set
     await _box.put(key, profile);
   }
 
@@ -23,9 +23,9 @@ class ProfileCacheService {
     if (cachedProfile == null) return null;
 
     final now = DateTime.now();
-    final age = now.difference(cachedProfile.cachedAt).inDays;
+    final ageInSeconds = now.difference(cachedProfile.cachedAt).inSeconds;
 
-    if (age > cacheTTLInDays) {
+    if (ageInSeconds > cacheTTL.inSeconds) {
       // Cache expired
       return null;
     }

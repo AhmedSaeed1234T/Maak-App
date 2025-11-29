@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'SearchResultDto.g.dart'; // Hive adapter generator
 
-@HiveType(typeId: 4) // Unique typeId for Hive
+@HiveType(typeId: 4)
 class ServiceProvider extends HiveObject {
   @HiveField(0)
   final String name;
@@ -44,7 +44,7 @@ class ServiceProvider extends HiveObject {
   final String? aboutMe;
 
   @HiveField(13)
-  final DateTime cachedAt; // For cache expiry
+  final DateTime cachedAt; // final, immutable
 
   @HiveField(14)
   final String userName;
@@ -66,6 +66,7 @@ class ServiceProvider extends HiveObject {
     required this.userName,
     DateTime? cachedAt,
   }) : cachedAt = cachedAt ?? DateTime.now();
+
   ServiceProvider copyWith({
     String? name,
     String? skill,
@@ -103,8 +104,6 @@ class ServiceProvider extends HiveObject {
     );
   }
 
-  // JSON -> Model
-  // JSON -> Model
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
     String getLocation(Map<String, dynamic> json) {
       final parts = ['governorate', 'city', 'district'].map((key) {
@@ -121,7 +120,7 @@ class ServiceProvider extends HiveObject {
       owner: json['owner']?.toString(),
       imageUrl: json['imageUrl'],
       isCompany: json['isCompany'] ?? false,
-      mobileNumber: json['mobileNumber']?.toString().substring(2),
+      mobileNumber: json['mobileNumber']?.toString(),
       email: json['email']?.toString(),
       locationOfServiceArea: json['locationOfServiceArea'] ?? getLocation(json),
       typeOfService: json['typeOfService'] ?? '',
@@ -134,7 +133,6 @@ class ServiceProvider extends HiveObject {
     );
   }
 
-  // Model -> JSON// Model -> JSON
   Map<String, dynamic> toJson() {
     return {
       'name': name,
@@ -144,32 +142,14 @@ class ServiceProvider extends HiveObject {
       'owner': owner,
       'imageUrl': imageUrl,
       'isCompany': isCompany,
-      'mobileNumber': mobileNumber?.substring(2),
+      'mobileNumber': mobileNumber,
       'email': email,
       'locationOfServiceArea': locationOfServiceArea,
       'typeOfService': typeOfService,
       'aboutMe': aboutMe,
       'workerType': workerType,
-      'cachedAt': cachedAt.toIso8601String(), // REQUIRED
+      'cachedAt': cachedAt.toIso8601String(),
       'userName': userName,
     };
-  }
-
-  // Optional helper: human-readable skill
-  static String? returnSuitableSkillName(String skill) {
-    switch (skill) {
-      case 'Company':
-        return 'شركة';
-      case 'Contractor':
-        return 'مقاول';
-      case 'Engineer':
-        return 'مهندس';
-      case 'Worker':
-        return 'عامل';
-      case 'Marketplace':
-        return 'متجر';
-      default:
-        return skill;
-    }
   }
 }

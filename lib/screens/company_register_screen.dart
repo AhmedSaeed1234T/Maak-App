@@ -43,24 +43,11 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   // Password visibility
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool isRegistering = false;
 
   @override
   void initState() {
     super.initState();
-    if (sessionCompanyData != null) {
-      _nameController.text = sessionCompanyData!['name'] ?? '';
-      _businessController.text = sessionCompanyData!['business'] ?? '';
-      _ownerController.text = sessionCompanyData!['owner'] ?? '';
-      _emailController.text = sessionCompanyData!['email'] ?? '';
-      _mobileController.text = sessionCompanyData!['phoneNumber'] ?? '';
-      _bioController.text = sessionCompanyData!['bio'] ?? '';
-      _passwordController.text = sessionCompanyData!['password'] ?? '';
-      _referralController.text = sessionCompanyData!['referralUserName'] ?? '';
-      _governorateController.text = sessionCompanyData!['governorate'] ?? '';
-      _cityController.text = sessionCompanyData!['city'] ?? '';
-      _districtController.text = sessionCompanyData!['district'] ?? '';
-    }
-    _imageFile = sessionImage;
   }
 
   Future<void> _pickImage() async {
@@ -89,6 +76,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       _toast("كلمات المرور غير متطابقة");
       return;
     }
+    setState(() => isRegistering = true);
 
     final company = RegisterUserDto(
       firstName: _nameController.text.trim(), // Business Name
@@ -107,25 +95,15 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
     );
 
     // Save session
-    sessionCompanyData = {
-      'business': company.business,
-      'owner': company.owner,
-      'email': company.email,
-      'phoneNumber': company.phoneNumber,
-      'bio': company.bio,
-      'password': company.password,
-      'referralUserName': company.referralUserName,
-      'providerType': company.providerType,
-      'governorate': _governorateController.text,
-      'city': _cityController.text,
-      'district': _districtController.text,
-      'name': _nameController.text,
-    };
 
     final result = await registerController.registerUser(company, _imageFile);
+    setState(() => isRegistering = false);
+
     if (result.success) {
       _toast("تم تسجيل بياناتك بنجاح");
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } else {
       _toast(result.arabicErrorMessage);
     }
@@ -433,13 +411,22 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                             ),
                             elevation: 4,
                           ),
-                          child: const Text(
-                            'حفظ البيانات',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: isRegistering
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'حفظ البيانات',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                     ],

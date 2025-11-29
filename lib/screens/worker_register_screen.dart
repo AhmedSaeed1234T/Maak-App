@@ -17,6 +17,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   // Common styles
   final Color _primaryColor = const Color(0xFF13A9F6);
   // Image
+  bool isRegistering = false;
   File? _imageFile;
   final picker = ImagePicker();
   // Controllers
@@ -75,6 +76,10 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
 
   // Register worker
   Future<void> _registerWorker() async {
+    if (!_formKey.currentState!.validate()) {
+      _toast("يرجى ملء جميع الحقول المطلوبة");
+      return;
+    }
     if (_passwordController.text != _confirmPasswordController.text) {
       _toast("كلمات المرور غير متطابقة");
       return;
@@ -83,6 +88,8 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       _toast("يرجى اختيار صورة للملف الشخصي");
       return;
     }
+    setState(() => isRegistering = true);
+
     final user = RegisterUserDto(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
@@ -101,10 +108,13 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
     );
 
     final result = await registerController.registerUser(user, _imageFile);
+    setState(() => isRegistering = false);
 
     if (result.success) {
       _toast("تم تسجيل بياناتك بنجاح");
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } else {
       _toast(result.arabicErrorMessage);
     }
@@ -458,13 +468,22 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                             if (!_formKey.currentState!.validate()) return;
                             _registerWorker();
                           },
-                          child: const Text(
-                            "حفظ",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: isRegistering
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  "حفظ البيانات ",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                     ],

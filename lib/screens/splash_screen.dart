@@ -20,6 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -51,6 +52,8 @@ class _SplashScreenState extends State<SplashScreen>
       await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
       if (isFirstLaunch) {
+        await prefs.clear(); // Delete all the previous saints
+
         await prefs.setBool('is_first_launch', false);
         Navigator.pushReplacementNamed(context, '/onboarding');
         return;
@@ -65,14 +68,9 @@ class _SplashScreenState extends State<SplashScreen>
         if (isLocallyValid) {
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/login');
-            Future.delayed(const Duration(milliseconds: 200), () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('يجب الاتصال بالانترنت')),
-              );
-            });
-          }
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("تعذر الاتصال بالخادم")));
         }
         return;
       }
@@ -88,13 +86,6 @@ class _SplashScreenState extends State<SplashScreen>
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
           Navigator.pushReplacementNamed(context, '/login');
-        }
-        if (mounted) {
-          Future.delayed(const Duration(milliseconds: 200), () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('حدث خطأ في الاتصال بالخادم')),
-            );
-          });
         }
       }
     } catch (e, stack) {

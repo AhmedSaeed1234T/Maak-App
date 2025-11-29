@@ -1,5 +1,8 @@
 import 'package:abokamall/controllers/SearchController.dart';
+import 'package:abokamall/helpers/ContextFunctions.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/screens/search_results_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/helpers/enums.dart';
@@ -21,9 +24,14 @@ class _FiltersScreenState extends State<FiltersScreen> {
   final TextEditingController cityController = TextEditingController();
   final TextEditingController districtController = TextEditingController();
   late searchcontroller searchController;
+  late TokenService tokenService;
+
   @override
   void initState() {
     searchController = getIt<searchcontroller>();
+    tokenService = getIt<TokenService>();
+
+    checkSessionValidity(context, tokenService);
     super.initState();
   }
 

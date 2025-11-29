@@ -11,11 +11,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final loginController = getIt<LoginController>();
+  bool isLogingIn = false;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
-
+  late LoginResult loginResult;
   InputDecoration _buildDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
@@ -222,27 +223,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (!_formKey.currentState!.validate()) {
                       return;
                     }
+                    setState(() => isLogingIn = true);
 
-                    if (await loginController.login(
-                          _emailController.text.trim(),
-                          _passwordController.text,
-                        ) ==
-                        true) {
+                    loginResult = await loginController.login(
+                      _emailController.text.trim(),
+                      _passwordController.text,
+                    );
+
+                    if (loginResult.isSuccess) {
+                      setState(() => isLogingIn = false);
+
                       Navigator.pushReplacementNamed(context, '/dashboard');
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'فشل تسجيل الدخول. يرجى التحقق من بياناتك.',
-                          ),
-                        ),
+                        SnackBar(content: Text(loginResult.arabicErrorMessage)),
                       );
                     }
+                    setState(() => isLogingIn = false);
                   },
-                  child: const Text(
-                    'دخول',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: isLogingIn
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'دخول',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 20),

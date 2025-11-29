@@ -1,49 +1,36 @@
 import 'package:abokamall/models/ServiceProviderDto.dart';
+import 'package:abokamall/models/Subscription.dart';
 import 'package:hive/hive.dart';
-import 'Subscription.dart';
-
 part 'UserProfile.g.dart';
 
 @HiveType(typeId: 2)
 class UserProfile extends HiveObject {
   @HiveField(0)
   final String userName;
-
   @HiveField(1)
   final String firstName;
-
   @HiveField(2)
   final String lastName;
-
   @HiveField(3)
   final String email;
-
   @HiveField(4)
   final String phoneNumber;
-
   @HiveField(5)
   final String imageUrl;
-
   @HiveField(6)
   final int points;
-
   @HiveField(7)
   final Subscription? subscription;
-
   @HiveField(8)
   final ServiceProviderDto? serviceProvider;
-
   @HiveField(9)
   final String governorate;
-
   @HiveField(10)
   final String city;
-
   @HiveField(11)
   final String district;
-
   @HiveField(12)
-  final DateTime cachedAt;
+  DateTime cachedAt;
 
   UserProfile({
     required this.userName,
@@ -61,15 +48,16 @@ class UserProfile extends HiveObject {
     required this.cachedAt,
   });
 
-  bool? get isAvailable => subscription != null ? subscription!.isActive : true;
+  bool get isAvailable => subscription?.isActive ?? true;
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final phone = json['phoneNumber'] ?? '';
     return UserProfile(
       userName: json['userName'] ?? '',
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       email: json['email'] ?? '',
-      phoneNumber: json['phoneNumber'].substring(2) ?? '',
+      phoneNumber: phone,
       imageUrl: json['imageUrl'] ?? '',
       points: json['points'] ?? 0,
       subscription: json['subscription'] != null
@@ -91,7 +79,7 @@ class UserProfile extends HiveObject {
       'firstName': firstName,
       'lastName': lastName,
       'email': email,
-      'phoneNumber': phoneNumber.substring(2),
+      'phoneNumber': phoneNumber,
       'imageUrl': imageUrl,
       'points': points,
       'subscription': subscription?.toJson(),
@@ -99,6 +87,7 @@ class UserProfile extends HiveObject {
       'governorate': governorate,
       'city': city,
       'district': district,
+      'cachedAt': cachedAt.toIso8601String(),
     };
   }
 }

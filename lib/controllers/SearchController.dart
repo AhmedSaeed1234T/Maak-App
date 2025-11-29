@@ -7,6 +7,7 @@ import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/enums.dart';
+import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:abokamall/services/UserListCache.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +100,36 @@ class searchcontroller {
         }
 
         return providers;
+      }
+      if (response.statusCode == 401) {
+        try {
+          debugPrint(401.toString());
+          // debugPrint(responseBody);
+          final DateTime = await getCurrentUserSubscription();
+          debugPrint(DateTime.toString());
+          final searchResult = SearchResult(
+            errorCode: jsonDecode(response.body)["errorCode"],
+            lastDate: DateTime.toString(),
+          );
+          if (context!.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(searchResult.arabicErrorMessage)),
+            );
+          }
+          debugPrint('Search API error: ${response.body}');
+        } catch (e) {
+          if (context!.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("لقد حدث خطأ يرجي اعادة التسجيل")),
+            );
+          }
+        }
+
+        if (basedOnPoints) {
+          return _cacheService.loadCachedUsers(cacheKey);
+        } else {
+          return []; // In case the user searched when the server is down
+        }
       } else {
         serverActionError = ServerActionError.unknown;
 
@@ -137,6 +168,32 @@ class searchcontroller {
       } else {
         return []; // In case the user searched when the server is down
       }
+    }
+  }
+}
+
+class SearchResult {
+  bool isSuccess;
+  String? errorCode;
+  String? errorMessage;
+  String? lastDate;
+
+  SearchResult({
+    this.isSuccess = false,
+    this.errorCode,
+    this.errorMessage,
+    this.lastDate,
+  });
+
+  String get arabicErrorMessage {
+    if (errorCode == null) return errorMessage ?? 'حدث خطأ غير معروف';
+    switch (errorCode) {
+      case 'GeneralError':
+        return 'حدث خطأ عام أثناء تسجيل الدخول';
+      case 'SubscriptionInvalid':
+        return "انتهى اشتراكك في $lastDate، يرجى التجديد";
+      default:
+        return errorMessage ?? 'حدث خطأ: $errorCode';
     }
   }
 }

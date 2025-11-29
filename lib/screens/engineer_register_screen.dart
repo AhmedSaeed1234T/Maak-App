@@ -16,6 +16,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final registerController = getIt<RegisterController>();
   File? _imageFile;
   final picker = ImagePicker();
+  bool isRegistering = false;
 
   // Session storage
   static Map<String, dynamic>? sessionEngineerData;
@@ -47,22 +48,6 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   @override
   void initState() {
     super.initState();
-    if (sessionEngineerData != null) {
-      _firstNameController.text = sessionEngineerData!['firstName'] ?? '';
-      _lastNameController.text = sessionEngineerData!['lastName'] ?? '';
-      _emailController.text = sessionEngineerData!['email'] ?? '';
-      _mobileController.text = sessionEngineerData!['phoneNumber'] ?? '';
-      _specializationController.text =
-          sessionEngineerData!['specialization'] ?? '';
-      _salaryController.text = sessionEngineerData!['pay']?.toString() ?? '';
-      _bioController.text = sessionEngineerData!['bio'] ?? '';
-      _governorateController.text = sessionEngineerData!['governorate'] ?? '';
-      _cityController.text = sessionEngineerData!['city'] ?? '';
-      _districtController.text = sessionEngineerData!['district'] ?? '';
-      _passwordController.text = sessionEngineerData!['password'] ?? '';
-      _referralController.text = sessionEngineerData!['referralCode'] ?? '';
-    }
-    _imageFile = sessionImage;
   }
 
   Future<void> _pickImage() async {
@@ -92,6 +77,8 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       return;
     }
 
+    setState(() => isRegistering = true);
+
     final user = RegisterUserDto(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
@@ -110,27 +97,15 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
     );
 
     // Save session
-    sessionEngineerData = {
-      'firstName': user.firstName,
-      'lastName': user.lastName,
-      'email': user.email,
-      'phoneNumber': user.phoneNumber,
-      'specialization': user.specialization,
-      'pay': user.pay,
-      'bio': user.bio,
-      'governorate': user.governorate,
-      'city': user.city,
-      'district': user.district,
-      'password': user.password,
-      'providerType': user.providerType,
-      'referralCode': user.referralUserName,
-    };
 
     final result = await registerController.registerUser(user, _imageFile);
+    setState(() => isRegistering = false);
 
     if (result.success) {
       _toast("تم تسجيل بياناتك بنجاح");
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } else {
       _toast(result.arabicErrorMessage);
     }
@@ -454,13 +429,22 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                             ),
                             elevation: 4,
                           ),
-                          child: const Text(
-                            'حفظ البيانات',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: isRegistering
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'حفظ البيانات',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                     ],

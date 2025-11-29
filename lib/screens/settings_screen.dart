@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:abokamall/controllers/ProfileController.dart';
+import 'package:abokamall/helpers/ContextFunctions.dart';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/models/UserProfile.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -16,7 +18,11 @@ class ProfileSettingsPage extends StatefulWidget {
 }
 
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
+  bool hasValidCache = false;
   bool _isConnected = true;
+  late final Connectivity _connectivity;
+  late final Stream<ConnectivityResult> _connectivityStream;
+
   Future<void> _checkConnection() async {
     final connectivityResult = await Connectivity().checkConnectivity();
 
@@ -36,10 +42,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   final ProfileController _controller = getIt<ProfileController>();
-
+  final TokenService tokenService = getIt<TokenService>();
   bool _isLoading = true;
   bool _isSaving = false;
   bool _hasChanges = false;
+  bool _isLogingOut = false;
   // Profile data from API
   UserProfile? _userProfile;
   // Local editable data
@@ -58,8 +65,35 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   void initState() {
     super.initState();
+
+    checkSessionValidity(context, tokenService);
+
+    _connectivity = Connectivity(); // IMPORTANT: Initialize first
+
+    _connectivityStream = _connectivity.onConnectivityChanged;
+    _connectivityStream.listen(_onConnectivityChanged);
+
     _checkConnection();
     _loadProfile();
+  }
+
+  void _onConnectivityChanged(ConnectivityResult result) {
+    final isConnected = result != ConnectivityResult.none;
+
+    if (!mounted) return;
+
+    setState(() {
+      _isConnected = isConnected;
+    });
+
+    if (!_isConnected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات"),
+          backgroundColor: Colors.black,
+        ),
+      );
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -329,10 +363,22 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   ),
                   elevation: 2,
                 ),
-                child: const Text(
-                  'تسجيل الخروج',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+                child: _isLogingOut
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'تسجيل الخروج',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
 
@@ -452,7 +498,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         // Phone number (non-editable)
         _buildNonEditableField(
           label: 'رقم الهاتف',
-          value: _userProfile!.phoneNumber,
+          value: _userProfile!.phoneNumber.substring(2),
           icon: Icons.phone_outlined,
         ),
 
@@ -949,7 +995,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     // controller.dispose();
   }
 
-  void _logout() async {
+  Future<void> _logout() async {
+    setState(() => _isLogingOut = true);
     bool allowed = await _controller.logout();
     if (allowed == false) {
       if (mounted) {
@@ -962,7 +1009,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       }
       return;
     }
-    Navigator.pushNamedAndRemoveUntil(context, '/splash', (route) => false);
+    setState(() => _isLogingOut = false);
+
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   void _changePassword() {
