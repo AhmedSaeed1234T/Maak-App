@@ -155,6 +155,9 @@ class ProfileController {
 
       // Clear local tokens and user info
       await tokenService.clearTokens();
+      final currentUser = await getCurrentUser();
+      // He should be inside the app so why he gets out ?
+      await deleteSubscriptionForUser(currentUser!);
       await deleteCurrentUser();
 
       // Clear cached profile

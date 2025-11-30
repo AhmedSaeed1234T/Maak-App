@@ -169,22 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/forgot');
-                        },
-                        child: const Text(
-                          'نسيت كلمة المرور؟',
-                          style: TextStyle(
-                            color: Color(0xFF13A9F6),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+
                     const SizedBox(height: 20),
                     Align(
                       alignment: Alignment.centerRight,

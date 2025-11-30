@@ -13,7 +13,7 @@ class ProfileCacheService {
 
   /// Save profile to cache
   Future<void> cacheProfile(UserProfile profile) async {
-    profile.cachedAt = DateTime.now(); // Ensure cachedAt is set
+    profile.cachedAt = DateTime.now().toUtc(); // Ensure cachedAt is set
     await _box.put(key, profile);
   }
 
@@ -22,7 +22,7 @@ class ProfileCacheService {
     final cachedProfile = _box.get(key);
     if (cachedProfile == null) return null;
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final ageInSeconds = now.difference(cachedProfile.cachedAt).inSeconds;
 
     if (ageInSeconds > cacheTTL.inSeconds) {

@@ -12,7 +12,6 @@
 //     if (expirationDateString == null) return Future.value(true);
 
 //     final expirationDate = DateTime.parse(expirationDateString);
-//     final today = DateTime.now();
 //     final daysLeft = expirationDate
 //         .difference(DateTime(today.year, today.month, today.day))
 //         .inDays;

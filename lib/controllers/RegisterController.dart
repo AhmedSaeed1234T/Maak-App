@@ -73,15 +73,11 @@ class RegisterController {
       if (user.referralUserName != null && user.referralUserName!.isNotEmpty) {
         request.fields['referralUserName'] = user.referralUserName!;
       }
-      // Add other fields like Specialization, Owner, Business, etc., if needed
 
       // Add profile image
       if (profileImage != null) {
         request.files.add(
-          await http.MultipartFile.fromPath(
-            'imageFile', // must match backend parameter name
-            profileImage.path,
-          ),
+          await http.MultipartFile.fromPath('imageFile', profileImage.path),
         );
       }
 
@@ -89,20 +85,29 @@ class RegisterController {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      debugPrint('Status code: ${response.statusCode}');
-      debugPrint('Body: ${response.body}');
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final expiryDate =
-            DateTime.tryParse(data['expiryDate']) ??
-            DateTime.now().add(Duration(days: 30));
-        debugPrint("Print now");
-        debugPrint(expiryDate.toString());
-        debugPrint(user.email);
-        debugPrint(user.phoneNumber);
+      debugPrint('Register Status code: ${response.statusCode}');
+      debugPrint('Register Body: ${response.body}');
 
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        // ✅ FIXED: Parse subscription expiry date (Egypt date from backend)
+        final expiryDate = DateTime.parse(
+          data['expiryDate'],
+        ); // Backend sends "2025-12-28"
+
+        debugPrint('📅 Subscription expiry date: ${expiryDate.toString()}');
+        debugPrint('📧 Email: ${user.email}');
+        debugPrint('📱 Phone: ${user.phoneNumber}');
+
+        // ✅ Save subscription for both email and phone
         await saveSubscriptionForUser(user.email, expiryDate);
-        await saveSubscriptionForUser(user.phoneNumber, expiryDate);
+
+        // ✅ Format phone number consistently
+        String phoneKey = user.phoneNumber.startsWith('+20')
+            ? user.phoneNumber
+            : '+20${user.phoneNumber.substring(1)}';
+        await saveSubscriptionForUser(phoneKey, expiryDate);
 
         return RegisterResult(success: true);
       } else {
@@ -129,7 +134,7 @@ class RegisterController {
       }
     } catch (e) {
       debugPrint('Register error: $e');
-      return RegisterResult(success: false, message: 'حدث خطأ في التسجيل');
+      return RegisterResult(success: false, message: 'حدث خطأ في التسجيل: $e');
     }
   }
 }

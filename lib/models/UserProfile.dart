@@ -69,7 +69,7 @@ class UserProfile extends HiveObject {
       governorate: json['governorate'] ?? '',
       city: json['city'] ?? '',
       district: json['district'] ?? '',
-      cachedAt: DateTime.now(),
+      cachedAt: DateTime.now().toUtc(),
     );
   }
 

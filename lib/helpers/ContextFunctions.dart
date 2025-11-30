@@ -20,9 +20,9 @@ Future<void> goToLogin(BuildContext context) async {
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(
       builder: (_) => LoginScreen(),
-      settings: RouteSettings(name: 'login'), // give it a name
+      settings: RouteSettings(name: 'login'),
     ),
-    (route) => false, // remove all previous routes
+    (route) => false,
   );
 }
 
@@ -33,39 +33,31 @@ Future<void> showEndSessionMessage(BuildContext context) async {
   ).showSnackBar(SnackBar(content: Text("انتهت جلسة التسجيل")));
 }
 
+/// ✅ FIXED: Proper session validity check
 Future<bool> checkSessionValidity(
   BuildContext context,
   TokenService tokenService,
 ) async {
-  // 1. Check if refresh token is valid
+  debugPrint("Checking session validity...");
+
+  // 1. Check if refresh token is valid (checks both token expiry and subscription)
   bool refreshValid = await tokenService.isRefreshTokenLocallyValid();
-  debugPrint("soha1");
   if (!refreshValid) {
-    // Offline or expired refresh token -> force login
+    debugPrint("Session invalid: refresh token or subscription expired");
     await showEndSessionMessage(context);
     await goToLogin(context);
     return false;
   }
-  debugPrint("soha2");
+  debugPrint("Refresh token and subscription are valid");
 
-  // 2. Refresh access token online (if possible)
+  // 2. Try to refresh access token online (if possible)
   bool refreshed = await tokenService.refreshAccessToken();
   if (!refreshed) {
-    // Optional: silently allow offline usage if subscription valid
-    debugPrint(
-      "Cannot refresh access token, but subscription may still allow offline usage",
-    );
-  }
-  debugPrint("soha3");
-
-  // 3. Check subscription expiry
-  final expiryDate = await getCurrentUserSubscription();
-  if (expiryDate == null ||
-      expiryDate.add(Duration(days: 1)).isBefore(DateTime.now())) {
-    await showEndSessionMessage(context);
-    await goToLogin(context);
-    return false;
+    debugPrint("Could not refresh access token (offline or network error)");
+    // Allow offline usage if subscription is still valid
+  } else {
+    debugPrint("Access token refreshed successfully");
   }
 
-  return true; // everything ok
+  return true; // Session is valid
 }

@@ -45,6 +45,8 @@ dependencies:
   google_sign_in: ^6.0.0
   cached_network_image: ^3.3.1
   dartz : any
+  intl_date_helper: any
+  intl: any
   # i need a widget for putting the icon for the app
 
 dev_dependencies:

@@ -20,6 +20,7 @@ import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class searchcontroller {
   final UserListCacheService _cacheService = getIt<UserListCacheService>();
@@ -88,7 +89,7 @@ class searchcontroller {
             .map(
               (item) => ServiceProvider.fromJson(
                 item,
-              ).copyWith(cachedAt: DateTime.now()),
+              ).copyWith(cachedAt: DateTime.now().toUtc()),
             )
             .toList();
 
@@ -112,9 +113,10 @@ class searchcontroller {
             lastDate: DateTime.toString(),
           );
           if (context!.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(searchResult.arabicErrorMessage)),
-            );
+            String message = await searchResult.arabicErrorMessage;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(message)));
           }
           debugPrint('Search API error: ${response.body}');
         } catch (e) {
@@ -185,13 +187,63 @@ class SearchResult {
     this.lastDate,
   });
 
-  String get arabicErrorMessage {
+  Future<String> get arabicErrorMessage async {
     if (errorCode == null) return errorMessage ?? 'حدث خطأ غير معروف';
     switch (errorCode) {
       case 'GeneralError':
         return 'حدث خطأ عام أثناء تسجيل الدخول';
       case 'SubscriptionInvalid':
-        return "انتهى اشتراكك في $lastDate، يرجى التجديد";
+        if (lastDate != null) {
+          try {
+            final date = await getCurrentUserSubscription();
+            final formattedDate = DateFormat('dd/MM/yyyy').format(date!);
+            debugPrint("Format is $formattedDate");
+
+            return "انتهى اشتراكك في $formattedDate، يرجى التجديد";
+          } catch (e) {
+            return "انتهى اشتراكك، يرجى التجديد";
+          }
+        }
+        return "انتهى اشتراكك، يرجى التجديد";
+      default:
+        return errorMessage ?? 'حدث خطأ: $errorCode';
+    }
+  }
+}
+
+class LoginResult {
+  bool isSuccess;
+  String? errorCode;
+  String? errorMessage;
+  String? lastDate; // ✅ This will be "2024-12-30" format (Egypt date)
+
+  LoginResult({
+    this.isSuccess = false,
+    this.errorCode,
+    this.errorMessage,
+    this.lastDate,
+  });
+
+  String get arabicErrorMessage {
+    if (errorCode == null) return errorMessage ?? 'حدث خطأ غير معروف';
+
+    switch (errorCode) {
+      case 'GeneralError':
+        return 'حدث خطأ عام أثناء تسجيل الدخول';
+
+      case 'SubscriptionInvalid':
+        // ✅ Format the date nicely for Arabic display
+        if (lastDate != null) {
+          try {
+            final date = DateTime.parse(lastDate!);
+            final formattedDate = DateFormat('dd/MM/yyyy').format(date);
+            return "انتهى اشتراكك في $formattedDate، يرجى التجديد";
+          } catch (e) {
+            return "انتهى اشتراكك، يرجى التجديد";
+          }
+        }
+        return "انتهى اشتراكك، يرجى التجديد";
+
       default:
         return errorMessage ?? 'حدث خطأ: $errorCode';
     }

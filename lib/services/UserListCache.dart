@@ -23,7 +23,7 @@ class UserListCacheService {
     String providerType,
     List<ServiceProvider> users,
   ) async {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final usersWithCachedAt = users
         .map((u) => u.copyWith(cachedAt: now))
         .toList();
@@ -34,7 +34,7 @@ class UserListCacheService {
   List<ServiceProvider> loadCachedUsers(String providerType) {
     final cachedData =
         _box.get(providerType, defaultValue: <dynamic>[]) as List;
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
 
     final valid = <ServiceProvider>[];
     for (var json in cachedData) {

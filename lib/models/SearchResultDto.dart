@@ -65,7 +65,7 @@ class ServiceProvider extends HiveObject {
     this.aboutMe,
     required this.userName,
     DateTime? cachedAt,
-  }) : cachedAt = cachedAt ?? DateTime.now();
+  }) : cachedAt = cachedAt ?? DateTime.now().toUtc();
 
   ServiceProvider copyWith({
     String? name,
@@ -128,7 +128,7 @@ class ServiceProvider extends HiveObject {
       workerType: json['workerType'],
       cachedAt: json['cachedAt'] != null
           ? DateTime.parse(json['cachedAt'])
-          : DateTime.now(),
+          : DateTime.now().toUtc(),
       userName: json['userName'] ?? '',
     );
   }
