@@ -345,7 +345,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         decoration: _buildDecoration(
                           "كيف عرفت هذا التطبيق؟",
                           Icons.share,
-                        ).copyWith(helperText: 'مثال: صديق / اعلان'),
+                        ),
                       ),
                       const SizedBox(height: 16),
 
@@ -391,8 +391,8 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                           if (v == null || v.isEmpty) {
                             return "كلمة المرور مطلوبة";
                           }
-                          if (v.length < 6) {
-                            return "كلمة المرور يجب ألا تقل عن 6 أحرف";
+                          if (v.length < 8) {
+                            return "كلمة المرور يجب ألا تقل عن 8 أحرف";
                           }
                           return null;
                         },

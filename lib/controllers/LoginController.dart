@@ -111,7 +111,8 @@ class LoginResult {
           }
         }
         return "انتهى اشتراكك، يرجى التجديد";
-
+      case "EmailOrPasswordInCorrect":
+        return 'الايميل او الباسورد خطأ, يرجي اعادة التأكد';
       default:
         return errorMessage ?? 'حدث خطأ: $errorCode';
     }

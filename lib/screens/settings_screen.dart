@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:abokamall/controllers/ProfileController.dart';
@@ -261,7 +262,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
     final providerType =
         _userProfile!.serviceProvider?.providerType.toLowerCase() ?? '';
-
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(

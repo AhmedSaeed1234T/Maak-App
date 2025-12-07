@@ -99,12 +99,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'البريد الإلكترونى أو الاسم مطلوب';
+                          return 'البريد الإلكترونى أو رقم الهاتف مطلوب';
                         }
                         return null;
                       },
                       decoration: _buildDecoration(
-                        'البريد الإلكترونى أو الاسم',
+                        'البريد الإلكترونى أو رقم الهاتف',
                         Icons.email,
                       ),
                     ),
@@ -169,7 +169,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/forgot');
+                        },
+                        child: const Text(
+                          'تغيير كلمة المرور',
+                          style: TextStyle(
+                            color: Color(0xFF13A9F6),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     Align(
                       alignment: Alignment.centerRight,

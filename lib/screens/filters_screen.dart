@@ -434,6 +434,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
               horizontal: 4,
               vertical: 2,
             ),
+            selected: true,
+
             dense: true,
           ),
           RadioListTile<String>(
@@ -449,6 +451,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
               horizontal: 4,
               vertical: 2,
             ),
+            selected: false,
             dense: true,
           ),
         ],

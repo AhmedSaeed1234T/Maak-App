@@ -2,6 +2,7 @@ import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class WorkerProfilePage extends StatelessWidget {
   final ServiceProvider provider;
@@ -87,7 +88,7 @@ class WorkerProfilePage extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
-            _buildDetailsSection(provider),
+            _buildDetailsSection(provider, context),
             const SizedBox(height: 24),
             _buildAboutSection(provider),
           ],
@@ -96,7 +97,7 @@ class WorkerProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailsSection(ServiceProvider provider) {
+  Widget _buildDetailsSection(ServiceProvider provider, BuildContext context) {
     const primary = Color(0xFF13A9F6);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -112,11 +113,30 @@ class WorkerProfilePage extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
-          _detailRow(
-            Icons.phone,
-            'رقم الهاتف',
-            provider.mobileNumber.toString().substring(2),
-            primary,
+          Row(
+            children: [
+              Expanded(
+                child: _detailRow(
+                  Icons.phone,
+                  'رقم الهاتف',
+                  provider.mobileNumber.toString().substring(2),
+                  primary,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.copy, size: 20),
+                onPressed: () {
+                  Clipboard.setData(
+                    ClipboardData(
+                      text: provider.mobileNumber.toString().substring(2),
+                    ),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم نسخ رقم الهاتف')),
+                  );
+                },
+              ),
+            ],
           ),
           const Divider(),
           _detailRow(

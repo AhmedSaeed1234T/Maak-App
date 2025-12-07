@@ -7,10 +7,12 @@ import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
+import 'package:abokamall/screens/debug_token_screen.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:abokamall/services/UserListCache.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -69,7 +71,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _checkInitialConnectivity();
       _connectivityStream = _connectivity.onConnectivityChanged;
       _connectivityStream.listen(_onConnectivityChanged);
-      _loadProfile();
     }
   }
 
@@ -89,16 +90,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     await _preloadAllProviders();
-  }
-
-  Future<void> _loadProfile() async {
-    if (!mounted) return;
-
-    try {
-      await profileController.fetchProfile();
-    } catch (e) {
-      // Silent fail for profile - not critical for main screen
-    }
   }
 
   Future<void> _preloadAllProviders() async {
@@ -637,7 +628,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                onPressed: () => Navigator.pushNamed(context, '/payment'),
+                onPressed: () {
+                  if (kDebugMode) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => TestingPanel()),
+                    );
+                  } else {
+                    Navigator.of(context).pushNamed('/payment');
+                  }
+                },
                 child: const Text(
                   'خدمة العملاء',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),

@@ -51,6 +51,8 @@ Future<void> main() async {
   );
   */
   // Initialize Hive first
+  // SharedPreferences removed = await SharedPreferences.getInstance();
+  // await removed.clear();
   await Hive.initFlutter();
   Hive.registerAdapter(SubscriptionAdapter());
   Hive.registerAdapter(ServiceProviderDtoAdapter());

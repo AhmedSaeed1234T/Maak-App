@@ -15,7 +15,9 @@ Future<http.Response> withTokenRetry(
   if (response.statusCode == 401) {
     // Access token expired, try refresh
     debugPrint("Refreshing right now");
-    bool refreshed = await tokenService.refreshAccessToken();
+    bool refreshed = false;
+    refreshed = await tokenService.refreshAccessToken();
+
     if (refreshed) {
       debugPrint("Refreshed successfully");
       // Get the new token

@@ -22,7 +22,7 @@ class RegisterResult {
       case 'GeneralError':
         return 'حدث خطأ عام في التسجيل';
       case 'ReferralUserNotFound':
-        return 'مستخدم الإحالة غير موجود';
+        return 'مستخدم الاحالة غير موجود يمكن ترك هذا الحقل فارغا';
       case 'PhoneNumberAlreadyExists':
         return 'رقم الهاتف موجود بالفعل';
       case 'EmailAlreadyExists':
@@ -33,6 +33,10 @@ class RegisterResult {
         return 'قيمة الدفع غير صحيحة';
       case 'InvalidInput':
         return 'هناك خطأ في البيانات المدخلة , اعد كتابتها بشكل سليم';
+      case "PasswordInvalid":
+        return 'يجب علي الاقل 8 حروف لكلمة المرور';
+      case "EmailOrPasswordInCorrect":
+        return 'الايميل او الباسورد خطأ, يرجي اعادة التأكد';
       default:
         return 'حدث خطأ في التسجيل: $errorCode';
     }
