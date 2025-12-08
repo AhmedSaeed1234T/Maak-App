@@ -631,7 +631,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onPressed: () {
                   if (kDebugMode) {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => TestingPanel()),
+                      MaterialPageRoute(
+                        builder: (context) => OfflineModeTestingPanel(),
+                      ),
                     );
                   } else {
                     Navigator.of(context).pushNamed('/payment');

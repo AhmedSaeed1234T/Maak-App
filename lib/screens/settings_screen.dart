@@ -10,6 +10,7 @@ import 'package:abokamall/models/UserProfile.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
@@ -482,10 +483,25 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         const SizedBox(height: 16),
 
         // Username (non-editable)
-        _buildNonEditableField(
-          label: 'اسم المستخدم',
-          value: _userProfile!.userName,
-          icon: Icons.person,
+        Row(
+          children: [
+            Expanded(
+              child: _buildNonEditableField(
+                label: 'اسم المستخدم',
+                value: _userProfile!.userName,
+                icon: Icons.person,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.copy, size: 20),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: _userProfile!.userName));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم نسخ اسم المستخدم')),
+                );
+              },
+            ),
+          ],
         ),
 
         // Email (non-editable)

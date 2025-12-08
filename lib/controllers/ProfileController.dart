@@ -5,6 +5,7 @@ import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/HttpHelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/helpers/apiclient.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/models/UserProfile.dart';
@@ -15,6 +16,7 @@ import 'package:http/http.dart' as http;
 
 class ProfileController {
   final ProfileCacheService _cacheService = getIt<ProfileCacheService>();
+  final ApiClient apiClient = getIt<ApiClient>();
 
   /// Fetch profile with caching and offline support
   Future<UserProfile?> fetchProfile({bool forceRefresh = false}) async {
@@ -24,17 +26,7 @@ class ProfileController {
         return _cacheService.loadCachedProfile();
       }
 
-      final url = Uri.parse('$apiRoute/profile');
-
-      final response = await withTokenRetry(
-        (token) => http.get(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ),
-      );
+      final response = await apiClient.get("/profile");
 
       if (response.statusCode != 200) {
         debugPrint('Profile fetch failed: ${response.body}');
@@ -96,16 +88,7 @@ class ProfileController {
         if (uploadedImageUrl != null) "profileImage": uploadedImageUrl,
       };
 
-      final response = await withTokenRetry(
-        (token) => http.put(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode(body),
-        ),
-      );
+      final response = await apiClient.put("/profile", body: body);
 
       if (response.statusCode != 200) {
         debugPrint('Profile update failed: ${response.body}');
@@ -139,12 +122,8 @@ class ProfileController {
       final refreshToken = await tokenService.getRefreshToken();
 
       if (refreshToken != null) {
-        final response = await http
-            .post(
-              Uri.parse('$apiRoute/auth/logout'),
-              body: jsonEncode({'refreshToken': refreshToken}),
-              headers: {'Content-Type': 'application/json'},
-            )
+        final response = await apiClient
+            .post("/auth/logout", body: {'refreshToken': refreshToken})
             .timeout(Duration(seconds: 10));
 
         if (response.statusCode != 200) {

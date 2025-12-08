@@ -211,17 +211,15 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               provider.isCompany
-                  ? Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.orange.withOpacity(0.15),
-                      ),
-                      child: Icon(
-                        Icons.business,
-                        color: Colors.orange,
-                        size: 24,
-                      ),
+                  ? CircleAvatar(
+                      radius: 28,
+                      backgroundImage: provider.imageUrl != null
+                          ? NetworkImage(provider.imageUrl!)
+                          : null,
+                      backgroundColor: Colors.grey[200],
+                      child: provider.imageUrl == null
+                          ? Icon(Icons.business, color: Colors.orange, size: 24)
+                          : null,
                     )
                   : CircleAvatar(
                       radius: 28,

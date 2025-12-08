@@ -20,136 +20,100 @@ Future<void> goToLogin(BuildContext context) async {
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(
       builder: (_) => LoginScreen(),
-      settings: RouteSettings(name: 'login'),
+      settings: const RouteSettings(name: 'login'),
     ),
     (route) => false,
   );
 }
 
-Future<void> showEndSessionMessage(BuildContext context) async {
-  if (!context.mounted) return;
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text("انتهت جلسة التسجيل")));
-}
-
-/// /// ✅ FIXED: Proper session validity check
-/// The checkSessionValidaty works in two ways offline and online mode,
-/// If you're in offline mode it will check the refresh token if valid or not "Still this thing has security concerns"
-/// If the refresh invalid and offline then Get him to the home screen
-/// If it's ok , so he wants to refresh again, so let him refresh
-/// Checks session validity in both offline and online modes
-/// Shows Arabic snackbar messages for different scenarios
+/// Checks session validity with proper offline handling
+/// - Validates local tokens (instant, no API call)
+/// - Enforces 2-day offline limit
+/// - Shows appropriate Arabic messages
 ///
 /// Returns true if session is valid, false if user needs to login
 Future<bool> checkSessionValidity(
   BuildContext context,
   TokenService tokenService,
 ) async {
-  debugPrint("Checking session validity...");
+  debugPrint("🔍 Checking session validity...");
 
-  // Step 1: Check local refresh token validity
-  bool refreshValid = await tokenService.isRefreshTokenLocallyValid();
+  // ✅ Call TokenService method (handles all logic)
+  final result = await tokenService.checkSessionValidity();
 
-  if (!refreshValid) {
-    debugPrint("Session invalid: refresh token or subscription expired");
+  debugPrint("📊 Session check result: ${result.reason}");
 
-    // Show Arabic snackbar for expired session
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى',
-            style: TextStyle(
-              fontFamily: 'Cairo',
-            ), // Use Arabic font if available
-            textAlign: TextAlign.right,
+  // Handle invalid session
+  if (!result.isValid) {
+    if (result.showOfflineWarning) {
+      // ⭐ 2+ DAYS OFFLINE - Must connect to internet ⭐
+      if (context.mounted) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text(
+              'يجب الاتصال بالإنترنت',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: const Text(
+              'يجب عليك الاتصال بالإنترنت لمواصلة استخدام التطبيق. '
+              'هذا مطلوب للتحقق الأمني.',
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+              style: TextStyle(fontFamily: 'Cairo', fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  goToLogin(context);
+                },
+                child: const Text(
+                  'حسناً',
+                  style: TextStyle(fontFamily: 'Cairo', fontSize: 16),
+                ),
+              ),
+            ],
           ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'حسناً',
-            textColor: Colors.white,
-            onPressed: () {},
-          ),
-        ),
-      );
-
-      // Wait for snackbar to be visible
-      await Future.delayed(const Duration(milliseconds: 500));
-    }
-
-    await goToLogin(context);
-    return false;
-  }
-
-  debugPrint("Refresh token and subscription are valid locally");
-
-  // Step 2: Try to refresh access token (online check)
-  try {
-    bool refreshed = await tokenService.refreshAccessToken();
-
-    if (refreshed) {
-      debugPrint("✅ Access token refreshed successfully (ONLINE)");
-
-      // Optional: Show success message
-
-      return true;
+        );
+      }
     } else {
-      debugPrint(
-        "⚠️ Could not refresh access token (OFFLINE or network error)",
-      );
-
-      // Show offline warning
+      // Normal logout (token/subscription expired)
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
-              'أنت تعمل في وضع عدم الاتصال. بعض الميزات قد لا تكون متاحة',
+              'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى',
               style: TextStyle(fontFamily: 'Cairo'),
               textAlign: TextAlign.right,
             ),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
-              label: 'فهمت',
+              label: 'حسناً',
               textColor: Colors.white,
               onPressed: () {},
             ),
           ),
         );
+
+        await Future.delayed(const Duration(milliseconds: 500));
       }
 
-      // Allow offline usage since local tokens are still valid
-      return true;
-    }
-  } catch (e) {
-    debugPrint("⚠️ Refresh attempt failed: $e (assuming OFFLINE mode)");
-
-    // Show offline mode message
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'لا يوجد اتصال بالإنترنت. يمكنك الاستمرار في وضع عدم الاتصال',
-            style: TextStyle(fontFamily: 'Cairo'),
-            textAlign: TextAlign.right,
-          ),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'حسناً',
-            textColor: Colors.white,
-            onPressed: () {},
-          ),
-        ),
-      );
+      await goToLogin(context);
     }
 
-    // Local tokens are valid, allow offline usage
-    return true;
+    return false;
   }
+
+  // ✅ Session is valid - no need to show anything
+  debugPrint("✅ Session valid");
+  return true;
 }

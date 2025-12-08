@@ -14,18 +14,9 @@ class TokenService {
   bool _isRefreshing = false;
   Completer<bool>? _refreshCompleter;
 
-  // ✅ NEW: Caching mechanism to reduce API calls
-  DateTime? lastValidationTime;
-  bool? lastValidationResult;
-  static const validationCacheDuration = Duration(
-    minutes: 5,
-  ); // Cache for 5 minutes
-
-  // Offline check tracking
+  // Offline check tracking (for 2-day limit)
   DateTime? lastOnlineCheck;
-  static const maxOfflineDuration = Duration(
-    days: 2,
-  ); // Force online check after 7 days
+  static const maxOfflineDuration = Duration(days: 2);
 
   TokenService({FlutterSecureStorage? storage})
     : storage = storage ?? const FlutterSecureStorage();
@@ -85,8 +76,6 @@ class TokenService {
     _accessToken = null;
     _refreshToken = null;
     refreshExpiry = null;
-    lastValidationTime = null;
-    lastValidationResult = null;
     lastOnlineCheck = null;
 
     await storage.delete(key: _accessTokenKey);
@@ -121,42 +110,14 @@ class TokenService {
   }
 
   // ------------------------------------------------------------
-  // ✅ NEW: Check if we should validate (uses cache)
+  // Refresh Access Token
+  // ✅ SIMPLIFIED: No more 5-minute cache logic
+  // Just refresh when called (usually triggered by 401)
   // ------------------------------------------------------------
-  Future<bool> shouldValidateSession({bool forceValidation = false}) async {
-    // Force validation overrides cache
-    if (forceValidation) {
-      debugPrint("🔄 Force validation requested");
-      return true;
-    }
-
-    // If we validated recently and it was successful, skip
-    if (lastValidationTime != null && lastValidationResult == true) {
-      final timeSinceLastCheck = DateTime.now().difference(lastValidationTime!);
-
-      if (timeSinceLastCheck < validationCacheDuration) {
-        debugPrint(
-          "⚡ Using cached validation (${timeSinceLastCheck.inSeconds}s ago)",
-        );
-        return false; // Don't need to validate
-      }
-    }
-
-    return true; // Need to validate
-  }
-
-  // ------------------------------------------------------------
-  // Refresh Access Token (with caching)
-  // ------------------------------------------------------------
-  Future<bool> refreshAccessToken({bool forceRefresh = false}) async {
-    // Check if we need to refresh at all (unless forced)
-    if (!forceRefresh && !await shouldValidateSession()) {
-      return true; // Use cached result
-    }
-
+  Future<bool> refreshAccessToken() async {
     // If already refreshing, wait for that refresh to complete
     if (_isRefreshing) {
-      debugPrint("Already refreshing, waiting...");
+      debugPrint("⏳ Already refreshing, waiting...");
       return await _refreshCompleter!.future;
     }
 
@@ -168,7 +129,6 @@ class TokenService {
       debugPrint("🔄 Refreshing token...");
       final refreshToken = await getRefreshToken();
       if (refreshToken == null) {
-        lastValidationResult = false;
         _refreshCompleter!.complete(false);
         return false;
       }
@@ -191,7 +151,6 @@ class TokenService {
 
       if (response.statusCode != 200) {
         debugPrint('Refresh failed: ${response.body}');
-        lastValidationResult = false;
         _refreshCompleter!.complete(false);
         return false;
       }
@@ -203,7 +162,6 @@ class TokenService {
           data['refreshToken'] == null ||
           data['refreshTokenExpiry'] == null) {
         debugPrint('Invalid refresh response from server: $data');
-        lastValidationResult = false;
         _refreshCompleter!.complete(false);
         return false;
       }
@@ -225,15 +183,11 @@ class TokenService {
         }
       }
 
-      // ✅ Update cache
-      lastValidationTime = DateTime.now();
-      lastValidationResult = true;
-
+      debugPrint("✅ Token refreshed successfully");
       _refreshCompleter!.complete(true);
       return true;
     } catch (e) {
-      debugPrint('Error refreshing token: $e');
-      lastValidationResult = false;
+      debugPrint('❌ Error refreshing token: $e');
       _refreshCompleter!.complete(false);
       return false;
     } finally {
@@ -243,9 +197,9 @@ class TokenService {
   }
 
   // ------------------------------------------------------------
-  // Check if we MUST go online
+  // Check if we MUST go online (2-day check)
   // ------------------------------------------------------------
-  Future<bool> _mustCheckOnline() async {
+  Future<bool> mustCheckOnline() async {
     if (lastOnlineCheck == null) {
       // Try to load from storage
       final stored = await storage.read(key: lastOnlineCheckKey);
@@ -265,11 +219,22 @@ class TokenService {
   }
 
   // ------------------------------------------------------------
-  // Enhanced Session Validation
+  // Update Last Online Check (call this after successful API calls)
   // ------------------------------------------------------------
-  Future<SessionValidityResult> checkSessionValidity({
-    bool forceValidation = false,
-  }) async {
+  Future<void> updateLastOnlineCheck() async {
+    lastOnlineCheck = DateTime.now();
+    await storage.write(
+      key: lastOnlineCheckKey,
+      value: lastOnlineCheck!.toIso8601String(),
+    );
+  }
+
+  // ------------------------------------------------------------
+  // ✅ SIMPLIFIED Session Validation
+  // Only checks local validity + 2-day offline limit
+  // Does NOT proactively refresh tokens
+  // ------------------------------------------------------------
+  Future<SessionValidityResult> checkSessionValidity() async {
     // 1. Check local token validity first (fast, no API call)
     final hasValidLocalTokens = await isRefreshTokenLocallyValid();
 
@@ -281,21 +246,17 @@ class TokenService {
       );
     }
 
-    // 2. Check if we MUST validate online (7 days passed)
-    if (await _mustCheckOnline()) {
+    // 2. Check if we MUST validate online (2+ days passed)
+    if (await mustCheckOnline()) {
       debugPrint(
         "⚠️ Must check online (${maxOfflineDuration.inDays} days since last validation)",
       );
 
       try {
-        final refreshed = await refreshAccessToken(forceRefresh: true);
+        final refreshed = await refreshAccessToken();
 
         if (refreshed) {
-          lastOnlineCheck = DateTime.now();
-          await storage.write(
-            key: lastOnlineCheckKey,
-            value: lastOnlineCheck!.toIso8601String(),
-          );
+          await updateLastOnlineCheck();
 
           return SessionValidityResult(
             isValid: true,
@@ -321,46 +282,12 @@ class TokenService {
       }
     }
 
-    // 3. Check if we should validate (uses 5-minute cache)
-    if (!forceValidation && !await shouldValidateSession()) {
-      debugPrint("⚡ Skipping validation (cached)");
-      return SessionValidityResult(
-        isValid: true,
-        reason: 'Using cached validation',
-        requiresLogin: false,
-      );
-    }
-
-    // 4. Try online validation (best effort)
-    try {
-      final refreshed = await refreshAccessToken().timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => false,
-      );
-
-      if (refreshed) {
-        lastOnlineCheck = DateTime.now();
-        await storage.write(
-          key: lastOnlineCheckKey,
-          value: lastOnlineCheck!.toIso8601String(),
-        );
-
-        return SessionValidityResult(
-          isValid: true,
-          reason: 'Online validation successful',
-          requiresLogin: false,
-        );
-      }
-    } catch (e) {
-      debugPrint("Online check failed: $e");
-    }
-
-    // 5. Offline mode - allow with local validation
+    // 3. ✅ Tokens are valid locally and within 2-day window
+    // DON'T refresh here - let API calls handle 401s
     return SessionValidityResult(
       isValid: true,
-      reason: 'Offline mode - using local validation',
+      reason: 'Local validation successful',
       requiresLogin: false,
-      isOfflineMode: true,
     );
   }
 }
@@ -370,14 +297,12 @@ class SessionValidityResult {
   final bool isValid;
   final String reason;
   final bool requiresLogin;
-  final bool isOfflineMode;
   final bool showOfflineWarning;
 
   SessionValidityResult({
     required this.isValid,
     required this.reason,
     required this.requiresLogin,
-    this.isOfflineMode = false,
     this.showOfflineWarning = false,
   });
 }

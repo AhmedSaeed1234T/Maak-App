@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/helpers/apiclient.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:flutter/material.dart';
@@ -8,18 +9,17 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // ✅ Add for date formatting
 
 class LoginController {
+  final ApiClient apiClient = getIt<ApiClient>();
   final TokenService tokenService = getIt<TokenService>();
 
   Future<LoginResult> login(String email, String password) async {
     final url = Uri.parse('$apiRoute/Auth/login');
-    final body = jsonEncode({'email': email, 'password': password});
+    final body = {'email': email, 'password': password};
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
+      final response = await apiClient.post("/auth/login", body: body);
+      debugPrint(response.body.toString());
+      debugPrint(response.statusCode.toString());
 
       final data = jsonDecode(response.body);
 

@@ -5,6 +5,7 @@ import 'package:abokamall/helpers/HttpHelperMethods.dart';
 import 'package:abokamall/helpers/NetworkStatus.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/helpers/apiclient.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
@@ -24,6 +25,7 @@ import 'package:intl/intl.dart';
 
 class searchcontroller {
   final UserListCacheService _cacheService = getIt<UserListCacheService>();
+  final ApiClient apiClient = getIt<ApiClient>();
   final TokenService _tokenService = getIt<TokenService>();
 
   Future<List<ServiceProvider>> searchWorkers({
@@ -64,23 +66,14 @@ class searchcontroller {
         "pageNumber": pageNumber,
       };
 
-      final response = await withTokenRetry((token) async {
-        return await http
-            .post(
-              url,
-              headers: {
-                'Authorization': 'Bearer $token',
-                'Content-Type': 'application/json',
-              },
-              body: jsonEncode(body),
-            )
-            .timeout(
-              const Duration(seconds: 8),
-              onTimeout: () {
-                throw TimeoutException("Request timed out");
-              },
-            );
-      });
+      final response = await apiClient
+          .post("/search/$cacheKey", body: body)
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () {
+              throw TimeoutException("Request timed out");
+            },
+          );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;

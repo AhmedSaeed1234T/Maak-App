@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:abokamall/controllers/LoginController.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
@@ -14,6 +15,8 @@ class EngineerRegisterScreen extends StatefulWidget {
 
 class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final registerController = getIt<RegisterController>();
+  final loginController = getIt<LoginController>();
+
   File? _imageFile;
   final picker = ImagePicker();
   bool isRegistering = false;
@@ -59,6 +62,8 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   }
 
   void _toast(String msg) {
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
@@ -99,14 +104,28 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
     // Save session
 
     final result = await registerController.registerUser(user, _imageFile);
-    setState(() => isRegistering = false);
+
+    if (!mounted) return; // Stop if user popped the page
 
     if (result.success) {
+      final loginResult = await loginController.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (!mounted) return; // Stop if user popped the page
+
       _toast("تم تسجيل بياناتك بنجاح");
-      if (mounted) {
-        Navigator.pop(context);
-      }
+
+      setState(() => isRegistering = false);
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/dashboard',
+        (route) => false, // remove everything
+      );
     } else {
+      if (mounted) setState(() => isRegistering = false);
       _toast(result.arabicErrorMessage);
     }
   }
@@ -114,344 +133,347 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF13A9F6);
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'تسجيل مقاول/مهندس',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+    return WillPopScope(
+      onWillPop: () async => !isRegistering,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0.5,
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Header with Icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [primary, primary.withOpacity(0.8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primary.withOpacity(0.2),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.engineering,
-                  color: Colors.white,
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'إنشاء حسابك',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'أكمل بيانات تسجيلك الآن',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 28),
-
-              // Profile Image
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
+        appBar: AppBar(
+          title: const Text(
+            'تسجيل مقاول/مهندس',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.black),
+          elevation: 0.5,
+        ),
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Header with Icon
+                Container(
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [primary, primary.withOpacity(0.8)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: primary.withOpacity(0.15),
+                        color: primary.withOpacity(0.2),
                         blurRadius: 12,
-                        spreadRadius: 2,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
-                  child: CircleAvatar(
-                    radius: 55,
-                    backgroundColor: Color(0xFFF4F7FA),
-                    backgroundImage: _imageFile != null
-                        ? FileImage(_imageFile!)
-                        : null,
-                    child: _imageFile == null
-                        ? Icon(Icons.camera_alt, color: primary, size: 38)
-                        : null,
+                  child: const Icon(
+                    Icons.engineering,
+                    color: Colors.white,
+                    size: 40,
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextButton.icon(
-                onPressed: _pickImage,
-                icon: const Icon(Icons.edit, size: 18),
-                label: const Text("اختر صورتك"),
-                style: TextButton.styleFrom(
-                  foregroundColor: primary,
-                  textStyle: const TextStyle(fontSize: 14),
+                const SizedBox(height: 24),
+                const Text(
+                  'إنشاء حسابك',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 28),
+                const SizedBox(height: 8),
+                Text(
+                  'أكمل بيانات تسجيلك الآن',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 28),
 
-              // Main Card
-              Card(
-                elevation: 2,
-                shadowColor: primary.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                // Profile Image
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: primary.withOpacity(0.15),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 55,
+                      backgroundColor: Color(0xFFF4F7FA),
+                      backgroundImage: _imageFile != null
+                          ? FileImage(_imageFile!)
+                          : null,
+                      child: _imageFile == null
+                          ? Icon(Icons.camera_alt, color: primary, size: 38)
+                          : null,
+                    ),
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // User Type Selection
-                      _buildSectionLabel('نوع الحساب'),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text("اختر صورتك"),
+                  style: TextButton.styleFrom(
+                    foregroundColor: primary,
+                    textStyle: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Main Card
+                Card(
+                  elevation: 2,
+                  shadowColor: primary.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // User Type Selection
+                        _buildSectionLabel('نوع الحساب'),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFFE0E0E0)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: RadioListTile<int>(
+                                  title: const Text(
+                                    'مقاول',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  value: 0,
+                                  groupValue: userTypeIndex,
+                                  activeColor: primary,
+                                  onChanged: (val) =>
+                                      setState(() => userTypeIndex = val!),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  dense: true,
+                                ),
+                              ),
+                              Expanded(
+                                child: RadioListTile<int>(
+                                  title: const Text(
+                                    'مهندس',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  value: 1,
+                                  groupValue: userTypeIndex,
+                                  activeColor: primary,
+                                  onChanged: (val) =>
+                                      setState(() => userTypeIndex = val!),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  dense: true,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFE0E0E0)),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
+                        const SizedBox(height: 20),
+
+                        // Names
+                        _buildSectionLabel('البيانات الشخصية *'),
+                        const SizedBox(height: 10),
+                        Row(
                           children: [
                             Expanded(
-                              child: RadioListTile<int>(
-                                title: const Text(
-                                  'مقاول',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                value: 0,
-                                groupValue: userTypeIndex,
-                                activeColor: primary,
-                                onChanged: (val) =>
-                                    setState(() => userTypeIndex = val!),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                dense: true,
+                              child: _buildTextField(
+                                _firstNameController,
+                                'الاسم الأول *',
+                                Icons.person,
+                                isRequired: true,
                               ),
                             ),
+                            const SizedBox(width: 12),
                             Expanded(
-                              child: RadioListTile<int>(
-                                title: const Text(
-                                  'مهندس',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                value: 1,
-                                groupValue: userTypeIndex,
-                                activeColor: primary,
-                                onChanged: (val) =>
-                                    setState(() => userTypeIndex = val!),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                dense: true,
+                              child: _buildTextField(
+                                _lastNameController,
+                                'الاسم الأخير *',
+                                Icons.person,
+                                isRequired: true,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Names
-                      _buildSectionLabel('البيانات الشخصية *'),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              _firstNameController,
-                              'الاسم الأول *',
-                              Icons.person,
-                              isRequired: true,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildTextField(
-                              _lastNameController,
-                              'الاسم الأخير *',
-                              Icons.person,
-                              isRequired: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        _emailController,
-                        'البريد الإلكتروني *',
-                        Icons.email,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        _mobileController,
-                        'رقم الجوال *',
-                        Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Professional Info
-                      _buildSectionLabel('معلومات مهنية'),
-                      const SizedBox(height: 10),
-                      _buildTextField(
-                        _specializationController,
-                        'التخصص *',
-                        Icons.school,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        _salaryController,
-                        'الأجر *',
-                        Icons.monetization_on,
-                        keyboardType: TextInputType.number,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextFieldMultiline(
-                        _bioController,
-                        'نبذة عنك',
-                        Icons.description,
-                        lines: 3,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        _referralController,
-                        'كيف عرفت هذا التطبيق؟',
-                        Icons.share,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Location
-                      _buildSectionLabel('الموقع الجغرافي'),
-                      const SizedBox(height: 10),
-                      _buildTextField(
-                        _governorateController,
-                        'المحافظة',
-                        Icons.location_on,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        _cityController,
-                        'المدينة',
-                        Icons.location_city,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        _districtController,
-                        'الحي',
-                        Icons.location_on_outlined,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Passwords
-                      _buildSectionLabel('كلمة المرور *'),
-                      const SizedBox(height: 10),
-                      _buildPasswordField(
-                        _passwordController,
-                        'كلمة المرور *',
-                        isPassword: true,
-                        isVisible: _isPasswordVisible,
-                        onToggleVisibility: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPasswordField(
-                        _confirmPasswordController,
-                        'تأكيد كلمة المرور *',
-                        isPassword: false,
-                        isVisible: _isConfirmPasswordVisible,
-                        onToggleVisibility: () {
-                          setState(() {
-                            _isConfirmPasswordVisible =
-                                !_isConfirmPasswordVisible;
-                          });
-                        },
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Submit Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _registerEngineer,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 4,
-                          ),
-                          child: isRegistering
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'حفظ البيانات',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          _emailController,
+                          'البريد الإلكتروني *',
+                          Icons.email,
+                          isRequired: true,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          _mobileController,
+                          'رقم الجوال *',
+                          Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          isRequired: true,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Professional Info
+                        _buildSectionLabel('معلومات مهنية'),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          _specializationController,
+                          'التخصص *',
+                          Icons.school,
+                          isRequired: true,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          _salaryController,
+                          'الأجر *',
+                          Icons.monetization_on,
+                          keyboardType: TextInputType.number,
+                          isRequired: true,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextFieldMultiline(
+                          _bioController,
+                          'نبذة عنك',
+                          Icons.description,
+                          lines: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          _referralController,
+                          'كيف عرفت هذا التطبيق؟',
+                          Icons.share,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Location
+                        _buildSectionLabel('الموقع الجغرافي'),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          _governorateController,
+                          'المحافظة',
+                          Icons.location_on,
+                          isRequired: true,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          _cityController,
+                          'المدينة',
+                          Icons.location_city,
+                          isRequired: true,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          _districtController,
+                          'الحي',
+                          Icons.location_on_outlined,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Passwords
+                        _buildSectionLabel('كلمة المرور *'),
+                        const SizedBox(height: 10),
+                        _buildPasswordField(
+                          _passwordController,
+                          'كلمة المرور *',
+                          isPassword: true,
+                          isVisible: _isPasswordVisible,
+                          onToggleVisibility: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                          isRequired: true,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildPasswordField(
+                          _confirmPasswordController,
+                          'تأكيد كلمة المرور *',
+                          isPassword: false,
+                          isVisible: _isConfirmPasswordVisible,
+                          onToggleVisibility: () {
+                            setState(() {
+                              _isConfirmPasswordVisible =
+                                  !_isConfirmPasswordVisible;
+                            });
+                          },
+                          isRequired: true,
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Submit Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _registerEngineer,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 4,
+                            ),
+                            child: isRegistering
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'حفظ البيانات',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
