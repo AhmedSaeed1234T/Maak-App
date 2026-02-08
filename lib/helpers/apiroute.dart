@@ -1,1 +1,1 @@
-const apiRoute = "http://localhost:5095/api/v1";
+const apiRoute = "https://egyptonlinema3ak.com/api/v1";

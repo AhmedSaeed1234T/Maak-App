@@ -1,3 +1,5 @@
+import 'package:abokamall/helpers/ContextFunctions.dart';
+import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
@@ -33,7 +35,7 @@ class SearchResultsPage extends StatefulWidget {
 class _SearchResultsPageState extends State<SearchResultsPage> {
   final searchController = getIt<searchcontroller>();
   final ScrollController _scrollController = ScrollController();
-
+  late TokenService tokenService = getIt<TokenService>();
   List<ServiceProvider> providers = [];
   bool isLoading = false;
   bool hasMore = true;
@@ -42,6 +44,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   @override
   void initState() {
+    tokenService = getIt<TokenService>();
+
+    checkSessionValidity(context, tokenService);
     super.initState();
     _fetchResults();
 
@@ -56,24 +61,31 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   Future<void> _fetchResults() async {
+    if (!mounted) {
+      debugPrint("The api has been done doing for real");
+      return;
+    }
     setState(() => isLoading = true);
 
     // <-- simulate network delay
     await Future.delayed(const Duration(seconds: 2));
 
     final result = await searchController.searchWorkers(
-      widget.firstName,
-      widget.lastName,
-      widget.specialization,
-      widget.governorate,
-      widget.city,
-      widget.district,
-      widget.workerType,
-      widget.providerType,
-      false,
-      currentPage,
+      firstName: widget.firstName,
+      lastName: widget.lastName,
+      profession: widget.specialization,
+      governorate: widget.governorate,
+      city: widget.city,
+      district: widget.district,
+      workerType: widget.workerType,
+      providerType: widget.providerType,
+      basedOnPoints: false,
+      pageNumber: currentPage,
     );
-
+    if (!mounted) {
+      debugPrint("The api has been done doing for real");
+      return;
+    }
     setState(() {
       providers.addAll(result);
       isLoading = false;
@@ -107,12 +119,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           'نتائج البحث',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: providers.isEmpty && !isLoading
           ? Center(
@@ -123,7 +129,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                   const SizedBox(height: 16),
                   Text(
                     'لم يتم العثور على نتائج',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -137,16 +147,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               children: [
                 Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${providers.length} نتائج',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                      const Expanded(child: SizedBox()),
-                    ],
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
                 ),
                 Expanded(
@@ -159,7 +162,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       if (index >= providers.length) {
                         return Padding(
                           padding: const EdgeInsets.all(12),
-                          child: Center(child: CircularProgressIndicator(color: primary)),
+                          child: Center(
+                            child: CircularProgressIndicator(color: primary),
+                          ),
                         );
                       }
 
@@ -173,7 +178,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     );
   }
 
-  Widget _buildProviderCard(BuildContext context, ServiceProvider provider, Color primary) {
+  Widget _buildProviderCard(
+    BuildContext context,
+    ServiceProvider provider,
+    Color primary,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -202,13 +211,15 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               provider.isCompany
-                  ? Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.orange.withOpacity(0.15),
-                      ),
-                      child: Icon(Icons.business, color: Colors.orange, size: 24),
+                  ? CircleAvatar(
+                      radius: 28,
+                      backgroundImage: provider.imageUrl != null
+                          ? NetworkImage(provider.imageUrl!)
+                          : null,
+                      backgroundColor: Colors.grey[200],
+                      child: provider.imageUrl == null
+                          ? Icon(Icons.business, color: Colors.orange, size: 24)
+                          : null,
                     )
                   : CircleAvatar(
                       radius: 28,
@@ -217,7 +228,12 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                           : null,
                       backgroundColor: Colors.grey[200],
                       child: provider.imageUrl == null
-                          ? Icon(Icons.person, color: Colors.grey[600], size: 28)
+                          ? Icon(
+                              Icons.person,
+                              color: Colors.blue[600],
+
+                              size: 28,
+                            )
                           : null,
                     ),
               const SizedBox(width: 14),
@@ -236,10 +252,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                     const SizedBox(height: 4),
                     Text(
                       provider.skill,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
@@ -268,7 +281,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _formatPay(provider),
+                    (provider.isCompany) ? "" : _formatPay(provider),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -303,7 +316,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       ),
                       child: const Text(
                         'عرض',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -320,7 +336,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     final pay = provider.pay ?? '0';
     if (provider.typeOfService == 'Worker') {
       if (provider.workerType == 0) return '$pay ج باليومية';
-      if (provider.workerType == 1) return '$pay ج بالمشروع';
+      if (provider.workerType == 1) return '$pay ج بالمقطوعية';
       return '$pay ج';
     }
     if (provider.typeOfService == 'Engineer') return '$pay ج بالمرتب';

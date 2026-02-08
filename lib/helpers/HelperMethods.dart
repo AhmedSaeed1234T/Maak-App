@@ -96,7 +96,7 @@ String formatPay(ServiceProvider provider) {
 
   if (provider.typeOfService == 'Worker') {
     if (provider.workerType == 0) return '$pay ج باليومية';
-    if (provider.workerType == 1) return '$pay ج بالمشروع';
+    if (provider.workerType == 1) return '$pay ج بالمقطوعية';
     return '$pay ج';
   }
   if (provider.typeOfService == 'Engineer') return '$pay ج بالمرتب';
