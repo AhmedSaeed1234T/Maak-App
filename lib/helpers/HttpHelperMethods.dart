@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +14,7 @@ Future<http.Response> withTokenRetry(
   if (response.statusCode == 401) {
     // Access token expired, try refresh
     debugPrint("Refreshing right now");
-    bool refreshed = false;
-    refreshed = await tokenService.refreshAccessToken();
-
+    bool refreshed = await tokenService.refreshAccessToken();
     if (refreshed) {
       debugPrint("Refreshed successfully");
       // Get the new token

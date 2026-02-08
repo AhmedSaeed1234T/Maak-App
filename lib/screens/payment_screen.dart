@@ -1,28 +1,22 @@
-import 'package:abokamall/helpers/OpenWhatsapp.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+  const PaymentScreen({Key? key}) : super(key: key);
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
-
 class _PaymentScreenState extends State<PaymentScreen> {
   String? _selectedPaymentMethod;
   String? _paymentPhone = '';
-  bool paymentIsAllowed = false;
+
   Future<void> _showPaymentDialog(String method) async {
     String phone = '';
     await showDialog(
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: Text(
-            method == 'vodafone_cash'
-                ? 'بيانات فودافون كاش'
-                : 'بيانات إنستا باي',
-          ),
+          title: Text(method == 'vodafone_cash' ? 'بيانات فودافون كاش' : 'بيانات إنستا باي'),
           content: TextField(
             keyboardType: TextInputType.phone,
             decoration: const InputDecoration(hintText: 'رقم الهاتف'),
@@ -35,13 +29,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                  _paymentPhone = phone;
-                  _selectedPaymentMethod = method;
-                });
+                setState(() { _paymentPhone = phone; _selectedPaymentMethod = method; });
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('تم حفظ بيانات الدفع: $phone')),
+                  SnackBar(content: Text('تم حفظ بيانات الدفع: $phone'))
                 );
               },
               child: const Text('موافق'),
@@ -52,20 +43,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  Future<void> _openWhatsapp() async {
+    final webUrl = Uri.parse('https://wa.me/201040073077');
+    try {
+      if (!await launchUrl(webUrl, mode: LaunchMode.externalApplication)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح الواتساب')));
+      }
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر فتح الواتساب')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF13A9F6);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'خيارات الدفع',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('خيارات الدفع', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0.5,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -86,62 +84,37 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: primary.withOpacity(0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
               ),
-              child: const Icon(
-                Icons.credit_card,
-                color: Colors.white,
-                size: 35,
-              ),
+              child: const Icon(Icons.credit_card, color: Colors.white, size: 35),
             ),
             const SizedBox(height: 20),
-            if (paymentIsAllowed) ...[
-              const Text(
-                'طرق الدفع المتاحة',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'اختر طريقة دفع مفضلة لتحديث اشتراكك',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 28),
-              // Payment Options
-              _buildPaymentOption(
-                title: 'الدفع بفودافون كاش',
-                subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
-                value: 'vodafone_cash',
-                icon: Icons.phone_android,
-                onTap: () => _showPaymentDialog('vodafone_cash'),
-              ),
-              const SizedBox(height: 16),
-              _buildPaymentOption(
-                title: 'الدفع بإنستا باي',
-                subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
-                value: 'instapay',
-                icon: Icons.credit_card,
-                onTap: () => _showPaymentDialog('instapay'),
-              ),
-            ] else ...[
-              Text(
-                "طرق الدفع غير متاحة في النسخة الحالية من التطبيق, انتظرونا في تحديثات مستقبلية",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  fontSize: 30,
-                ),
-              ),
-            ],
+            const Text(
+              'طرق الدفع المتاحة',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'اختر طريقة دفع مفضلة لتحديث اشتراكك',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 28),
+            // Payment Options
+            _buildPaymentOption(
+              title: 'الدفع بفودافون كاش',
+              subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
+              value: 'vodafone_cash',
+              icon: Icons.phone_android,
+              onTap: () => _showPaymentDialog('vodafone_cash'),
+            ),
+            const SizedBox(height: 16),
+            _buildPaymentOption(
+              title: 'الدفع بإنستا باي',
+              subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
+              value: 'instapay',
+              icon: Icons.credit_card,
+              onTap: () => _showPaymentDialog('instapay'),
+            ),
             const SizedBox(height: 32),
             // Customer Service Button
             SizedBox(
@@ -149,17 +122,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
               height: 56,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.support_agent, size: 22),
-                label: const Text(
-                  'تواصل مع خدمة العملاء عبر واتساب',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-                onPressed: () async => await openWhatsapp(context),
+                label: const Text('تواصل مع خدمة العملاء عبر واتساب', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                onPressed: _openWhatsapp,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF25D366),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 3,
                 ),
               ),
@@ -193,7 +161,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ),
     );
   }
-
   Widget _buildPaymentOption({
     required String title,
     required String subtitle,
@@ -210,26 +177,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _selectedPaymentMethod == value
-                ? primary
-                : Colors.grey[300]!,
+            color: _selectedPaymentMethod == value ? primary : Colors.grey[300]!,
             width: _selectedPaymentMethod == value ? 2 : 1,
           ),
           boxShadow: _selectedPaymentMethod == value
-              ? [
-                  BoxShadow(
-                    color: primary.withOpacity(0.1),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.05),
-                    blurRadius: 4,
-                    spreadRadius: 0,
-                  ),
-                ],
+              ? [BoxShadow(color: primary.withOpacity(0.1), blurRadius: 8, spreadRadius: 1)]
+              : [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 4, spreadRadius: 0)],
         ),
         child: Row(
           children: [
@@ -247,19 +200,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
                   const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
+                  Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                 ],
               ),
             ),

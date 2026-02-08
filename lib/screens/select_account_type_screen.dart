@@ -31,19 +31,9 @@ class SelectAccountTypeScreen extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primary.withOpacity(0.2),
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
+                  boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: Offset(0, 6))],
                 ),
-                child: const Icon(
-                  Icons.person_add,
-                  color: Colors.white,
-                  size: 40,
-                ),
+                child: const Icon(Icons.person_add, color: Colors.white, size: 40),
               ),
             ),
             const SizedBox(height: 24),
@@ -52,11 +42,7 @@ class SelectAccountTypeScreen extends StatelessWidget {
                 children: [
                   const Text(
                     'اختر نوع الحساب',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -97,8 +83,27 @@ class SelectAccountTypeScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 32),
-
             // Login Link
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('لديك حساب بالفعل؟ ', style: TextStyle(fontSize: 14, color: Colors.black87)),
+                  GestureDetector(
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, '/login'),
+                    child: const Text(
+                      'سجّل دخول',
+                      style: TextStyle(
+                        color: Color(0xFF13A9F6),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -177,7 +182,11 @@ class _AccountTypeTileState extends State<_AccountTypeTile> {
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios, color: primary, size: 18),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: primary,
+                  size: 18,
+                ),
               ],
             ),
           ),

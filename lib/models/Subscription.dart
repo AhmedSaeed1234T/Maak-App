@@ -1,40 +1,40 @@
-import 'package:hive/hive.dart';
-
-part 'Subscription.g.dart'; // <-- exactly one per file
-
-@HiveType(typeId: 99)
 class Subscription {
-  @HiveField(0)
-  final int id;
-  @HiveField(1)
-  final String startDate;
-  @HiveField(2)
-  final String endDate;
-  @HiveField(3)
-  final bool isActive;
+  // int id;
+  // String userId;
+  // User user;
+  DateTime startDate;
+  DateTime endDate;
 
   Subscription({
-    required this.id,
+    // required this.id,
+    // required this.userId,
+    // required this.user,
     required this.startDate,
     required this.endDate,
-    required this.isActive,
   });
 
+  // Computed property for IsActive
+  bool get isActive => endDate.isAfter(DateTime.now().toUtc());
+
+  // Factory to create Subscription from JSON
   factory Subscription.fromJson(Map<String, dynamic> json) {
     return Subscription(
-      id: json['id'] ?? 0,
-      startDate: json['startDate'] ?? '',
-      endDate: json['endDate'] ?? '',
-      isActive: json['isActive'] ?? false,
+      // id: json['Id'] ?? 0,
+      // userId: json['UserId'] ?? '',
+      // user: User.fromJson(json['User'] ?? {}),
+      startDate: DateTime.tryParse(json['StartDate'] ?? '') ?? DateTime.now(),
+      endDate: DateTime.tryParse(json['EndDate'] ?? '') ?? DateTime.now(),
     );
   }
 
+  // Convert to JSON (for sending to backend)
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'startDate': startDate,
-      'endDate': endDate,
-      'isActive': isActive,
+      // 'Id': id,
+      // 'UserId': userId,
+      // 'User': user.toJson(),
+      'StartDate': startDate.toIso8601String(),
+      'EndDate': endDate.toIso8601String(),
     };
   }
 }

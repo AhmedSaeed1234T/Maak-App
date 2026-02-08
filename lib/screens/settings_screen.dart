@@ -1,54 +1,22 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:abokamall/controllers/ProfileController.dart';
-import 'package:abokamall/helpers/ContextFunctions.dart';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
-import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/models/UserProfile.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
   @override
   State<ProfileSettingsPage> createState() => _ProfileSettingsPageState();
 }
-
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
-  bool hasValidCache = false;
-  bool _isConnected = true;
-  late final Connectivity _connectivity;
-  late final Stream<ConnectivityResult> _connectivityStream;
-
-  Future<void> _checkConnection() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-
-    setState(() {
-      _isConnected = connectivityResult != ConnectivityResult.none;
-    });
-
-    // Optional: show warning when offline
-    if (!_isConnected && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات"),
-          backgroundColor: Colors.black,
-        ),
-      );
-    }
-  }
-
   final ProfileController _controller = getIt<ProfileController>();
-  final TokenService tokenService = getIt<TokenService>();
+
   bool _isLoading = true;
   bool _isSaving = false;
   bool _hasChanges = false;
-  bool _isLogingOut = false;
   // Profile data from API
   UserProfile? _userProfile;
   // Local editable data
@@ -67,37 +35,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   void initState() {
     super.initState();
-
-    checkSessionValidity(context, tokenService);
-
-    _connectivity = Connectivity(); // IMPORTANT: Initialize first
-
-    _connectivityStream = _connectivity.onConnectivityChanged;
-    _connectivityStream.listen(_onConnectivityChanged);
-
-    _checkConnection();
     _loadProfile();
   }
-
-  void _onConnectivityChanged(ConnectivityResult result) {
-    final isConnected = result != ConnectivityResult.none;
-
-    if (!mounted) return;
-
-    setState(() {
-      _isConnected = isConnected;
-    });
-
-    if (!_isConnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات"),
-          backgroundColor: Colors.black,
-        ),
-      );
-    }
-  }
-
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
 
@@ -154,17 +93,15 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       });
     }
   }
-
   void _markAsChanged() {
     setState(() => _hasChanges = true);
   }
-
   Future<void> _saveProfile() async {
     if (!_hasChanges) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('لا توجد تغييرات للحفظ'),
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -263,6 +200,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
     final providerType =
         _userProfile!.serviceProvider?.providerType.toLowerCase() ?? '';
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -286,47 +224,48 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             // Provider-Specific Section
             _buildProviderSpecificSection(providerType),
             const SizedBox(height: 24),
-
             // Change Password Button
-            /*SizedBox(
+            SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _changePassword,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isConnected
-                      ? const Color(0xFF13A9F6)
-                      : Colors.grey[400],
+                  backgroundColor: const Color(0xFF13A9F6),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 2,
                 ),
-                child: const Text(
-                  'تغيير كلمة المرور',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+                child: const Text('تغيير كلمة المرور', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),
-            */
             const SizedBox(height: 16),
             // Logout Button
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _isConnected
-                    ? (_isSaving ? null : _saveProfile)
-                    : null,
+                onPressed: _logout,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _hasChanges
-                      ? const Color(0xFF13A9F6)
-                      : Colors.grey[400],
+                  backgroundColor: Colors.red.shade500,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                ),
+                child: const Text('تسجيل الخروج', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Save Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _saveProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _hasChanges ? const Color(0xFF13A9F6) : Colors.grey[400],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: _hasChanges ? 4 : 0,
                 ),
                 child: _isSaving
@@ -347,43 +286,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       ),
               ),
             ),
-            const SizedBox(height: 24),
 
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isConnected ? _logout : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isConnected
-                      ? Colors.red.shade500
-                      : Colors.grey[400],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: _isLogingOut
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'تسجيل الخروج',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-
-            // Save Button
             const SizedBox(height: 16),
           ],
         ),
@@ -416,9 +319,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   backgroundColor: Colors.grey[200],
                   backgroundImage: _newProfileImage != null
                       ? FileImage(_newProfileImage!)
-                      : (imageUrl.isNotEmpty
-                                ? CachedNetworkImageProvider(imageUrl)
-                                : null)
+                      : (imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null)
                             as ImageProvider?,
                   child: _newProfileImage == null && imageUrl.isEmpty
                       ? Icon(Icons.person, size: 60, color: Colors.grey[400])
@@ -429,7 +330,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: (_isConnected) ? _pickImage : null,
+                  onTap: _pickImage,
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -483,25 +384,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         const SizedBox(height: 16),
 
         // Username (non-editable)
-        Row(
-          children: [
-            Expanded(
-              child: _buildNonEditableField(
-                label: 'اسم المستخدم',
-                value: _userProfile!.userName,
-                icon: Icons.person,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.copy, size: 20),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: _userProfile!.userName));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('تم نسخ اسم المستخدم')),
-                );
-              },
-            ),
-          ],
+        _buildNonEditableField(
+          label: 'اسم المستخدم',
+          value: _userProfile!.userName,
+          icon: Icons.person,
         ),
 
         // Email (non-editable)
@@ -514,7 +400,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         // Phone number (non-editable)
         _buildNonEditableField(
           label: 'رقم الهاتف',
-          value: _userProfile!.phoneNumber.substring(2),
+          value: _userProfile!.phoneNumber,
           icon: Icons.phone_outlined,
         ),
 
@@ -603,7 +489,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
         Row(
           children: [
-            Icon(Icons.location_on_outlined, color: const Color(0xFF13A9F6)),
+            Icon(
+              Icons.location_on_outlined,
+              color: const Color(0xFF13A9F6),
+            ),
             const SizedBox(width: 8),
             Text(
               'العنوان',
@@ -938,12 +827,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               ],
             ),
           ),
-          if (_isConnected) ...[
-            IconButton(
-              icon: const Icon(Icons.edit, color: Color(0xFF13A9F6)),
-              onPressed: onEdit,
-            ),
-          ],
+          IconButton(
+            icon: const Icon(Icons.edit, color: Color(0xFF13A9F6)),
+            onPressed: onEdit,
+          ),
         ],
       ),
     );
@@ -1011,23 +898,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     // controller.dispose();
   }
 
-  Future<void> _logout() async {
-    setState(() => _isLogingOut = true);
-    bool allowed = await _controller.logout();
-    if (allowed == false) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('لا يوجد اتصال بالإنترنت - تعذر تسجيل الخروج'),
-            backgroundColor: Colors.black,
-          ),
-        );
-      }
-      return;
-    }
-    setState(() => _isLogingOut = false);
-
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  void _logout() async {
+    await _controller.logout();
+    Navigator.pushNamedAndRemoveUntil(context, '/splash', (route) => false);
   }
 
   void _changePassword() {
