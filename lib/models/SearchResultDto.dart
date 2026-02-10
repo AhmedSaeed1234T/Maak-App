@@ -157,6 +157,7 @@ class ServiceProvider extends HiveObject {
       'workerType': workerType,
       'cachedAt': cachedAt.toIso8601String(),
       'userName': userName,
+      'userId': userId, // ✅ Add userId to preserve it in cache
     };
   }
 }

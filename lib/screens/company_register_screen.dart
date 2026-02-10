@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
+import '../widgets/location_fields.dart';
 
 class CompanyRegisterScreen extends StatefulWidget {
   const CompanyRegisterScreen({super.key});
@@ -364,24 +365,22 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                         // Location
                         _buildSectionLabel('الموقع الجغرافي'),
                         const SizedBox(height: 10),
-                        _buildTextField(
-                          _governorateController,
-                          "المحافظة",
-                          Icons.location_on,
+                        GovernorateDropdownField(
+                          controller: _governorateController,
+                          primaryColor: const Color(0xFF13A9F6),
                           isRequired: true,
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField(
-                          _cityController,
-                          "المدينة",
-                          Icons.location_city,
+                        CityTextField(
+                          controller: _cityController,
+                          primaryColor: const Color(0xFF13A9F6),
                           isRequired: true,
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField(
-                          _districtController,
-                          "الحي",
-                          Icons.location_on_outlined,
+                        DistrictTextField(
+                          controller: _districtController,
+                          primaryColor: const Color(0xFF13A9F6),
+                          isRequired: false,
                         ),
                         const SizedBox(height: 20),
 

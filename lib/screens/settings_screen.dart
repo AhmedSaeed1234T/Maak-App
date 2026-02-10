@@ -607,8 +607,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label: 'المحافظة',
           value: _governorate,
           icon: Icons.map,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل المحافظة',
+          onEdit: () => _showGovernorateDialog(
             initialValue: _governorate,
             onSave: (value) {
               setState(() => _governorate = value);
@@ -933,6 +932,167 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  // List of Egyptian governorates
+  static const List<String> _egyptianGovernorates = [
+    'القاهرة',
+    'الجيزة',
+    'الإسكندرية',
+    'الدقهلية',
+    'الشرقية',
+    'القليوبية',
+    'كفر الشيخ',
+    'الغربية',
+    'المنوفية',
+    'البحيرة',
+    'دمياط',
+    'بورسعيد',
+    'السويس',
+    'الإسماعيلية',
+    'بني سويف',
+    'الفيوم',
+    'المنيا',
+    'أسيوط',
+    'سوهاج',
+    'قنا',
+    'الأقصر',
+    'أسوان',
+    'البحر الأحمر',
+    'الوادي الجديد',
+    'مطروح',
+    'شمال سيناء',
+    'جنوب سيناء',
+    'الاخري', // Other option
+  ];
+
+  Future<void> _showGovernorateDialog({
+    required String initialValue,
+    required Function(String) onSave,
+  }) async {
+    String? selectedGovernorate;
+    bool isOtherSelected = false;
+    final controller = TextEditingController();
+
+    // Initialize selection
+    if (_egyptianGovernorates.contains(initialValue)) {
+      selectedGovernorate = initialValue;
+      isOtherSelected = initialValue == 'الاخري';
+      if (isOtherSelected) {
+        controller.text = initialValue;
+      }
+    } else if (initialValue.isNotEmpty) {
+      // Custom value - set to "Other"
+      selectedGovernorate = 'الاخري';
+      isOtherSelected = true;
+      controller.text = initialValue;
+    }
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text('تعديل المحافظة'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isOtherSelected) ...[
+                    // Dropdown mode
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedGovernorate,
+                      decoration: InputDecoration(
+                        labelText: 'المحافظة',
+                        prefixIcon: const Icon(
+                          Icons.location_on,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      items: _egyptianGovernorates.map((String governorate) {
+                        return DropdownMenuItem<String>(
+                          value: governorate,
+                          child: Text(governorate),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setDialogState(() {
+                          selectedGovernorate = newValue;
+                          if (newValue == 'الاخري') {
+                            isOtherSelected = true;
+                            controller.clear();
+                          }
+                        });
+                      },
+                      isExpanded: true,
+                    ),
+                  ] else ...[
+                    // Text field mode (when "Other" is selected)
+                    TextFormField(
+                      controller: controller,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'المحافظة',
+                        hintText: 'اكتب اسم المحافظة',
+                        prefixIcon: const Icon(
+                          Icons.location_on,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: Color(0xFF13A9F6),
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              isOtherSelected = false;
+                              selectedGovernorate = null;
+                            });
+                          },
+                          tooltip: 'العودة للقائمة',
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  String valueToSave;
+                  if (isOtherSelected) {
+                    valueToSave = controller.text.trim();
+                  } else {
+                    valueToSave = selectedGovernorate ?? '';
+                  }
+
+                  if (valueToSave.isNotEmpty) {
+                    onSave(valueToSave);
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('حفظ'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

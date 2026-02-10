@@ -36,7 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late final searchcontroller searchController;
   late final UserListCacheService userListCacheService;
   late final TokenService tokenService;
-  bool isLoading = false;
+  Map<ProviderType, bool> sectionLoadingStates = {};
+  bool isInitialLoad = true;
   bool hasInternet = true;
   bool hasValidCache = true;
   bool hasError = false;
@@ -220,7 +221,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           featuredProviders = [];
           cachedProviders = {};
-          isLoading = false;
+          isInitialLoad = false;
+          for (var type in providerTypes) {
+            sectionLoadingStates[type] = false;
+          }
           hasError = true;
           errorMessage = 'يجب الاتصال بالإنترنت لتحديث البيانات';
         });
@@ -229,15 +233,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     setState(() {
-      isLoading = true;
+      isInitialLoad = true;
       hasError = false;
       errorMessage = '';
     });
 
-    bool hasFreshData = false;
     bool allCachesEmpty = true;
 
+    // ⭐ STEP 1: Load ALL cached data immediately and display
     for (var type in providerTypes) {
+      sectionLoadingStates[type] = true;
       final cached = await userListCacheService.loadCachedUsersAsync(
         type.name.toLowerCase(),
       );
@@ -246,61 +251,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
         allCachesEmpty = false;
       }
 
-      if (hasInternet) {
-        try {
-          final providers = await searchController.searchWorkers(
-            serverActionError: ServerActionError.unknown,
-            context: context,
-            providerType: type,
-            basedOnPoints: true,
-          );
-
-          cachedProviders[type] = providers;
-          await userListCacheService.cacheUsers(
-            type.name.toLowerCase(),
-            providers,
-          );
-          hasFreshData = true;
-        } catch (e) {
-          // Fallback to cache on error
-          cachedProviders[type] = cached;
-          if (!mounted) return;
-
-          if (cached.isEmpty) {
-            setState(() {
-              hasError = true;
-              errorMessage = 'فشل تحميل البيانات. يرجى المحاولة مرة أخرى';
-            });
-          }
-        }
-      } else {
-        cachedProviders[type] = cached;
-      }
+      cachedProviders[type] = cached;
     }
 
     // Determine cache validity
     hasValidCache = !allCachesEmpty;
     if (!mounted) return;
 
-    // ✅ NEW: Re-check status LOCALLY in case searchWorkers detected a 403 expiry
-    await _checkSubscriptionStatus(onlyLocal: true);
-
+    // ⭐ STEP 2: Update UI with cached data immediately
     setState(() {
       featuredProviders = cachedProviders[providerTypes[tabIndex]] ?? [];
-      isLoading = false;
+      isInitialLoad = false;
     });
 
-    // Show appropriate messages
-    if (!hasInternet && allCachesEmpty) {
-      showSnackBar(
-        'لا توجد بيانات متاحة. يرجى الاتصال بالإنترنت',
-        Colors.red,
-        duration: 4,
+    // ⭐ STEP 3: Fetch fresh data for each section independently (in parallel)
+    if (hasInternet) {
+      for (var type in providerTypes) {
+        _fetchSectionData(type); // Don't await - let them run in parallel
+      }
+    } else {
+      // Mark all sections as loaded since we're offline
+      if (!mounted) return;
+      setState(() {
+        for (var type in providerTypes) {
+          sectionLoadingStates[type] = false;
+        }
+      });
+
+      if (allCachesEmpty) {
+        showSnackBar(
+          'لا توجد بيانات متاحة. يرجى الاتصال بالإنترنت',
+          Colors.red,
+          duration: 4,
+        );
+      }
+    }
+
+    // ✅ Re-check status LOCALLY in case searchWorkers detected a 403 expiry
+    await _checkSubscriptionStatus(onlyLocal: true);
+  }
+
+  Future<void> _fetchSectionData(ProviderType type) async {
+    if (!mounted) return;
+
+    try {
+      final providers = await searchController.searchWorkers(
+        serverActionError: ServerActionError.unknown,
+        context: context,
+        providerType: type,
+        basedOnPoints: true,
       );
-    } else if (!hasInternet && hasValidCache) {
-      // Already shown message in _checkInitialConnectivity
-    } else if (hasInternet && hasFreshData) {
-      // Successfully loaded fresh data - no message needed
+
+      if (!mounted) return;
+
+      // Update immediately when this section loads
+      setState(() {
+        cachedProviders[type] = providers;
+        sectionLoadingStates[type] = false;
+
+        // If this is the currently viewed tab, update display
+        if (providerTypes[tabIndex] == type) {
+          featuredProviders = providers;
+        }
+      });
+
+      // Cache the data
+      await userListCacheService.cacheUsers(type.name.toLowerCase(), providers);
+    } catch (e) {
+      if (!mounted) return;
+
+      // Mark as loaded even on error (fallback to cached data)
+      setState(() {
+        sectionLoadingStates[type] = false;
+
+        // If cached data is empty and this is current tab, show error
+        if (cachedProviders[type]?.isEmpty ?? true) {
+          if (providerTypes[tabIndex] == type) {
+            hasError = true;
+            errorMessage = 'فشل تحميل البيانات. يرجى المحاولة مرة أخرى';
+          }
+        }
+      });
     }
   }
 
@@ -395,7 +426,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     setState(() {
       featuredProviders = cachedProviders[type] ?? [];
-      isLoading = false;
     });
   }
 
@@ -697,7 +727,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 12),
 
             // Content area
-            if (isLoading)
+            if (isInitialLoad)
               const SizedBox(
                 height: 200,
                 child: Center(

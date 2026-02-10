@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
+import '../widgets/location_fields.dart';
 
 class WorkerRegisterScreen extends StatefulWidget {
   const WorkerRegisterScreen({super.key});
@@ -396,37 +397,26 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        TextFormField(
+                        GovernorateDropdownField(
                           controller: _governorateController,
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? "المحافظة مطلوبة"
-                              : null,
-                          decoration: _buildDecoration(
-                            "المحافظة",
-                            Icons.location_on,
-                          ),
+                          primaryColor: _primaryColor,
+                          isRequired: true,
                         ),
                         const SizedBox(height: 16),
 
-                        TextFormField(
+                        CityTextField(
                           controller: _cityController,
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? "المدينة مطلوبة"
-                              : null,
-                          decoration: _buildDecoration(
-                            "المدينة",
-                            Icons.location_city,
-                          ),
+                          primaryColor: _primaryColor,
+                          isRequired: true,
                         ),
                         const SizedBox(height: 16),
 
-                        TextFormField(
+                        DistrictTextField(
                           controller: _districtController,
-                          decoration: _buildDecoration(
-                            "الحي",
-                            Icons.location_on_outlined,
-                          ),
+                          primaryColor: _primaryColor,
+                          isRequired: false,
                         ),
+
                         const SizedBox(height: 16),
 
                         TextFormField(

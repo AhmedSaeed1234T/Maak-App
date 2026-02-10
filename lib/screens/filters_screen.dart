@@ -7,6 +7,7 @@ import 'package:abokamall/screens/search_results_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:abokamall/helpers/enums.dart';
+import '../widgets/location_fields.dart';
 
 class FiltersScreen extends StatefulWidget {
   const FiltersScreen({super.key});
@@ -231,28 +232,28 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             // Location fields
                             _buildSectionLabel('المحافظة'),
                             const SizedBox(height: 8),
-                            _buildTextField(
-                              governorateController,
-                              'مثال: القاهرة',
-                              Icons.map,
+                            GovernorateDropdownField(
+                              controller: governorateController,
+                              primaryColor: primary,
+                              isRequired: false,
                             ),
                             const SizedBox(height: 16),
 
                             _buildSectionLabel('المدينة'),
                             const SizedBox(height: 8),
-                            _buildTextField(
-                              cityController,
-                              'مثال: مدينة نصر',
-                              Icons.location_city,
+                            CityTextField(
+                              controller: cityController,
+                              primaryColor: primary,
+                              isRequired: false,
                             ),
                             const SizedBox(height: 16),
 
                             _buildSectionLabel('الحي'),
                             const SizedBox(height: 8),
-                            _buildTextField(
-                              districtController,
-                              'مثال: التجمع الخامس',
-                              Icons.location_on_outlined,
+                            DistrictTextField(
+                              controller: districtController,
+                              primaryColor: primary,
+                              isRequired: false,
                             ),
                             const SizedBox(height: 16),
 

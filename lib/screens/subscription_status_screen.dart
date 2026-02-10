@@ -257,7 +257,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
               'اخر تحديث',
               _formatDate(widget.userProfile.subscription!.updatedAt),
             ),
-
+            /*
             const SizedBox(height: 60),
             const Align(
               alignment: Alignment.centerRight,
@@ -314,6 +314,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                 ),
               ],
             ),
+            */
             if (!_isOnline)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
