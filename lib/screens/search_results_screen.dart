@@ -1,6 +1,7 @@
 import 'package:abokamall/helpers/ContextFunctions.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/controllers/SearchController.dart';
@@ -61,40 +62,64 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   Future<void> _fetchResults() async {
-    if (!mounted) {
-      debugPrint("The api has been done doing for real");
-      return;
-    }
+    if (!mounted) return;
+
     setState(() => isLoading = true);
 
-    // <-- simulate network delay
-    await Future.delayed(const Duration(seconds: 2));
+    // Optional: simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    final result = await searchController.searchWorkers(
-      firstName: widget.firstName,
-      lastName: widget.lastName,
-      profession: widget.specialization,
-      governorate: widget.governorate,
-      city: widget.city,
-      district: widget.district,
-      workerType: widget.workerType,
-      providerType: widget.providerType,
-      basedOnPoints: false,
-      pageNumber: currentPage,
-    );
-    if (!mounted) {
-      debugPrint("The api has been done doing for real");
-      return;
-    }
-    setState(() {
-      providers.addAll(result);
-      isLoading = false;
-      currentPage++;
+    try {
+      final result = await searchController.searchWorkers(
+        firstName: widget.firstName,
+        lastName: widget.lastName,
+        profession: widget.specialization,
+        governorate: widget.governorate,
+        city: widget.city,
+        district: widget.district,
+        workerType: widget.workerType,
+        providerType: widget.providerType,
+        basedOnPoints: false,
+        pageNumber: currentPage,
+      );
 
-      if (result.length < pageSize) {
-        hasMore = false;
+      if (result.isEmpty) {
+        if (currentPage == 1) {
+          if (!mounted) return;
+          CustomSnackBar.show(
+            context,
+            message: 'لا توجد نتائج أو حدث خطأ في البحث',
+            type: SnackBarType.warning,
+          );
+        }
+
+        if (!mounted) return;
+        setState(() {
+          isLoading = false;
+          hasMore = false;
+        });
+        return;
       }
-    });
+
+      if (!mounted) return;
+
+      setState(() {
+        providers.addAll(result);
+        isLoading = false;
+        currentPage++;
+        if (result.length < pageSize) hasMore = false;
+      });
+    } catch (e) {
+      // Catch any unexpected errors
+      if (!mounted) return;
+      setState(() => isLoading = false);
+
+      CustomSnackBar.show(
+        context,
+        message: 'حدث خطأ أثناء تحميل النتائج: ${e.toString()}',
+        type: SnackBarType.error,
+      );
+    }
   }
 
   @override
@@ -334,6 +359,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   String _formatPay(ServiceProvider provider) {
     final pay = provider.pay ?? '0';
+    if (provider.typeOfService == 'Assistant') {
+      return '$pay ج باليومية';
+    }
     if (provider.typeOfService == 'Worker') {
       if (provider.workerType == 0) return '$pay ج باليومية';
       if (provider.workerType == 1) return '$pay ج بالمقطوعية';

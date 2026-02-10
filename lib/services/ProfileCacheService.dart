@@ -40,4 +40,13 @@ class ProfileCacheService {
 
   /// Check if profile is available offline
   bool get hasValidCache => loadCachedProfile() != null;
+
+  /// ✅ DEBUG ONLY: Rewind cache timestamps for testing
+  Future<void> debugRewindCacheTimestamps(Duration offset) async {
+    final profile = _box.get(key);
+    if (profile != null) {
+      profile.cachedAt = profile.cachedAt.subtract(offset);
+      await _box.put(key, profile);
+    }
+  }
 }

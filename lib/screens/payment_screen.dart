@@ -1,6 +1,11 @@
-import 'package:abokamall/helpers/OpenWhatsapp.dart';
+import 'package:flutter/foundation.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:abokamall/helpers/OpenWhatsapp.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/TokenService.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -12,6 +17,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String? _selectedPaymentMethod;
   String? _paymentPhone = '';
   bool paymentIsAllowed = false;
+  bool _isGracePassed = false;
+  bool _isOnline = true; // ✅ NEW
+  late final Connectivity _connectivity;
+  late final Stream<ConnectivityResult> _connectivityStream;
   Future<void> _showPaymentDialog(String method) async {
     String phone = '';
     await showDialog(
@@ -40,8 +49,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   _selectedPaymentMethod = method;
                 });
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('تم حفظ بيانات الدفع: $phone')),
+                CustomSnackBar.show(
+                  context,
+                  message: 'تم شحن المحفظة بنجاح، شكراً لك',
+                  type: SnackBarType.success,
                 );
               },
               child: const Text('موافق'),
@@ -50,6 +61,38 @@ class _PaymentScreenState extends State<PaymentScreen> {
         );
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _connectivity = Connectivity();
+    _checkInitialConnectivity();
+    _checkOfflineStatus();
+    _connectivityStream = _connectivity.onConnectivityChanged;
+    _connectivityStream.listen(_onConnectivityChanged);
+  }
+
+  Future<void> _checkInitialConnectivity() async {
+    final result = await _connectivity.checkConnectivity();
+    if (mounted) {
+      setState(() => _isOnline = result != ConnectivityResult.none);
+    }
+  }
+
+  void _onConnectivityChanged(ConnectivityResult result) {
+    if (mounted) {
+      setState(() => _isOnline = result != ConnectivityResult.none);
+    }
+  }
+
+  Future<void> _checkOfflineStatus() async {
+    final gracePassed = await getIt<TokenService>().mustCheckOnline();
+    if (mounted) {
+      setState(() {
+        _isGracePassed = gracePassed;
+      });
+    }
   }
 
   @override
@@ -122,7 +165,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
                 value: 'vodafone_cash',
                 icon: Icons.phone_android,
-                onTap: () => _showPaymentDialog('vodafone_cash'),
+                onTap: (_isGracePassed && !_isOnline)
+                    ? () {
+                        CustomSnackBar.show(
+                          context,
+                          message: 'يجب الاتصال بالإنترنت لإتمام عملية الدفع',
+                          type: SnackBarType.warning,
+                        );
+                      }
+                    : () => _showPaymentDialog('vodafone_cash'),
               ),
               const SizedBox(height: 16),
               _buildPaymentOption(
@@ -130,7 +181,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 subtitle: 'سيتم تجديد اشتراكك خلال 24 ساعة',
                 value: 'instapay',
                 icon: Icons.credit_card,
-                onTap: () => _showPaymentDialog('instapay'),
+                onTap: (_isGracePassed && !_isOnline)
+                    ? () {
+                        CustomSnackBar.show(
+                          context,
+                          message: 'يجب الاتصال بالإنترنت لإتمام عملية الدفع',
+                          type: SnackBarType.warning,
+                        );
+                      }
+                    : () => _showPaymentDialog('instapay'),
               ),
             ] else ...[
               Text(

@@ -1,18 +1,23 @@
 import 'package:abokamall/helpers/supportPhone.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<void> openWhatsapp(BuildContext context) async {
   final webUrl = Uri.parse('https://wa.me/$supportPhoneNumber');
   try {
     if (!await launchUrl(webUrl, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(
+      CustomSnackBar.show(
         context,
-      ).showSnackBar(const SnackBar(content: Text('تعذر فتح الواتساب')));
+        message: 'تعذر فتح الواتساب',
+        type: SnackBarType.error,
+      );
     }
   } catch (_) {
-    ScaffoldMessenger.of(
+    CustomSnackBar.show(
       context,
-    ).showSnackBar(const SnackBar(content: Text('تعذر فتح الواتساب')));
+      message: 'تعذر فتح الواتساب',
+      type: SnackBarType.error,
+    );
   }
 }

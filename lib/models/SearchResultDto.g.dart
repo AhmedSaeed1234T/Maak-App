@@ -31,6 +31,7 @@ class ServiceProviderAdapter extends TypeAdapter<ServiceProvider> {
       typeOfService: fields[11] as String?,
       aboutMe: fields[12] as String?,
       userName: fields[14] as String,
+      userId: fields[15] as String?,
       cachedAt: fields[13] as DateTime?,
     );
   }
@@ -38,7 +39,7 @@ class ServiceProviderAdapter extends TypeAdapter<ServiceProvider> {
   @override
   void write(BinaryWriter writer, ServiceProvider obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -68,7 +69,9 @@ class ServiceProviderAdapter extends TypeAdapter<ServiceProvider> {
       ..writeByte(13)
       ..write(obj.cachedAt)
       ..writeByte(14)
-      ..write(obj.userName);
+      ..write(obj.userName)
+      ..writeByte(15)
+      ..write(obj.userId);
   }
 
   @override

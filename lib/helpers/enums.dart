@@ -1,1 +1,8 @@
-enum ProviderType { Engineers, Contractors, Companies, Marketplaces, Workers }
+enum ProviderType {
+  Engineers,
+  Contractors,
+  Companies,
+  Marketplaces,
+  Workers,
+  Assistants,
+}

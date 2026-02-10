@@ -9,6 +9,7 @@ import 'package:abokamall/helpers/apiclient.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
+import 'package:abokamall/models/SearchResult.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:abokamall/services/UserListCache.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,6 @@ class searchcontroller {
   final UserListCacheService _cacheService = getIt<UserListCacheService>();
   final ApiClient apiClient = getIt<ApiClient>();
   final TokenService _tokenService = getIt<TokenService>();
-
   Future<List<ServiceProvider>> searchWorkers({
     ServerActionError? serverActionError,
     BuildContext? context,
@@ -47,12 +47,10 @@ class searchcontroller {
       final type = providerType ?? ProviderType.Workers;
       final cacheKey = type.name.toLowerCase();
 
-      // If no token, return cached users for this provider type
+      // If no token, return cached users for this provider type (IF ALLOWED)
       if (accessToken == null) {
-        return _cacheService.loadCachedUsers(cacheKey);
+        return await _cacheService.loadCachedUsersAsync(cacheKey);
       }
-
-      final url = Uri.parse('$apiRoute/search/$cacheKey');
 
       final body = {
         "firstName": firstName,
@@ -68,16 +66,12 @@ class searchcontroller {
 
       final response = await apiClient
           .post("/search/$cacheKey", body: body)
-          .timeout(
-            const Duration(seconds: 8),
-            onTimeout: () {
-              throw TimeoutException("Request timed out");
-            },
-          );
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
         debugPrint('Search API response data: ${data.length} items found');
+
         final providers = data
             .map(
               (item) => ServiceProvider.fromJson(
@@ -86,120 +80,58 @@ class searchcontroller {
             )
             .toList();
 
-        // Cache the results by provider type
+        // ✅ NEW: Clear expiry flag on any successful search so UI recovers immediately
+        final currentUserEmail = await getCurrentUser();
+        if (currentUserEmail != null) {
+          await saveUserIsExpired(currentUserEmail, false);
+        }
 
-        // if they are the users in the main screen so cache them , search will cook things up
-        if (basedOnPoints == true) {
+        if (basedOnPoints) {
           await _cacheService.cacheUsers(cacheKey, providers);
         }
 
         return providers;
       }
-      if (response.statusCode == 401) {
-        try {
-          debugPrint(401.toString());
-          // debugPrint(responseBody);
-          final DateTime = await getCurrentUserSubscription();
-          debugPrint(DateTime.toString());
-          final searchResult = SearchResult(
-            errorCode: jsonDecode(response.body)["errorCode"],
-            lastDate: DateTime.toString(),
-          );
-          if (context!.mounted) {
-            String message = await searchResult.arabicErrorMessage;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(message)));
-          }
-          debugPrint('Search API error: ${response.body}');
-        } catch (e) {
-          if (context!.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("لقد حدث خطأ يرجي اعادة التسجيل")),
-            );
-          }
-        }
 
-        if (basedOnPoints) {
-          return _cacheService.loadCachedUsers(cacheKey);
-        } else {
-          return []; // In case the user searched when the server is down
-        }
-      } else {
-        serverActionError = ServerActionError.unknown;
+      // Log unauthorized access (401/403) but allow cache fallback per user request
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        debugPrint(
+          'SearchController: Unauthorized access (${response.statusCode}). Attempting cache fallback.',
+        );
 
-        debugPrint('Search API error: ${response.body}');
-        if (basedOnPoints) {
-          return _cacheService.loadCachedUsers(cacheKey);
-        } else {
-          return []; // In case the user searched when the server is down
+        // ✅ NEW: If 403, mark as expired in storage so UI can react
+        if (response.statusCode == 403) {
+          final currentUserEmail = await getCurrentUser();
+          if (currentUserEmail != null) {
+            await saveUserIsExpired(currentUserEmail, true);
+          }
         }
       }
+
+      // Return cache or empty list depending on basedOnPoints
+      return basedOnPoints
+          ? await _cacheService.loadCachedUsersAsync(cacheKey)
+          : [];
     } on SocketException catch (e) {
       serverActionError = ServerActionError.networkError;
-
-      debugPrint('Socket Timeout :  $e');
+      debugPrint('Socket Exception: $e');
       final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
-      if (basedOnPoints) {
-        return _cacheService.loadCachedUsers(cacheKey);
-      } else {
-        return []; // In case the user searched when the server is down
-      }
+      return basedOnPoints
+          ? await _cacheService.loadCachedUsersAsync(cacheKey)
+          : [];
     } on TimeoutException catch (e) {
-      debugPrint(' Timeout Exception:  $e');
       serverActionError = ServerActionError.timeout;
-
+      debugPrint('Timeout Exception: $e');
       final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
-      if (basedOnPoints) {
-        return _cacheService.loadCachedUsers(cacheKey);
-      } else {
-        return []; // In case the user searched when the server is down
-      }
+      return basedOnPoints
+          ? await _cacheService.loadCachedUsersAsync(cacheKey)
+          : [];
     } catch (e) {
-      debugPrint('Search error: $e');
+      debugPrint('Unexpected error: $e');
       final cacheKey = providerType?.name.toLowerCase() ?? 'workers';
-      if (basedOnPoints) {
-        return _cacheService.loadCachedUsers(cacheKey);
-      } else {
-        return []; // In case the user searched when the server is down
-      }
-    }
-  }
-}
-
-class SearchResult {
-  bool isSuccess;
-  String? errorCode;
-  String? errorMessage;
-  String? lastDate;
-
-  SearchResult({
-    this.isSuccess = false,
-    this.errorCode,
-    this.errorMessage,
-    this.lastDate,
-  });
-
-  Future<String> get arabicErrorMessage async {
-    if (errorCode == null) return errorMessage ?? 'حدث خطأ غير معروف';
-    switch (errorCode) {
-      case 'GeneralError':
-        return 'حدث خطأ عام أثناء تسجيل الدخول';
-      case 'SubscriptionInvalid':
-        if (lastDate != null) {
-          try {
-            final date = await getCurrentUserSubscription();
-            final formattedDate = DateFormat('dd/MM/yyyy').format(date!);
-            debugPrint("Format is $formattedDate");
-
-            return "انتهى اشتراكك في $formattedDate، يرجى التجديد";
-          } catch (e) {
-            return "انتهى اشتراكك، يرجى التجديد";
-          }
-        }
-        return "انتهى اشتراكك، يرجى التجديد";
-      default:
-        return errorMessage ?? 'حدث خطأ: $errorCode';
+      return basedOnPoints
+          ? await _cacheService.loadCachedUsersAsync(cacheKey)
+          : [];
     }
   }
 }

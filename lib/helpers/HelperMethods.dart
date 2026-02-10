@@ -86,6 +86,8 @@ String translateProviderTypeToArabic(String providerType) {
       return 'مقاول';
     case 'company':
       return 'شركة';
+    case 'assistant':
+      return 'مساعد';
     default:
       return 'غير معروف';
   }
@@ -93,7 +95,9 @@ String translateProviderTypeToArabic(String providerType) {
 
 String formatPay(ServiceProvider provider) {
   final pay = provider.pay ?? '0';
-
+  if (provider.typeOfService == 'Assistant') {
+    return '$pay ج باليومية';
+  }
   if (provider.typeOfService == 'Worker') {
     if (provider.workerType == 0) return '$pay ج باليومية';
     if (provider.workerType == 1) return '$pay ج بالمقطوعية';

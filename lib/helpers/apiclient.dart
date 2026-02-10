@@ -12,27 +12,28 @@ class ApiClient {
   /// GET request with automatic 401 handling
   Future<http.Response> get(String endpoint) async {
     return _makeRequest(() async {
-      final token = await _tokenService.getAccessToken();
-      return http.get(
-        Uri.parse('$apiRoute$endpoint'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
+      final needsAuth = !_isAuthEndpoint(endpoint);
+      final token = needsAuth ? await _tokenService.getAccessToken() : null;
+      final headers = <String, String>{'Content-Type': 'application/json'};
+      if (needsAuth && token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      return http.get(Uri.parse('$apiRoute$endpoint'), headers: headers);
     });
   }
 
   /// POST request with automatic 401 handling
   Future<http.Response> post(String endpoint, {Object? body}) async {
     return _makeRequest(() async {
-      final token = await _tokenService.getAccessToken();
+      final needsAuth = !_isAuthEndpoint(endpoint);
+      final token = needsAuth ? await _tokenService.getAccessToken() : null;
+      final headers = <String, String>{'Content-Type': 'application/json'};
+      if (needsAuth && token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
       return http.post(
         Uri.parse('$apiRoute$endpoint'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: body != null ? jsonEncode(body) : null,
       );
     });
@@ -41,13 +42,15 @@ class ApiClient {
   /// PUT request with automatic 401 handling
   Future<http.Response> put(String endpoint, {Object? body}) async {
     return _makeRequest(() async {
-      final token = await _tokenService.getAccessToken();
+      final needsAuth = !_isAuthEndpoint(endpoint);
+      final token = needsAuth ? await _tokenService.getAccessToken() : null;
+      final headers = <String, String>{'Content-Type': 'application/json'};
+      if (needsAuth && token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
       return http.put(
         Uri.parse('$apiRoute$endpoint'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: body != null ? jsonEncode(body) : null,
       );
     });
@@ -56,15 +59,22 @@ class ApiClient {
   /// DELETE request with automatic 401 handling
   Future<http.Response> delete(String endpoint) async {
     return _makeRequest(() async {
-      final token = await _tokenService.getAccessToken();
-      return http.delete(
-        Uri.parse('$apiRoute$endpoint'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
+      final needsAuth = !_isAuthEndpoint(endpoint);
+      final token = needsAuth ? await _tokenService.getAccessToken() : null;
+      final headers = <String, String>{'Content-Type': 'application/json'};
+      if (needsAuth && token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      return http.delete(Uri.parse('$apiRoute$endpoint'), headers: headers);
     });
+  }
+
+  bool _isAuthEndpoint(String endpoint) {
+    final e = endpoint.toLowerCase();
+    if (e == "/auth/add-firebase-token" || e.startsWith("/auth/refresh")) {
+      return false;
+    }
+    return e.startsWith('/auth') || e.contains('/auth/');
   }
 
   /// ✅ Core request handler - automatically retries on 401
@@ -78,9 +88,16 @@ class ApiClient {
     if (response.statusCode == 401) {
       debugPrint("🔄 Got 401 Unauthorized, refreshing token...");
 
-      final refreshed = await _tokenService.refreshAccessToken();
+      // If server already marked refresh as permanently invalid, don't retry
+      final invalidReason = await _tokenService.getRefreshInvalidReason();
+      if (invalidReason != null) {
+        debugPrint('🚫 Refresh permanently invalid: $invalidReason');
+        throw UnauthorizedException(invalidReason);
+      }
 
-      if (refreshed) {
+      final refreshResult = await _tokenService.refreshAccessToken();
+
+      if (refreshResult.isSuccess) {
         debugPrint("✅ Token refreshed, retrying request...");
 
         // ✅ Update last online check (we just successfully connected)

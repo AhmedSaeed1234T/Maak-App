@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/controllers/PresenceController.dart';
+import 'package:abokamall/services/UserListCache.dart';
+import 'package:abokamall/services/ProfileCacheService.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
@@ -26,6 +31,7 @@ class TokenService {
   static const _refreshTokenKey = 'refresh_token';
   static const refreshExpiryKey = 'refresh_expiry';
   static const lastOnlineCheckKey = 'last_online_check';
+  static const _refreshInvalidKey = 'refresh_invalid';
 
   // ------------------------------------------------------------
   // Save Tokens
@@ -42,6 +48,21 @@ class TokenService {
     await storage.write(key: _accessTokenKey, value: accessToken);
     await storage.write(key: _refreshTokenKey, value: refreshToken);
     await storage.write(key: refreshExpiryKey, value: refreshTokenExpiry);
+    // Clearing any previous permanent-refresh-failure flag on new tokens
+    await storage.delete(key: _refreshInvalidKey);
+
+    // ✅ NEW: Mark that we were online JUST NOW.
+    // This allows the user to stay offline for the next 48 hours.
+    await updateLastOnlineCheck();
+    // After saving tokens, ensure presence controller connects to mark user online
+    try {
+      if (getIt.isRegistered<PresenceController>()) {
+        // Fire-and-forget connection; token is now available
+        getIt<PresenceController>().connect();
+      }
+    } catch (e) {
+      debugPrint('Error connecting presence after saveTokens: $e');
+    }
   }
 
   // ------------------------------------------------------------
@@ -66,6 +87,32 @@ class TokenService {
     } catch (e) {
       debugPrint('Error parsing refresh token expiry: $e');
       return null;
+    }
+  }
+
+  /// If a previous refresh attempt was marked permanently invalid by the server
+  /// (e.g. subscription revoked), this returns the server-provided reason.
+  Future<String?> getRefreshInvalidReason() async {
+    return await storage.read(key: _refreshInvalidKey);
+  }
+
+  /// Convenience helper: returns true when a previous refresh attempt was
+  /// marked permanently invalid by the server (e.g. subscription revoked).
+  Future<bool> isRefreshInvalid() async {
+    final r = await getRefreshInvalidReason();
+    return r != null && r.isNotEmpty;
+  }
+
+  /// ✅ NEW: Clear the permanent invalidation status to allow recovery
+  Future<void> clearRefreshInvalidStatus() async {
+    await storage.delete(key: _refreshInvalidKey);
+  }
+
+  /// ✅ NEW: Force clear the expiry flag globally
+  Future<void> forceClearExpiryFlag() async {
+    final email = await getCurrentUser();
+    if (email != null) {
+      await saveUserIsExpired(email, false);
     }
   }
 
@@ -100,12 +147,7 @@ class TokenService {
       return false;
     }
 
-    final subscriptionExpired = await isSubscriptionExpired();
-    if (subscriptionExpired) {
-      debugPrint('Subscription expired');
-      return false;
-    }
-
+    debugPrint('TokenService: Local tokens are valid');
     return true;
   }
 
@@ -114,11 +156,18 @@ class TokenService {
   // ✅ SIMPLIFIED: No more 5-minute cache logic
   // Just refresh when called (usually triggered by 401)
   // ------------------------------------------------------------
-  Future<bool> refreshAccessToken() async {
+  Future<RefreshResult> refreshAccessToken() async {
+    // If previously marked as permanently invalid (e.g. subscription invalid), do not retry
+    final invalid = await storage.read(key: _refreshInvalidKey);
+    if (invalid != null) {
+      debugPrint('🚫 Refresh permanently invalid: $invalid');
+      return RefreshResult(isSuccess: false);
+    }
     // If already refreshing, wait for that refresh to complete
     if (_isRefreshing) {
       debugPrint("⏳ Already refreshing, waiting...");
-      return await _refreshCompleter!.future;
+      final result = await _refreshCompleter!.future;
+      return RefreshResult(isSuccess: result);
     }
 
     // Set refreshing flag and create completer
@@ -130,7 +179,7 @@ class TokenService {
       final refreshToken = await getRefreshToken();
       if (refreshToken == null) {
         _refreshCompleter!.complete(false);
-        return false;
+        return RefreshResult(isSuccess: false);
       }
 
       final response = await http
@@ -151,8 +200,43 @@ class TokenService {
 
       if (response.statusCode != 200) {
         debugPrint('Refresh failed: ${response.body}');
+
+        // Try to parse server error to detect permanent failure reasons
+        try {
+          final err = jsonDecode(response.body);
+          final errCode = err['errorCode']?.toString();
+          final errMsg = err['message']?.toString() ?? '';
+
+          if (errCode == 'SubscriptionInvalid' ||
+              errMsg.toLowerCase().contains('expired or revoked')) {
+            // Mark as permanently invalid so we don't keep retrying
+            await storage.write(
+              key: _refreshInvalidKey,
+              value: errMsg.isNotEmpty ? errMsg : errCode ?? 'invalid_refresh',
+            );
+
+            // ✅ NEW: Proactively mark as expired locally so logic reacts
+            if (errCode == 'SubscriptionInvalid') {
+              final email = await getCurrentUser();
+              if (email != null) await saveUserIsExpired(email, true);
+            }
+
+            // Per user request, we don't clear tokens or logout here anymore
+            // await clearTokens();
+
+            _refreshCompleter!.complete(false);
+            return RefreshResult(
+              isSuccess: false,
+              isExpired: err['isExpired'] ?? false,
+              expiryDate: err['subscriptionExpiry'],
+            );
+          }
+        } catch (e) {
+          debugPrint('Error parsing refresh error response: $e');
+        }
+
         _refreshCompleter!.complete(false);
-        return false;
+        return RefreshResult(isSuccess: false);
       }
 
       final data = jsonDecode(response.body);
@@ -163,7 +247,7 @@ class TokenService {
           data['refreshTokenExpiry'] == null) {
         debugPrint('Invalid refresh response from server: $data');
         _refreshCompleter!.complete(false);
-        return false;
+        return RefreshResult(isSuccess: false);
       }
 
       // Save new tokens
@@ -172,6 +256,9 @@ class TokenService {
         refreshToken: data['refreshToken'],
         refreshTokenExpiry: data['refreshTokenExpiry'],
       );
+
+      // Successful refresh: clear permanent-invalid flag
+      await storage.delete(key: _refreshInvalidKey);
 
       // Optional: subscription update
       if (data['subscriptionExpiry'] != null) {
@@ -183,13 +270,24 @@ class TokenService {
         }
       }
 
+      await saveCurrentUserIsExpired(data['isExpired'] ?? false);
+
       debugPrint("✅ Token refreshed successfully");
       _refreshCompleter!.complete(true);
-      return true;
+      return RefreshResult(
+        isSuccess: true,
+        isExpired: data['isExpired'] ?? false,
+        expiryDate: data['subscriptionExpiry'],
+      );
     } catch (e) {
       debugPrint('❌ Error refreshing token: $e');
       _refreshCompleter!.complete(false);
-      return false;
+      // ✅ Detect if it was a network error (Socket, Timeout, etc.)
+      final isNet =
+          e is SocketException ||
+          e is TimeoutException ||
+          e.toString().contains('timed out');
+      return RefreshResult(isSuccess: false, isNetworkError: isNet);
     } finally {
       _isRefreshing = false;
       _refreshCompleter = null;
@@ -235,6 +333,19 @@ class TokenService {
   // Does NOT proactively refresh tokens
   // ------------------------------------------------------------
   Future<SessionValidityResult> checkSessionValidity() async {
+    // 0. ✅ NEW: Strict boolean check FIRST (per user request)
+    // This ensures non-eligible users are caught even if tokens are valid.
+    if (await isCurrentUserExpired()) {
+      debugPrint("🚫 User is marked as expired (boolean flag)");
+
+      return SessionValidityResult(
+        isValid: false,
+        reason: 'Subscription expired (boolean flag)',
+        requiresLogin: true,
+        isSubscriptionExpired: true,
+      );
+    }
+
     // 1. Check local token validity first (fast, no API call)
     final hasValidLocalTokens = await isRefreshTokenLocallyValid();
 
@@ -253,9 +364,12 @@ class TokenService {
       );
 
       try {
-        final refreshed = await refreshAccessToken();
+        final refreshResult = await refreshAccessToken();
 
-        if (refreshed) {
+        if (refreshResult.isSuccess) {
+          debugPrint(
+            'TokenService: ✅ Online validation successful via refresh',
+          );
           await updateLastOnlineCheck();
 
           return SessionValidityResult(
@@ -263,19 +377,46 @@ class TokenService {
             reason: 'Online validation successful',
             requiresLogin: false,
           );
+        } else if (refreshResult.isNetworkError) {
+          debugPrint(
+            'TokenService: ❌ Online validation FAILED (Network Error)',
+          );
+          // Network error - but we MUST validate online
+          // ✅ SECURITY: Clear sensitive cache if we can't validate online after 2 days
+          await getIt<UserListCacheService>().clearAllCache();
+          await getIt<ProfileCacheService>().clearCache();
+
+          return SessionValidityResult(
+            isValid: false,
+            reason:
+                'Cannot validate online (network error during required check)',
+            requiresLogin: true,
+            showOfflineWarning: true,
+          );
         } else {
+          debugPrint(
+            'TokenService: ❌ Online validation failed: Server rejected tokens',
+          );
           // Server rejected tokens - force login
           return SessionValidityResult(
             isValid: false,
-            reason: 'Server rejected tokens',
+            reason: 'Server rejected tokens during required online check',
             requiresLogin: true,
+            isSubscriptionExpired: refreshResult.isExpired, // ✅ PASS THIS UP
           );
         }
       } catch (e) {
-        // Network error - but we MUST validate online
+        debugPrint(
+          'TokenService: ❌ Unexpected error during required online check: $e',
+        );
+
+        // ✅ SECURITY: Clear sensitive cache if we can't validate online after 2 days
+        await getIt<UserListCacheService>().clearAllCache();
+        await getIt<ProfileCacheService>().clearCache();
+
         return SessionValidityResult(
           isValid: false,
-          reason: 'Cannot validate online (required)',
+          reason: 'Unexpected error during online check',
           requiresLogin: true,
           showOfflineWarning: true,
         );
@@ -290,6 +431,65 @@ class TokenService {
       requiresLogin: false,
     );
   }
+
+  // ------------------------------------------------------------
+  /// Extracts the user ID (uid/sub) from the current access token.
+  // ------------------------------------------------------------
+  Future<String?> getUserId() async {
+    final token = await getAccessToken();
+    if (token == null) return null;
+
+    try {
+      final parts = token.split('.');
+      if (parts.length < 2) return null;
+      var payload = parts[1];
+      payload = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(payload));
+      final map = jsonDecode(decoded) as Map<String, dynamic>;
+      debugPrint('TokenService: Decoded token payload: $map');
+
+      final candidates = ['uid', 'sub', 'nameid', 'userId', 'unique_name'];
+      for (final k in candidates) {
+        if (map.containsKey(k) && map[k] != null) return map[k].toString();
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Token parse error in getUserId: $e');
+      return null;
+    }
+  }
+
+  // ------------------------------------------------------------
+  /// ✅ NEW: Centralized security decision for data access
+  /// Returns true ONLY if:
+  /// 1. User is NOT past the 2-day offline limit (Hard Blockade)
+  /// Note: Explicitly allows data visibility during subscription expiry (Warning only)
+  // ------------------------------------------------------------
+  Future<bool> isDataAccessibleAsync() async {
+    // SECURITY CUTOFF: Only block if past the 2-day offline limit.
+    // Explicitly allow visibility during expiry per user request.
+    if (await mustCheckOnline()) {
+      debugPrint("🚫 Security: Data inaccessible (Offline > 2 days)");
+      return false;
+    }
+
+    debugPrint("✅ Security: Data access allowed");
+    return true;
+  }
+}
+
+class RefreshResult {
+  final bool isSuccess;
+  final bool isExpired;
+  final bool isNetworkError; // ✅ NEW
+  final String? expiryDate;
+
+  RefreshResult({
+    required this.isSuccess,
+    this.isExpired = false,
+    this.isNetworkError = false,
+    this.expiryDate,
+  });
 }
 
 // Result class for clear communication
@@ -298,11 +498,13 @@ class SessionValidityResult {
   final String reason;
   final bool requiresLogin;
   final bool showOfflineWarning;
+  final bool isSubscriptionExpired; // ✅ NEW
 
   SessionValidityResult({
     required this.isValid,
     required this.reason,
     required this.requiresLogin,
     this.showOfflineWarning = false,
+    this.isSubscriptionExpired = false, // ✅ NEW
   });
 }

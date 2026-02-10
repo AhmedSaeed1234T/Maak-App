@@ -1,4 +1,5 @@
 import 'package:abokamall/helpers/apiroute.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -92,15 +93,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontSize: 14)),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    SnackBarType type = color == Colors.green
+        ? SnackBarType.success
+        : SnackBarType.error;
+    CustomSnackBar.show(context, message: message, type: type);
   }
 
   @override
@@ -283,15 +279,10 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontSize: 14)),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    SnackBarType type = color == Colors.green
+        ? SnackBarType.success
+        : SnackBarType.error;
+    CustomSnackBar.show(context, message: message, type: type);
   }
 
   Future<void> _verifyOtp() async {
@@ -532,15 +523,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontSize: 14)),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    SnackBarType type = color == Colors.green
+        ? SnackBarType.success
+        : SnackBarType.error;
+    CustomSnackBar.show(context, message: message, type: type);
   }
 
   Future<void> _changePassword() async {

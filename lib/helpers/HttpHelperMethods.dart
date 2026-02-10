@@ -15,10 +15,16 @@ Future<http.Response> withTokenRetry(
   if (response.statusCode == 401) {
     // Access token expired, try refresh
     debugPrint("Refreshing right now");
-    bool refreshed = false;
-    refreshed = await tokenService.refreshAccessToken();
+    // If server already marked refresh as permanently invalid, skip retry
+    final invalidReason = await tokenService.getRefreshInvalidReason();
+    if (invalidReason != null) {
+      debugPrint('🚫 Refresh permanently invalid: $invalidReason');
+      return response;
+    }
 
-    if (refreshed) {
+    final refreshResult = await tokenService.refreshAccessToken();
+
+    if (refreshResult.isSuccess) {
       debugPrint("Refreshed successfully");
       // Get the new token
       accessToken = await tokenService.getAccessToken() ?? '';

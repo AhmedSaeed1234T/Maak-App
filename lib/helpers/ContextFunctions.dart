@@ -2,29 +2,8 @@ import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/screens/login_screen.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
-
-Future<void> goToLogin(BuildContext context) async {
-  if (!context.mounted) return;
-
-  // Prevent navigation if already on LoginScreen
-  bool alreadyOnLogin = false;
-  Navigator.popUntil(context, (route) {
-    if (route.settings.name == 'login') {
-      alreadyOnLogin = true;
-    }
-    return true;
-  });
-  if (alreadyOnLogin) return;
-
-  Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(
-      builder: (_) => LoginScreen(),
-      settings: const RouteSettings(name: 'login'),
-    ),
-    (route) => false,
-  );
-}
 
 /// Checks session validity with proper offline handling
 /// - Validates local tokens (instant, no API call)
@@ -72,7 +51,6 @@ Future<bool> checkSessionValidity(
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  goToLogin(context);
                 },
                 child: const Text(
                   'حسناً',
@@ -86,28 +64,25 @@ Future<bool> checkSessionValidity(
     } else {
       // Normal logout (token/subscription expired)
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى',
-              style: TextStyle(fontFamily: 'Cairo'),
-              textAlign: TextAlign.right,
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'حسناً',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
+        // ✅ Only show subscription message if IT IS ACTUALLY EXPIRED.
+        // For "eligible" users (valid sub but tokens died), we stay silent or show generic msg.
+        if (result.isSubscriptionExpired) {
+          CustomSnackBar.show(
+            context,
+            message: 'لقد انتهي اشتراكك',
+            type: SnackBarType.error,
+            duration: 4,
+          );
+        } else {
+          debugPrint(
+            "🚪 Logging out eligible user (session died/tokens expired)",
+          );
+          // Optional: Generic session expired message could go here if user wants.
+          // For now, per request, we avoid blaming the subscription.
+        }
 
         await Future.delayed(const Duration(milliseconds: 500));
       }
-
-      await goToLogin(context);
     }
 
     return false;

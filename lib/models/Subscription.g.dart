@@ -21,13 +21,14 @@ class SubscriptionAdapter extends TypeAdapter<Subscription> {
       startDate: fields[1] as String,
       endDate: fields[2] as String,
       isActive: fields[3] as bool,
+      updatedAt: fields[4] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Subscription obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class SubscriptionAdapter extends TypeAdapter<Subscription> {
       ..writeByte(2)
       ..write(obj.endDate)
       ..writeByte(3)
-      ..write(obj.isActive);
+      ..write(obj.isActive)
+      ..writeByte(4)
+      ..write(obj.updatedAt);
   }
 
   @override

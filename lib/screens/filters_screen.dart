@@ -5,6 +5,7 @@ import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/screens/search_results_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:abokamall/helpers/enums.dart';
 
 class FiltersScreen extends StatefulWidget {
@@ -62,6 +63,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
         return ProviderType.Companies;
       case 'متجر':
         return ProviderType.Marketplaces;
+      case 'مساعد':
+        return ProviderType.Assistants;
       case 'عامل':
       default:
         return ProviderType.Workers;
@@ -70,9 +73,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
   Future<void> _applyFilters() async {
     if (selectedProfession == null) {
-      ScaffoldMessenger.of(
+      CustomSnackBar.show(
         context,
-      ).showSnackBar(const SnackBar(content: Text('يرجى اختيار التخصص')));
+        message: 'يرجى اختيار التخصص',
+        type: SnackBarType.warning,
+      );
       return;
     }
     final workerType = _mapTypeOfServiceToWorkerType();
@@ -390,6 +395,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
           _buildRadioTile('شركة', 'شركة'),
           _buildRadioTile('مهندس', 'مهندس'),
           _buildRadioTile('متجر', 'متجر'),
+          _buildRadioTile('مساعد', 'مساعد'),
         ],
       ),
     );

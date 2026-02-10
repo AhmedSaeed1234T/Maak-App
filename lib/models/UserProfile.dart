@@ -31,6 +31,8 @@ class UserProfile extends HiveObject {
   final String district;
   @HiveField(12)
   DateTime cachedAt;
+  @HiveField(13)
+  int? subscriptionPoints; // Changed to nullable with default 0
 
   UserProfile({
     required this.userName,
@@ -46,6 +48,7 @@ class UserProfile extends HiveObject {
     required this.city,
     required this.district,
     required this.cachedAt,
+    this.subscriptionPoints, // Made optional with default null
   });
 
   bool get isAvailable => subscription?.isActive ?? true;
@@ -70,6 +73,7 @@ class UserProfile extends HiveObject {
       city: json['city'] ?? '',
       district: json['district'] ?? '',
       cachedAt: DateTime.now().toUtc(),
+      subscriptionPoints: json['subscriptionPoints'] as int?, // Handle null
     );
   }
 

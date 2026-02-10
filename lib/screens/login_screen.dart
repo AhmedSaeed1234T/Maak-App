@@ -1,6 +1,10 @@
 import 'package:abokamall/controllers/LoginController.dart';
+import 'package:abokamall/controllers/SearchController.dart' hide LoginResult;
+import 'package:abokamall/helpers/FirebaseUtilities.dart';
 import 'package:abokamall/helpers/OpenWhatsapp.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/SubscriptionHandler.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -230,13 +234,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       _passwordController.text,
                     );
 
+                    if (loginResult.isExpired) {
+                      CustomSnackBar.show(
+                        context,
+                        message: 'لقد انتهي اشتراكك',
+                        type: SnackBarType.error,
+                        duration: 5,
+                      );
+                      SubscriptionHandler.handleSubscriptionStatus(
+                        context: context,
+                        isExpired: true,
+                        expiryDate: loginResult.expiryDate,
+                      );
+                    }
+
                     if (loginResult.isSuccess) {
                       setState(() => isLogingIn = false);
 
                       Navigator.pushReplacementNamed(context, '/dashboard');
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(loginResult.arabicErrorMessage)),
+                      CustomSnackBar.show(
+                        context,
+                        message:
+                            loginResult.errorMessage ??
+                            loginResult.errorCode ??
+                            "حدث خطأ ما",
+                        type: SnackBarType.error,
                       );
                     }
                     setState(() => isLogingIn = false);

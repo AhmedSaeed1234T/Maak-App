@@ -1,8 +1,12 @@
+import 'package:abokamall/controllers/PresenceController.dart';
+import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
+import 'package:abokamall/screens/chat_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 
 class WorkerProfilePage extends StatelessWidget {
   final ServiceProvider provider;
@@ -10,8 +14,36 @@ class WorkerProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF13A9F6);
+    const secondary = Color(
+      0xFF536DFE,
+    ); // Defined a secondary color for chat button
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          if (provider.userId == null || provider.userId!.isEmpty) {
+            CustomSnackBar.show(
+              context,
+              message: 'لا يمكن بدء المحادثة مع هذا المستخدم (المعرف مفقود)',
+              type: SnackBarType.error,
+            );
+            return;
+          }
+          debugPrint(provider.workerType.toString());
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                targetUserId: provider.userId!,
+                targetUserName: provider.name,
+              ),
+            ),
+          );
+        },
+        label: const Text("محادثة", style: TextStyle(color: Colors.white)),
+        icon: const Icon(Icons.chat, color: Colors.white),
+        backgroundColor: primary,
+      ),
       appBar: AppBar(
         title: const Text('ملف العامل', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
@@ -79,9 +111,46 @@ class WorkerProfilePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              provider.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ValueListenableBuilder<Set<String>>(
+              valueListenable: getIt<PresenceController>().onlineUsers,
+              builder: (context, onlineUsers, _) {
+                final isOnline = getIt<PresenceController>().isUserOnline(
+                  provider.userId,
+                );
+                return Column(
+                  children: [
+                    Text(
+                      provider.name,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: isOnline ? Colors.green : Colors.grey,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isOnline ? 'متصل الآن' : 'غير متصل',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isOnline ? Colors.green : Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
             Text(
               provider.skill,
@@ -131,20 +200,16 @@ class WorkerProfilePage extends StatelessWidget {
                       text: provider.mobileNumber.toString().substring(2),
                     ),
                   );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم نسخ رقم الهاتف')),
+                  CustomSnackBar.show(
+                    context,
+                    message: 'تم نسخ رقم الهاتف',
+                    type: SnackBarType.info,
                   );
                 },
               ),
             ],
           ),
-          const Divider(),
-          _detailRow(
-            Icons.email,
-            'البريد الإلكتروني',
-            provider.email ?? 'غير متوفر',
-            primary,
-          ),
+
           const Divider(),
           _detailRow(
             Icons.location_on,

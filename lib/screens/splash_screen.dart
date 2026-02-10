@@ -1,8 +1,8 @@
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/helpers/FirebaseUtilities.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,11 +40,6 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  Future<bool> _isConnected() async {
-    final ConnectivityResult result = await Connectivity().checkConnectivity();
-    return result != ConnectivityResult.none;
-  }
-
   Future<void> _handleStartupFlow() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -59,35 +54,30 @@ class _SplashScreenState extends State<SplashScreen>
         return;
       }
 
-      // Network check
-      final hasNet = await _isConnected();
       final tokenService = getIt<TokenService>();
-      if (!hasNet) {
-        // Offline!
-        final isLocallyValid = await tokenService.isRefreshTokenLocallyValid();
-        if (isLocallyValid) {
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("تعذر الاتصال بالخادم")));
-        }
-        return;
-      }
-      // Online flow - just try to refresh as before
-      debugPrint("I'm attempting refreshing wait");
-      final refreshed = await tokenService.refreshAccessToken();
+      final isLocallyValid = await tokenService.isRefreshTokenLocallyValid();
+
       if (!mounted) return;
-      if (refreshed) {
+
+      if (isLocallyValid) {
+        // User has valid tokens (within their own expiry)
+        // Let them in, Dashboard will handle the strict 2-day check and warnings
         Navigator.pushReplacementNamed(context, '/dashboard');
+
+        // Process any pending notifications after navigation
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          FirebaseUtilities.processPendingNotification();
+        });
       } else {
-        final isLocallyValid = await tokenService.isRefreshTokenLocallyValid();
-        if (isLocallyValid) {
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        } else {
-          Navigator.pushReplacementNamed(context, '/login');
-        }
+        // Tokens expired or subscription definitely revoked/expired
+        Navigator.pushReplacementNamed(context, '/login');
+
+        // Process any pending notifications after navigation
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          FirebaseUtilities.processPendingNotification();
+        });
       }
+      return;
     } catch (e, stack) {
       debugPrint('Splash flow failed: $e');
       debugPrint(stack.toString());

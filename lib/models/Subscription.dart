@@ -12,12 +12,15 @@ class Subscription {
   final String endDate;
   @HiveField(3)
   final bool isActive;
+  @HiveField(4)
+  final String updatedAt;
 
   Subscription({
     required this.id,
     required this.startDate,
     required this.endDate,
     required this.isActive,
+    required this.updatedAt,
   });
 
   factory Subscription.fromJson(Map<String, dynamic> json) {
@@ -26,6 +29,7 @@ class Subscription {
       startDate: json['startDate'] ?? '',
       endDate: json['endDate'] ?? '',
       isActive: json['isActive'] ?? false,
+      updatedAt: json['updatedAt'] ?? '',
     );
   }
 
@@ -35,6 +39,7 @@ class Subscription {
       'startDate': startDate,
       'endDate': endDate,
       'isActive': isActive,
+      'updatedAt': updatedAt,
     };
   }
 }

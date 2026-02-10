@@ -1,7 +1,9 @@
+import 'package:abokamall/controllers/ChatController.dart';
 import 'package:abokamall/controllers/LoginController.dart';
 import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/controllers/RegisterController.dart';
 import 'package:abokamall/controllers/SearchController.dart';
+import 'package:abokamall/controllers/PresenceController.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiclient.dart';
 import 'package:abokamall/services/ProfileCacheService.dart';
@@ -23,4 +25,6 @@ Future<void> setupServiceLocator() async {
   );
   final userListCacheService = await UserListCacheService.create();
   getIt.registerSingleton<UserListCacheService>(userListCacheService);
+  getIt.registerLazySingleton<ChatController>(() => ChatController());
+  getIt.registerLazySingleton<PresenceController>(() => PresenceController());
 }

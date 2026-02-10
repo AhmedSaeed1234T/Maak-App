@@ -1,4 +1,4 @@
-package com.example.abokamall
+package com.abokamall.app
 
 import io.flutter.embedding.android.FlutterActivity
 

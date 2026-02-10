@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:abokamall/controllers/LoginController.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
@@ -63,8 +64,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
 
   void _toast(String msg) {
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    CustomSnackBar.show(context, message: msg, type: SnackBarType.info);
   }
 
   Future<void> _registerEngineer() async {

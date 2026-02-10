@@ -1,6 +1,11 @@
 import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
+import 'package:abokamall/services/UserListCache.dart';
+import 'package:abokamall/services/ProfileCacheService.dart';
+import 'dart:ui';
 
 class OfflineModeTestingPanel extends StatefulWidget {
   const OfflineModeTestingPanel({super.key});
@@ -10,150 +15,255 @@ class OfflineModeTestingPanel extends StatefulWidget {
       _OfflineModeTestingPanelState();
 }
 
-class _OfflineModeTestingPanelState extends State<OfflineModeTestingPanel> {
+class _OfflineModeTestingPanelState extends State<OfflineModeTestingPanel>
+    with SingleTickerProviderStateMixin {
   final tokenService = getIt<TokenService>();
-  String _status = "جاهز للاختبار";
-  bool _isLoading = false;
+  double _simulatedDays = 0;
+  final Color secondary = const Color(0xFF6C63FF);
+
+  // Stats for the glass cards
+  String _tokenStatus = "Checking...";
+  String _expireFlag = "Checking...";
+  String _offlineClock = "Checking...";
+  bool _isPhysicallyValid = true;
+
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _refreshStats();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshStats() async {
+    final hasToken = await tokenService.getRefreshToken() != null;
+    await tokenService.getRefreshTokenExpiry();
+    final isLocallyValid = await tokenService.isRefreshTokenLocallyValid();
+
+    final lastCheckStr = await tokenService.storage.read(
+      key: TokenService.lastOnlineCheckKey,
+    );
+    DateTime? lastCheckTime;
+    if (lastCheckStr != null) lastCheckTime = DateTime.parse(lastCheckStr);
+
+    final email = await getCurrentUser();
+    final flag = email != null ? await getUserIsExpired(email) : false;
+
+    if (mounted) {
+      setState(() {
+        _tokenStatus = hasToken
+            ? (isLocallyValid ? "Active ✅" : "Expired ⚠️")
+            : "None ❌";
+        _expireFlag = flag ? "EXPIRED 🚨" : "VALID ✅";
+        _isPhysicallyValid = !flag;
+
+        if (lastCheckTime != null) {
+          final diff = DateTime.now().difference(lastCheckTime);
+          _offlineClock = "${diff.inDays}d ${diff.inHours % 24}h ago";
+        } else {
+          _offlineClock = "Never";
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    const primary = Color(0xFF13A9F6);
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('لوحة اختبار الوضع غير المتصل'),
-        backgroundColor: Colors.deepPurple,
+        title: const Text(
+          'Security Debug Terminal',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Status Display
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Column(
-                children: [
-                  if (_isLoading)
-                    const CircularProgressIndicator()
-                  else
-                    const Icon(
-                      Icons.info_outline,
-                      color: Colors.blue,
-                      size: 32,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF334155)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // --- Status Dashboard ---
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    _buildStatusCard(
+                      "Session",
+                      _tokenStatus,
+                      Icons.vpn_key_rounded,
+                      Colors.cyan,
                     ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _status,
-                    style: const TextStyle(fontSize: 14, height: 1.5),
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    _buildStatusCard(
+                      "Subscription",
+                      _expireFlag,
+                      Icons.verified_user_rounded,
+                      Colors.amber,
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
-
-            // Test 1: Show Current State
-            _buildTestCard(
-              title: 'عرض الحالة الحالية',
-              description: 'يعرض معلومات مفصلة عن الجلسة والتوكن',
-              buttonText: 'عرض الحالة',
-              color: Colors.green,
-              onPressed: _showCurrentState,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Test 2: Simulate 1 Day Offline
-            _buildTestCard(
-              title: 'محاكاة يوم واحد بدون اتصال',
-              description: 'يجب أن يعمل التطبيق بشكل طبيعي',
-              buttonText: 'محاكاة يوم واحد',
-              color: Colors.blue,
-              onPressed: () => _simulateOfflineDays(1),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Test 3: Simulate 2+ Days Offline
-            _buildTestCard(
-              title: 'محاكاة يومين+ بدون اتصال',
-              description: 'يجب أن يظهر حوار "يجب الاتصال"',
-              buttonText: 'محاكاة يومين',
-              color: Colors.red,
-              onPressed: () => _simulateOfflineDays(3),
-              isWarning: true,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Test 4: Expire Tokens
-            _buildTestCard(
-              title: 'إنهاء صلاحية التوكن',
-              description: 'يجب أن يتم تسجيل الخروج تلقائيًا',
-              buttonText: 'إنهاء صلاحية التوكن',
-              color: Colors.orange,
-              onPressed: _expireTokens,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Test 5: Reset Everything
-            _buildTestCard(
-              title: 'إعادة تعيين كل شيء',
-              description: 'مسح جميع البيانات المؤقتة',
-              buttonText: 'إعادة تعيين',
-              color: Colors.grey,
-              onPressed: _resetEverything,
-            ),
-
-            const SizedBox(height: 24),
-
-            // Instructions
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                border: Border.all(color: Colors.amber, width: 2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info, color: Colors.orange, size: 24),
-                      SizedBox(width: 8),
-                      Text(
-                        'تعليمات الاختبار:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      _buildSectionTitle("TIME MACHINE"),
+                      _buildGlassPanel(
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "Simulation Offset",
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                                Text(
+                                  "${_simulatedDays.toInt()} Days",
+                                  style: const TextStyle(
+                                    color: primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Slider(
+                              value: _simulatedDays,
+                              min: 0,
+                              max: 10,
+                              divisions: 10,
+                              activeColor: primary,
+                              inactiveColor: Colors.white10,
+                              onChanged: (v) =>
+                                  setState(() => _simulatedDays = v),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              "Rewind Last Online Check",
+                              Icons.history_toggle_off_rounded,
+                              primary,
+                              () => _applyTimeMachine(_simulatedDays.toInt()),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              "Current: $_offlineClock",
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+
+                      const SizedBox(height: 24),
+                      _buildSectionTitle("SYSTEM OVERRIDES"),
+                      _buildGlassPanel(
+                        child: Column(
+                          children: [
+                            _buildOverrideRow(
+                              "Subscription Flag",
+                              "Manually toggle the 'isExpired' bit",
+                              _isPhysicallyValid ? "SET EXPIRED" : "SET VALID",
+                              _isPhysicallyValid
+                                  ? Colors.redAccent
+                                  : Colors.greenAccent,
+                              _toggleSubscriptionFlag,
+                            ),
+                            const Divider(color: Colors.white10, height: 32),
+                            _buildOverrideRow(
+                              "Token Lifetime",
+                              "Invalidate local JWT immediately",
+                              "EXPIRE TOKENS",
+                              Colors.orangeAccent,
+                              _expireTokens,
+                            ),
+                            const Divider(color: Colors.white10, height: 32),
+                            _buildOverrideRow(
+                              "Factory Data Reset",
+                              "Clear all cached offline configs",
+                              "RESET CONFIG",
+                              Colors.white24,
+                              _resetEverything,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: _refreshStats,
+                          icon: const Icon(Icons.refresh_rounded, size: 16),
+                          label: const Text("REFRESH RUNTIME STATS"),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white38,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
                     ],
                   ),
-                  SizedBox(height: 12),
-                  Text(
-                    '📱 لاختبار الوضع غير المتصل (يومين+):\n'
-                    '1. اضغط "محاكاة يومين"\n'
-                    '2. قم بتفعيل وضع الطيران\n'
-                    '3. انتقل إلى أي صفحة\n'
-                    '4. يجب أن ترى حوار "يجب الاتصال"\n\n'
-                    '✅ لاختبار الوضع غير المتصل (يوم واحد):\n'
-                    '1. اضغط "محاكاة يوم واحد"\n'
-                    '2. قم بتفعيل وضع الطيران\n'
-                    '3. انتقل إلى صفحات مختلفة\n'
-                    '4. يجب أن يعمل التطبيق بشكل طبيعي',
-                    style: TextStyle(height: 1.5),
-                    textDirection: TextDirection.rtl,
-                  ),
-                ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Expanded(
+      child: _buildGlassPanel(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
             ),
           ],
@@ -162,252 +272,179 @@ class _OfflineModeTestingPanelState extends State<OfflineModeTestingPanel> {
     );
   }
 
-  Widget _buildTestCard({
-    required String title,
-    required String description,
-    required String buttonText,
-    required Color color,
-    required VoidCallback onPressed,
-    bool isWarning = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isWarning ? Colors.red.shade200 : Colors.grey.shade300,
-          width: isWarning ? 2 : 1,
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white38,
+          fontSize: 11,
+          letterSpacing: 2,
+          fontWeight: FontWeight.w800,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            textDirection: TextDirection.rtl,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade700,
-              height: 1.4,
-            ),
-            textDirection: TextDirection.rtl,
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: _isLoading ? null : onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: color,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              buttonText,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  // Test 1: Show Current State
-  Future<void> _showCurrentState() async {
-    setState(() {
-      _isLoading = true;
-      _status = "جاري تحميل الحالة...";
-    });
-
-    try {
-      final hasToken = await tokenService.getRefreshToken();
-      final expiry = await tokenService.getRefreshTokenExpiry();
-      final isValid = await tokenService.isRefreshTokenLocallyValid();
-
-      final lastCheckStr = await tokenService.storage.read(
-        key: TokenService.lastOnlineCheckKey,
-      );
-      DateTime? lastCheckTime;
-      if (lastCheckStr != null) {
-        try {
-          lastCheckTime = DateTime.parse(lastCheckStr);
-        } catch (e) {}
-      }
-
-      final timeSinceCheck = lastCheckTime != null
-          ? DateTime.now().difference(lastCheckTime)
-          : null;
-
-      final mustCheckOnline = await tokenService.mustCheckOnline();
-
-      setState(() {
-        _status =
-            '''
-📊 الحالة الحالية:
-━━━━━━━━━━━━━━━━━━━━
-
-🔑 يوجد توكن: ${hasToken != null ? '✅ نعم' : '❌ لا'}
-
-📅 انتهاء التوكن:
-${expiry?.toLocal().toString() ?? '❌ غير موجود'}
-
-✓ صالح محليًا: ${isValid ? '✅ نعم' : '❌ لا'}
-
-🌐 آخر فحص عبر الإنترنت:
-${lastCheckTime?.toLocal().toString() ?? '❌ أبدًا'}
-
-⏱️ الوقت منذ الفحص:
-${timeSinceCheck != null ? '${timeSinceCheck.inDays} يوم، ${timeSinceCheck.inHours % 24} ساعة' : '❌ غير متوفر'}
-
-⚠️ يجب الفحص عبر الإنترنت:
-${mustCheckOnline ? '🚨 نعم (تجاوز يومين)' : '✅ لا'}
-        ''';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _status = "❌ خطأ: $e";
-        _isLoading = false;
-      });
-    }
+  Widget _buildGlassPanel({required Widget child, EdgeInsets? padding}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: child,
+        ),
+      ),
+    );
   }
 
-  // Test 2 & 3: Simulate Offline Days
-  Future<void> _simulateOfflineDays(int days) async {
-    setState(() {
-      _isLoading = true;
-      _status = "جاري محاكاة $days يوم بدون اتصال...";
-    });
-
-    try {
-      // Set last online check to X days ago
-      final pastTime = DateTime.now().subtract(Duration(days: days));
-      await tokenService.storage.write(
-        key: TokenService.lastOnlineCheckKey,
-        value: pastTime.toIso8601String(),
-      );
-
-      // Clear in-memory cache
-      tokenService.lastOnlineCheck = null;
-
-      setState(() {
-        _status =
-            '''
-✅ تم تعيين آخر فحص إلى: قبل $days يوم
-
-📱 الآن قم بما يلي:
-
-${days >= 2 ? '''
-⚠️ اختبار تجاوز المدة:
-1️⃣ قم بتفعيل وضع الطيران
-2️⃣ انتقل إلى أي صفحة
-3️⃣ يجب أن ترى حوار "يجب الاتصال بالإنترنت"
-4️⃣ لن تستطيع استخدام التطبيق حتى تتصل بالإنترنت
-''' : '''
-✅ اختبار عمل التطبيق بدون اتصال:
-1️⃣ قم بتفعيل وضع الطيران
-2️⃣ انتقل إلى صفحات مختلفة
-3️⃣ يجب أن يعمل التطبيق بشكل طبيعي
-4️⃣ قد ترى رسالة "وضع عدم الاتصال"
-'''}
-        ''';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _status = "❌ خطأ: $e";
-        _isLoading = false;
-      });
-    }
+  Widget _buildActionButton(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withOpacity(0.5)),
+            color: color.withOpacity(0.1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  // Test 4: Expire Tokens
+  Widget _buildOverrideRow(
+    String title,
+    String desc,
+    String btnLabel,
+    Color btnColor,
+    VoidCallback onTap,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                desc,
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: btnColor.withOpacity(0.2),
+            foregroundColor: btnColor,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            side: BorderSide(color: btnColor.withOpacity(0.3)),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+          ),
+          child: Text(
+            btnLabel,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Logic Implementations ---
+
+  Future<void> _applyTimeMachine(int days) async {
+    final pastTime = DateTime.now().subtract(Duration(days: days));
+    await tokenService.storage.write(
+      key: TokenService.lastOnlineCheckKey,
+      value: pastTime.toIso8601String(),
+    );
+    tokenService.lastOnlineCheck = null;
+
+    // ✅ SIMULATE AGED DATA: Adjust Hive cache timestamps too
+    await getIt<UserListCacheService>().debugRewindCacheTimestamps(
+      Duration(days: days),
+    );
+    await getIt<ProfileCacheService>().debugRewindCacheTimestamps(
+      Duration(days: days),
+    );
+
+    await _refreshStats();
+    _showSnackBar("System & Cache clock rewound by $days days");
+  }
+
+  Future<void> _toggleSubscriptionFlag() async {
+    final email = await getCurrentUser();
+    if (email == null) return;
+    await saveUserIsExpired(email, !await getUserIsExpired(email));
+    await _refreshStats();
+    _showSnackBar("Subscription flag toggled");
+  }
+
   Future<void> _expireTokens() async {
-    setState(() {
-      _isLoading = true;
-      _status = "جاري إنهاء صلاحية التوكن...";
-    });
-
-    try {
-      // Set expiry to yesterday
-      final yesterday = DateTime.now().subtract(const Duration(days: 1));
-      await tokenService.storage.write(
-        key: TokenService.refreshExpiryKey,
-        value: yesterday.toIso8601String(),
-      );
-
-      // Clear in-memory cache
-      tokenService.refreshExpiry = null;
-
-      setState(() {
-        _status = '''
-✅ تم تعيين التوكن كمنتهي الصلاحية (أمس)
-
-📱 الآن:
-انتقل إلى أي صفحة لاختبار تسجيل الخروج التلقائي
-
-المتوقع:
-- رسالة: "انتهت صلاحية جلستك"
-- الانتقال إلى شاشة تسجيل الدخول
-        ''';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _status = "❌ خطأ: $e";
-        _isLoading = false;
-      });
-    }
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    await tokenService.storage.write(
+      key: TokenService.refreshExpiryKey,
+      value: yesterday.toIso8601String(),
+    );
+    tokenService.refreshExpiry = null;
+    await _refreshStats();
+    _showSnackBar("JWT Tokens expired");
   }
 
-  // Test 5: Reset Everything
   Future<void> _resetEverything() async {
-    setState(() {
-      _isLoading = true;
-      _status = "جاري إعادة التعيين...";
-    });
+    tokenService.lastOnlineCheck = null;
+    await tokenService.storage.write(
+      key: TokenService.lastOnlineCheckKey,
+      value: DateTime.now().toIso8601String(),
+    );
 
-    try {
-      // Clear in-memory cache
-      tokenService.lastOnlineCheck = null;
+    // ✅ Reset cache too
+    await getIt<UserListCacheService>().clearAllCache();
 
-      // Reset last online check to now
-      await tokenService.storage.write(
-        key: TokenService.lastOnlineCheckKey,
-        value: DateTime.now().toIso8601String(),
-      );
+    await _refreshStats();
+    _showSnackBar("Configuration & Cache reset to defaults");
+  }
 
-      setState(() {
-        _status = '''
-✅ تم إعادة تعيين كل شيء!
-
-تم:
-- مسح البيانات المؤقتة
-- إعادة تعيين آخر فحص عبر الإنترنت إلى الآن
-- يمكنك الآن البقاء بدون اتصال لمدة يومين
-
-ملاحظة: التوكن لم يتم حذفه
-        ''';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _status = "❌ خطأ: $e";
-        _isLoading = false;
-      });
-    }
+  void _showSnackBar(String msg) {
+    CustomSnackBar.show(context, message: msg, type: SnackBarType.info);
   }
 }

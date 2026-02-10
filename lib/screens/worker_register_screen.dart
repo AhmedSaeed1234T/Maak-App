@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:abokamall/controllers/LoginController.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controllers/RegisterController.dart';
 import '../helpers/ServiceLocator.dart';
@@ -17,13 +18,12 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final loginController = getIt<LoginController>();
 
   final _formKey = GlobalKey<FormState>();
-  // Common styles
   final Color _primaryColor = const Color(0xFF13A9F6);
-  // Image
+
   bool isRegistering = false;
   File? _imageFile;
   final picker = ImagePicker();
-  // Controllers
+
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -36,12 +36,13 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _governorateController = TextEditingController();
   final _cityController = TextEditingController();
   final _districtController = TextEditingController();
+  final _referralController = TextEditingController();
 
-  final _referralController = TextEditingController(); // New referral code
-  String salaryType = "daily"; // daily = 0, fixed = 1
+  String providerType = "Worker";
+  String salaryType = "daily";
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
-  // Pick image
+
   Future<void> _pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
@@ -72,14 +73,11 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
     );
   }
 
-  // Show simple toast
   void _toast(String msg) {
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    CustomSnackBar.show(context, message: msg, type: SnackBarType.info);
   }
 
-  // Register worker
   Future<void> _registerWorker() async {
     if (!_formKey.currentState!.validate()) {
       _toast("يرجى ملء جميع الحقول المطلوبة");
@@ -104,17 +102,17 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       district: _districtController.text.trim(),
       governorate: _governorateController.text.trim(),
       city: _cityController.text.trim(),
-      providerType: "Worker",
+      providerType: providerType,
       skill: _jobController.text.trim(),
       workerType: salaryType == "daily" ? 0 : 1,
       pay: double.tryParse(_salaryController.text.trim()) ?? 0,
       bio: _bioController.text.trim(),
-      referralUserName: _referralController.text.trim(), // Added referral
+      referralUserName: _referralController.text.trim(),
     );
 
     final result = await registerController.registerUser(user, _imageFile);
 
-    if (!mounted) return; // Stop if user popped the page
+    if (!mounted) return;
 
     if (result.success) {
       final loginResult = await loginController.login(
@@ -122,7 +120,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
         _passwordController.text,
       );
 
-      if (!mounted) return; // Stop if user popped the page
+      if (!mounted) return;
 
       _toast("تم تسجيل بياناتك بنجاح");
 
@@ -131,7 +129,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       Navigator.pushNamedAndRemoveUntil(
         context,
         '/dashboard',
-        (route) => false, // remove everything
+        (route) => false,
       );
     } else {
       if (mounted) setState(() => isRegistering = false);
@@ -145,7 +143,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       onWillPop: () async => !isRegistering,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("تسجيل عامل"),
+          title: const Text("تسجيل مقدم خدمة"),
           backgroundColor: Colors.white,
           elevation: 0,
           foregroundColor: Colors.black,
@@ -158,7 +156,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Profile Image Section with Shadow
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -205,7 +202,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Main Card with elevation
                 Card(
                   elevation: 8,
                   shadowColor: const Color(0xFF13A9F6).withOpacity(0.1),
@@ -216,7 +212,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
-                        // Section header
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
@@ -230,7 +225,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Name fields
                         Row(
                           children: [
                             Expanded(
@@ -262,7 +256,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Email
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -276,7 +269,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Phone
                         TextFormField(
                           controller: _phoneController,
                           validator: (v) => v == null || v.trim().isEmpty
@@ -290,7 +282,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Job
                         TextFormField(
                           controller: _jobController,
                           validator: (v) => v == null || v.trim().isEmpty
@@ -300,12 +291,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Salary Type Radio
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 6,
-                          ),
                           decoration: BoxDecoration(
                             border: Border.all(color: const Color(0xFFE0E0E0)),
                             borderRadius: BorderRadius.circular(12),
@@ -315,21 +301,21 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                             children: [
                               Expanded(
                                 child: RadioListTile(
-                                  title: const Text("يومي"),
-                                  value: "daily",
-                                  groupValue: salaryType,
+                                  title: const Text("عامل"),
+                                  value: "Worker",
+                                  groupValue: providerType,
                                   onChanged: (v) =>
-                                      setState(() => salaryType = v!),
+                                      setState(() => providerType = v!),
                                   contentPadding: EdgeInsets.zero,
                                 ),
                               ),
                               Expanded(
                                 child: RadioListTile(
-                                  title: const Text("مقطوعية"),
-                                  value: "fixed",
-                                  groupValue: salaryType,
+                                  title: const Text("مساعد"),
+                                  value: "Assistant",
+                                  groupValue: providerType,
                                   onChanged: (v) =>
-                                      setState(() => salaryType = v!),
+                                      setState(() => providerType = v!),
                                   contentPadding: EdgeInsets.zero,
                                 ),
                               ),
@@ -337,8 +323,47 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        if (providerType == "Worker") ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFFE0E0E0),
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.white,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile(
+                                    title: const Text("يومي"),
+                                    value: "daily",
+                                    groupValue: salaryType,
+                                    onChanged: (v) =>
+                                        setState(() => salaryType = v!),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: RadioListTile(
+                                    title: const Text("مقطوعية"),
+                                    value: "fixed",
+                                    groupValue: salaryType,
+                                    onChanged: (v) =>
+                                        setState(() => salaryType = v!),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
 
-                        // Salary
                         TextFormField(
                           controller: _salaryController,
                           keyboardType: TextInputType.number,
@@ -352,7 +377,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Bio
                         TextFormField(
                           controller: _bioController,
                           maxLines: 3,
@@ -363,7 +387,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Referral code
                         TextFormField(
                           controller: _referralController,
                           decoration: _buildDecoration(
@@ -373,7 +396,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Location
                         TextFormField(
                           controller: _governorateController,
                           validator: (v) => v == null || v.trim().isEmpty
@@ -407,7 +429,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _hidePassword,
@@ -442,7 +463,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Confirm Password
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: _hideConfirmPassword,
@@ -478,7 +498,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Submit button
                         SizedBox(
                           width: double.infinity,
                           height: 56,

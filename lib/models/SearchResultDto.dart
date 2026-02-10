@@ -49,6 +49,9 @@ class ServiceProvider extends HiveObject {
   @HiveField(14)
   final String userName;
 
+  @HiveField(15)
+  final String? userId;
+
   ServiceProvider({
     required this.name,
     required this.skill,
@@ -64,6 +67,7 @@ class ServiceProvider extends HiveObject {
     this.typeOfService,
     this.aboutMe,
     required this.userName,
+    this.userId, // Add to constructor
     DateTime? cachedAt,
   }) : cachedAt = cachedAt ?? DateTime.now().toUtc();
 
@@ -83,6 +87,7 @@ class ServiceProvider extends HiveObject {
     String? aboutMe,
     DateTime? cachedAt,
     String? userName,
+    String? userId,
   }) {
     return ServiceProvider(
       name: name ?? this.name,
@@ -101,6 +106,7 @@ class ServiceProvider extends HiveObject {
       aboutMe: aboutMe ?? this.aboutMe,
       cachedAt: cachedAt ?? this.cachedAt,
       userName: userName ?? this.userName,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -130,6 +136,7 @@ class ServiceProvider extends HiveObject {
           ? DateTime.parse(json['cachedAt'])
           : DateTime.now().toUtc(),
       userName: json['userName'] ?? '',
+      userId: json['userId'] ?? json['id'], // Try both userId and id
     );
   }
 

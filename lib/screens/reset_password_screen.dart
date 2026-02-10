@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../helpers/apiroute.dart';
 import '../helpers/ServiceLocator.dart';
 import '../helpers/TokenService.dart';
+
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
+
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController currentPasswordController =
@@ -21,13 +24,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _hideNewPassword = true;
   bool _hideConfirmPassword = true;
 
-  InputDecoration _buildDecoration(String label, IconData icon, bool hidePassword, VoidCallback onToggle) {
+  InputDecoration _buildDecoration(
+    String label,
+    IconData icon,
+    bool hidePassword,
+    VoidCallback onToggle,
+  ) {
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon, color: const Color(0xFF13A9F6)),
       suffixIcon: IconButton(
         icon: Icon(
-          hidePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          hidePassword
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined,
           color: const Color(0xFF13A9F6),
         ),
         onPressed: onToggle,
@@ -59,9 +69,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final tokenService = getIt<TokenService>();
     final accessToken = await tokenService.getAccessToken();
     if (accessToken == null) {
-      ScaffoldMessenger.of(
+      CustomSnackBar.show(
         context,
-      ).showSnackBar(const SnackBar(content: Text("المستخدم غير مسجل دخول")));
+        message: "المستخدم غير مسجل دخول",
+        type: SnackBarType.error,
+      );
       setState(() => isLoading = false);
       return;
     }
@@ -82,10 +94,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     setState(() => isLoading = false);
 
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تغيير كلمة المرور بنجاح')),
+      CustomSnackBar.show(
+        context,
+        message: 'تم تغيير كلمة المرور بنجاح!',
+        type: SnackBarType.success,
       );
-      Navigator.pop(context); 
+      Navigator.pop(context);
     } else {
       final data = jsonDecode(response.body);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -127,7 +141,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: Offset(0, 6))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: primary.withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
                   ),
                   child: const Icon(Icons.lock, color: Colors.white, size: 40),
                 ),
@@ -138,7 +158,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   children: [
                     const Text(
                       'تغيير كلمة المرور',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
@@ -155,19 +179,32 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               TextFormField(
                 controller: currentPasswordController,
                 obscureText: _hideCurrentPassword,
-                decoration: _buildDecoration('كلمة المرور الحالية', Icons.lock, _hideCurrentPassword, () {
-                  setState(() => _hideCurrentPassword = !_hideCurrentPassword);
-                }),
-                validator: (v) => v == null || v.trim().isEmpty ? 'كلمة المرور مطلوبة' : null,
+                decoration: _buildDecoration(
+                  'كلمة المرور الحالية',
+                  Icons.lock,
+                  _hideCurrentPassword,
+                  () {
+                    setState(
+                      () => _hideCurrentPassword = !_hideCurrentPassword,
+                    );
+                  },
+                ),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'كلمة المرور مطلوبة' : null,
               ),
               const SizedBox(height: 16),
               // New Password
               TextFormField(
                 controller: newPasswordController,
                 obscureText: _hideNewPassword,
-                decoration: _buildDecoration('كلمة المرور الجديدة', Icons.lock_open, _hideNewPassword, () {
-                  setState(() => _hideNewPassword = !_hideNewPassword);
-                }),
+                decoration: _buildDecoration(
+                  'كلمة المرور الجديدة',
+                  Icons.lock_open,
+                  _hideNewPassword,
+                  () {
+                    setState(() => _hideNewPassword = !_hideNewPassword);
+                  },
+                ),
                 validator: (v) => v != null && v.length >= 6
                     ? null
                     : 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
@@ -177,9 +214,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               TextFormField(
                 controller: confirmPasswordController,
                 obscureText: _hideConfirmPassword,
-                decoration: _buildDecoration('تأكيد كلمة المرور', Icons.check_circle, _hideConfirmPassword, () {
-                  setState(() => _hideConfirmPassword = !_hideConfirmPassword);
-                }),
+                decoration: _buildDecoration(
+                  'تأكيد كلمة المرور',
+                  Icons.check_circle,
+                  _hideConfirmPassword,
+                  () {
+                    setState(
+                      () => _hideConfirmPassword = !_hideConfirmPassword,
+                    );
+                  },
+                ),
                 validator: (v) => v != null && v == newPasswordController.text
                     ? null
                     : 'كلمة المرور غير متطابقة',
@@ -194,7 +238,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 4,
                   ),
                   child: isLoading
@@ -206,7 +252,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('تغيير كلمة المرور', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      : const Text(
+                          'تغيير كلمة المرور',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),

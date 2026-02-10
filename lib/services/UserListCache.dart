@@ -1,3 +1,5 @@
+import 'package:abokamall/helpers/ServiceLocator.dart';
+import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -31,7 +33,35 @@ class UserListCacheService {
     await _box.put(providerType, jsonList);
   }
 
-  List<ServiceProvider> loadCachedUsers(String providerType) {
+  Future<List<ServiceProvider>> loadCachedUsersAsync(
+    String providerType,
+  ) async {
+    // SECURITY: Use the centralized access check
+    final tokenService = getIt<TokenService>();
+    if (!(await tokenService.isDataAccessibleAsync())) {
+      return [];
+    }
+
+    final cachedData =
+        _box.get(providerType, defaultValue: <dynamic>[]) as List;
+    final now = DateTime.now().toUtc();
+
+    final valid = <ServiceProvider>[];
+    for (var json in cachedData) {
+      final provider = ServiceProvider.fromJson(
+        Map<String, dynamic>.from(json),
+      );
+
+      // Strict TTL enforcement
+      if (now.difference(provider.cachedAt) <= cacheTTL) {
+        valid.add(provider);
+      }
+    }
+    return valid;
+  }
+
+  /// ✅ Synchronous version for simple UI checks (still respects TTL)
+  List<ServiceProvider> loadCachedUsersSync(String providerType) {
     final cachedData =
         _box.get(providerType, defaultValue: <dynamic>[]) as List;
     final now = DateTime.now().toUtc();
@@ -49,5 +79,29 @@ class UserListCacheService {
   }
 
   bool hasValidCache(String providerType) =>
-      loadCachedUsers(providerType).isNotEmpty;
+      loadCachedUsersSync(providerType).isNotEmpty;
+
+  /// ✅ NEW: Clears all cached users from the box
+  Future<void> clearAllCache() async {
+    await _box.clear();
+  }
+
+  /// 🧪 DEBUG: Rewinds the 'cachedAt' timestamps for all entries
+  /// Allows simulating aged data for testing the 2-day limit
+  Future<void> debugRewindCacheTimestamps(Duration offset) async {
+    for (var key in _box.keys) {
+      final List<dynamic> cachedData = _box.get(key) as List;
+      final updatedData = [];
+
+      for (var json in cachedData) {
+        final map = Map<String, dynamic>.from(json);
+        final originalTime = DateTime.parse(map['cachedAt'] as String);
+        final newTime = originalTime.subtract(offset);
+        map['cachedAt'] = newTime.toUtc().toIso8601String();
+        updatedData.add(map);
+      }
+
+      await _box.put(key, updatedData);
+    }
+  }
 }

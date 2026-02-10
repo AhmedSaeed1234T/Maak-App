@@ -12,6 +12,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -34,11 +35,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
     // Optional: show warning when offline
     if (!_isConnected && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات"),
-          backgroundColor: Colors.black,
-        ),
+      CustomSnackBar.show(
+        context,
+        message: "لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات",
+        type: SnackBarType.info,
       );
     }
   }
@@ -89,11 +89,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     });
 
     if (!_isConnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("لا يوجد اتصال بالإنترنت - لا يمكن تعديل البيانات"),
-          backgroundColor: Colors.black,
-        ),
+      CustomSnackBar.show(
+        context,
+        message: 'تم الاتصال بالإنترنت - يمكنك الآن تعديل البيانات',
+        type: SnackBarType.info,
       );
     }
   }
@@ -102,6 +101,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     setState(() => _isLoading = true);
 
     final profile = await _controller.fetchProfile();
+
+    if (!mounted) return;
 
     if (profile != null) {
       setState(() {
@@ -125,16 +126,16 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       });
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('فشل تحميل الملف الشخصي'),
-            backgroundColor: Colors.red,
-          ),
+        CustomSnackBar.show(
+          context,
+          message: 'فشل تحميل الملف الشخصي',
+          type: SnackBarType.error,
         );
         Navigator.pop(context);
       }
     }
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
   }
 
@@ -161,11 +162,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   Future<void> _saveProfile() async {
     if (!_hasChanges) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('لا توجد تغييرات للحفظ'),
-          backgroundColor: Colors.black,
-        ),
+      CustomSnackBar.show(
+        context,
+        message: 'لا توجد تغييرات للحفظ',
+        type: SnackBarType.info,
       );
       return;
     }
@@ -199,7 +199,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         break;
     }
 
-    final success = await _controller.updateProfile(
+    final result = await _controller.updateProfile(
       firstName: _firstName,
       lastName: _lastName,
       bio: _bio,
@@ -214,21 +214,18 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       profileImage: _newProfileImage,
     );
 
+    if (!mounted) return;
     setState(() => _isSaving = false);
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'تم الحفظ بنجاح ✓' : 'فشل الحفظ'),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
-      );
-    }
+    CustomSnackBar.show(
+      context,
+      message: result.message ?? "حدث خطأ",
+      type: result.success ? SnackBarType.success : SnackBarType.error,
+    );
 
-    if (success) {
+    if (result.success) {
       setState(() => _hasChanges = false);
-      // Reload profile to get updated data
-      await _loadProfile();
+      await _loadProfile(); // refresh data after save
     }
   }
 
@@ -496,8 +493,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               icon: const Icon(Icons.copy, size: 20),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _userProfile!.userName));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('تم نسخ اسم المستخدم')),
+                CustomSnackBar.show(
+                  context,
+                  message: 'تم نسخ اسم المستخدم',
+                  type: SnackBarType.info,
                 );
               },
             ),
@@ -506,9 +505,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
         // Email (non-editable)
         _buildNonEditableField(
-          label: 'البريد الإلكتروني',
-          value: _userProfile!.email,
-          icon: Icons.email_outlined,
+          label: 'نقاط الاشتراك',
+          value: _userProfile!.subscriptionPoints.toString(),
+          icon: Icons.star_outline,
         ),
 
         // Phone number (non-editable)
@@ -527,20 +526,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
 
         _buildNonEditableField(
-          label: 'النقاط',
+          label: 'النقاط الاساسية',
           value: _userProfile!.points.toString(),
           icon: Icons.stars,
-        ),
-        _buildNonEditableField(
-          label: 'اول يوم للاشتراك',
-          value: _userProfile!.subscription!.startDate.toString(),
-          icon: Icons.date_range,
-        ),
-        _buildNonEditableField(
-          label: 'اخر يوم للاشتراك',
-          value: _userProfile!.subscription!.endDate.toString(),
-
-          icon: Icons.error,
         ),
 
         const SizedBox(height: 16),
@@ -1014,15 +1002,17 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   Future<void> _logout() async {
     setState(() => _isLogingOut = true);
     bool allowed = await _controller.logout();
+    if (!mounted) return;
+
     if (allowed == false) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('لا يوجد اتصال بالإنترنت - تعذر تسجيل الخروج'),
-            backgroundColor: Colors.black,
-          ),
+        CustomSnackBar.show(
+          context,
+          message: 'لا يوجد اتصال بالإنترنت - تعذر تسجيل الخروج',
+          type: SnackBarType.info,
         );
       }
+      setState(() => _isLogingOut = false);
       return;
     }
     setState(() => _isLogingOut = false);

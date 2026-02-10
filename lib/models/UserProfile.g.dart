@@ -30,13 +30,14 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       city: fields[10] as String,
       district: fields[11] as String,
       cachedAt: fields[12] as DateTime,
+      subscriptionPoints: fields[13] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.userName)
       ..writeByte(1)
@@ -62,7 +63,9 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..writeByte(11)
       ..write(obj.district)
       ..writeByte(12)
-      ..write(obj.cachedAt);
+      ..write(obj.cachedAt)
+      ..writeByte(13)
+      ..write(obj.subscriptionPoints);
   }
 
   @override

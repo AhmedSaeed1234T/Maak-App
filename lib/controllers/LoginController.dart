@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:abokamall/helpers/FirebaseUtilities.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/apiclient.dart';
 import 'package:abokamall/helpers/apiroute.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
+import 'package:abokamall/models/ApiMessage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // ✅ Add for date formatting
@@ -31,41 +33,44 @@ class LoginController {
           refreshTokenExpiry: data['refreshTokenExpiry'], // ✅ UTC ISO string
         );
 
-        // ✅ Save current user
+        await setCurrentUser(email);
 
         // ✅ Parse and save subscription expiry (Egypt date from backend)
-        final subscriptionExpiry = DateTime.parse(
-          data['subscriptionExpiry'],
-        ); // "2024-12-30"
-        debugPrint(
-          'Subscription expiry: ${DateFormat('yyyy-MM-dd').format(subscriptionExpiry)}',
-        );
-        await setCurrentUser(email);
-        await saveCurrentUserSubscription(subscriptionExpiry);
-
-        bool isValidToEnter = await isSubscriptionExpired();
-        if (!isValidToEnter) {
-          return LoginResult(isSuccess: true);
+        final subscriptionExpiryStr = data['subscriptionExpiry'];
+        if (subscriptionExpiryStr != null) {
+          final subscriptionExpiry = DateTime.parse(subscriptionExpiryStr);
+          debugPrint(
+            'Subscription expiry: ${DateFormat('yyyy-MM-dd').format(subscriptionExpiry)}',
+          );
+          await saveCurrentUserSubscription(subscriptionExpiry);
         }
+
+        await saveCurrentUserIsExpired(data['isExpired'] ?? false);
+        FirebaseUtilities.syncFcmTokenWithBackend();
         return LoginResult(
-          errorCode: "SubscriptionInvalid",
-          isSuccess: false,
-          lastDate: data['subscriptionExpiry'],
+          isSuccess: true,
+          isExpired: data['isExpired'] ?? false,
+          expiryDate: data['subscriptionExpiry'],
         );
       } else {
         // ✅ Handle error response with subscription date
-        debugPrint("Error: ${data['message']}");
-        debugPrint(
-          "Last subscription date: ${data['subscriptionExpiry'] ?? data['LastDate']}",
-        );
+        final apiMessage = ApiMessage.fromJson(data);
+        if (apiMessage.errorCode == "SubscriptionInvalid") {
+          // ✅ Must set user first so saveCurrentUserIsExpired works
+          await setCurrentUser(email);
+          await saveCurrentUserIsExpired(true);
 
-        return LoginResult(
-          isSuccess: false,
-          errorCode: data['errorCode'],
-          errorMessage: data['message'],
-          lastDate:
-              data['subscriptionExpiry'] ??
-              data['LastDate'], // ✅ Handle both possible keys
+          if (data['subscriptionExpiry'] != null) {
+            try {
+              final date = DateTime.parse(data['subscriptionExpiry']);
+              await saveCurrentUserSubscription(date);
+            } catch (_) {}
+          }
+        }
+
+        return LoginResult.fromApiMessage(
+          apiMessage,
+          lastDate: data['subscriptionExpiry'] ?? data['LastDate'],
         );
       }
     } catch (e) {
@@ -80,41 +85,47 @@ class LoginController {
 }
 
 class LoginResult {
-  bool isSuccess;
-  String? errorCode;
-  String? errorMessage;
-  String? lastDate; // ✅ This will be "2024-12-30" format (Egypt date)
+  final bool isSuccess;
+  final String? errorCode;
+  final String? errorMessage;
+  final String? lastDate; // backend subscription or last valid date
+  final bool isExpired;
+  final String? expiryDate;
 
   LoginResult({
-    this.isSuccess = false,
+    required this.isSuccess,
     this.errorCode,
     this.errorMessage,
     this.lastDate,
+    this.isExpired = false,
+    this.expiryDate,
   });
 
-  String get arabicErrorMessage {
-    if (errorCode == null) return errorMessage ?? 'حدث خطأ غير معروف';
+  /// Factory to create LoginResult from ApiMessage
+  factory LoginResult.fromApiMessage(
+    ApiMessage apiMessage, {
+    String? lastDate,
+  }) {
+    String? message = apiMessage.message;
 
-    switch (errorCode) {
-      case 'GeneralError':
-        return 'حدث خطأ عام أثناء تسجيل الدخول';
-
-      case 'SubscriptionInvalid':
-        // ✅ Format the date nicely for Arabic display
-        if (lastDate != null) {
-          try {
-            final date = DateTime.parse(lastDate!);
-            final formattedDate = DateFormat('dd/MM/yyyy').format(date);
-            return "انتهى اشتراكك في $formattedDate، يرجى التجديد";
-          } catch (e) {
-            return "انتهى اشتراكك، يرجى التجديد";
-          }
-        }
-        return "انتهى اشتراكك، يرجى التجديد";
-      case "EmailOrPasswordInCorrect":
-        return 'الايميل او الباسورد خطأ, يرجي اعادة التأكد';
-      default:
-        return errorMessage ?? 'حدث خطأ: $errorCode';
+    // Customize subscription invalid message with Arabic formatting
+    if (apiMessage.errorCode == "SubscriptionInvalid" && lastDate != null) {
+      try {
+        final date = DateTime.parse(lastDate);
+        final formattedDate = DateFormat('dd/MM/yyyy').format(date);
+        message = "انتهى اشتراكك في $formattedDate، يرجى التجديد";
+      } catch (_) {
+        message = "انتهى اشتراكك، يرجى التجديد";
+      }
     }
+
+    return LoginResult(
+      isSuccess: apiMessage.success,
+      errorCode: apiMessage.errorCode,
+      errorMessage: message,
+      lastDate: lastDate,
+      isExpired: apiMessage.errorCode == "SubscriptionInvalid",
+      expiryDate: lastDate,
+    );
   }
 }

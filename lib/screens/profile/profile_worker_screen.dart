@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
@@ -26,7 +27,9 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
   Future<void> _pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() { _imageFile = File(pickedFile.path); });
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
     }
   }
 
@@ -36,7 +39,14 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('تعديل الملف الشخصي', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'تعديل الملف الشخصي',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0.5,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -57,14 +67,28 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withOpacity(0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.edit_location, color: Colors.white, size: 40),
+              child: const Icon(
+                Icons.edit_location,
+                color: Colors.white,
+                size: 40,
+              ),
             ),
             const SizedBox(height: 24),
             const Text(
               'قم بتحديث بياناتك',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -90,7 +114,9 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
                 child: CircleAvatar(
                   radius: 55,
                   backgroundColor: Color(0xFFF4F7FA),
-                  backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
+                  backgroundImage: _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : null,
                   child: _imageFile == null
                       ? Icon(Icons.person, size: 55, color: primary)
                       : null,
@@ -102,14 +128,19 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
               onPressed: _pickImage,
               icon: const Icon(Icons.edit, size: 18),
               label: const Text('تغيير الصورة'),
-              style: TextButton.styleFrom(foregroundColor: primary, textStyle: const TextStyle(fontSize: 14)),
+              style: TextButton.styleFrom(
+                foregroundColor: primary,
+                textStyle: const TextStyle(fontSize: 14),
+              ),
             ),
             const SizedBox(height: 28),
 
             // Main Card
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -117,9 +148,19 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
                     // Personal Info Section
                     _buildSectionLabel('المعلومات الشخصية'),
                     const SizedBox(height: 12),
-                    _buildTextField('الاسم', Icons.person, name, (v) => setState(() => name = v)),
+                    _buildTextField(
+                      'الاسم',
+                      Icons.person,
+                      name,
+                      (v) => setState(() => name = v),
+                    ),
                     const SizedBox(height: 14),
-                    _buildTextField('المهنة', Icons.work, profession, (v) => setState(() => profession = v)),
+                    _buildTextField(
+                      'المهنة',
+                      Icons.work,
+                      profession,
+                      (v) => setState(() => profession = v),
+                    ),
                     const SizedBox(height: 14),
                     _buildLocationField(),
                     const SizedBox(height: 20),
@@ -127,17 +168,40 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
                     // Contact Info Section
                     _buildSectionLabel('معلومات الاتصال'),
                     const SizedBox(height: 12),
-                    _buildTextField('رقم الجوال', Icons.phone, phone, (v) => setState(() => phone = v), TextInputType.phone),
+                    _buildTextField(
+                      'رقم الجوال',
+                      Icons.phone,
+                      phone,
+                      (v) => setState(() => phone = v),
+                      TextInputType.phone,
+                    ),
                     const SizedBox(height: 14),
-                    _buildTextField('البريد الإلكتروني', Icons.email, email, (v) => setState(() => email = v), TextInputType.emailAddress),
+                    _buildTextField(
+                      'البريد الإلكتروني',
+                      Icons.email,
+                      email,
+                      (v) => setState(() => email = v),
+                      TextInputType.emailAddress,
+                    ),
                     const SizedBox(height: 20),
 
                     // Service Info Section
                     _buildSectionLabel('معلومات الخدمة'),
                     const SizedBox(height: 12),
-                    _buildTextField('السعر', Icons.monetization_on, price, (v) => setState(() => price = v), TextInputType.number),
+                    _buildTextField(
+                      'السعر',
+                      Icons.monetization_on,
+                      price,
+                      (v) => setState(() => price = v),
+                      TextInputType.number,
+                    ),
                     const SizedBox(height: 14),
-                    _buildTextFieldMultiline('نبذة عني', Icons.description, about, (v) => setState(() => about = v)),
+                    _buildTextFieldMultiline(
+                      'نبذة عني',
+                      Icons.description,
+                      about,
+                      (v) => setState(() => about = v),
+                    ),
                     const SizedBox(height: 24),
 
                     // Save Button
@@ -146,19 +210,26 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
                       height: 56,
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.save, size: 20),
-                        label: const Text('حفظ البيانات', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'حفظ البيانات',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           elevation: 3,
                         ),
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('تم حفظ البيانات بنجاح'),
-                              backgroundColor: Colors.green,
-                            ),
+                          CustomSnackBar.show(
+                            context,
+                            message: 'تم حفظ البيانات بنجاح',
+                            type: SnackBarType.success,
                           );
                         },
                       ),
@@ -178,7 +249,11 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
       alignment: Alignment.centerRight,
       child: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          color: Colors.black87,
+        ),
       ),
     );
   }
@@ -198,7 +273,10 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
         prefixIcon: Icon(icon, color: const Color(0xFF13A9F6)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -235,7 +313,10 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -262,10 +343,16 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
             initialValue: location,
             decoration: InputDecoration(
               labelText: 'مكان العمل',
-              prefixIcon: const Icon(Icons.location_on, color: Color(0xFF13A9F6)),
+              prefixIcon: const Icon(
+                Icons.location_on,
+                color: Color(0xFF13A9F6),
+              ),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
               labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -277,7 +364,10 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+                borderSide: const BorderSide(
+                  color: Color(0xFF13A9F6),
+                  width: 2,
+                ),
               ),
             ),
             onChanged: (v) => setState(() => location = v),
@@ -290,34 +380,58 @@ class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
             color: const Color(0xFF13A9F6).withOpacity(0.15),
           ),
           child: IconButton(
-            icon: const Icon(Icons.my_location, color: Color(0xFF13A9F6), size: 20),
+            icon: const Icon(
+              Icons.my_location,
+              color: Color(0xFF13A9F6),
+              size: 20,
+            ),
             tooltip: 'تحديد الموقع تلقائيًا',
             onPressed: () async {
               bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
               if (!serviceEnabled) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('يجب تفعيل خدمة الموقع.')));
+                CustomSnackBar.show(
+                  context,
+                  message: 'يجب تفعيل خدمة الموقع.',
+                  type: SnackBarType.warning,
+                );
                 return;
               }
-              LocationPermission permission = await Geolocator.checkPermission();
+              LocationPermission permission =
+                  await Geolocator.checkPermission();
               if (permission == LocationPermission.denied) {
                 permission = await Geolocator.requestPermission();
                 if (permission == LocationPermission.denied) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم رفض إذن الموقع')));
+                  CustomSnackBar.show(
+                    context,
+                    message: 'تم رفض إذن الموقع',
+                    type: SnackBarType.error,
+                  );
                   return;
                 }
               }
               if (permission == LocationPermission.deniedForever) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('إذن الموقع مرفوض دائمًا')));
+                CustomSnackBar.show(
+                  context,
+                  message: 'إذن الموقع مرفوض دائمًا',
+                  type: SnackBarType.error,
+                );
                 return;
               }
               Position pos = await Geolocator.getCurrentPosition();
-              List<Placemark> placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
+              List<Placemark> placemarks = await placemarkFromCoordinates(
+                pos.latitude,
+                pos.longitude,
+              );
               if (placemarks.isNotEmpty) {
                 final place = placemarks.first;
-                String address = '${place.country ?? ''} - ${place.administrativeArea ?? ''} - ${place.locality ?? ''} - ${place.street ?? ''}';
+                String address =
+                    '${place.country ?? ''} - ${place.administrativeArea ?? ''} - ${place.locality ?? ''} - ${place.street ?? ''}';
                 setState(() => location = address);
               } else {
-                setState(() => location = 'خط العرض: ${pos.latitude}, خط الطول: ${pos.longitude}');
+                setState(
+                  () => location =
+                      'خط العرض: ${pos.latitude}, خط الطول: ${pos.longitude}',
+                );
               }
             },
           ),

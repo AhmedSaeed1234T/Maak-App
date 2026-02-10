@@ -1,3 +1,4 @@
+import 'package:abokamall/controllers/PresenceController.dart';
 import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/controllers/SearchController.dart';
 import 'package:abokamall/helpers/ContextFunctions.dart';
@@ -7,6 +8,8 @@ import 'package:abokamall/helpers/TokenService.dart';
 import 'package:abokamall/helpers/enums.dart';
 import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
+import 'package:abokamall/models/UserProfile.dart';
+import 'package:abokamall/screens/chat_screen.dart';
 import 'package:abokamall/screens/debug_token_screen.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:abokamall/services/UserListCache.dart';
@@ -14,6 +17,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
+import 'package:abokamall/helpers/FirebaseUtilities.dart';
+import 'package:abokamall/screens/chat_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -36,6 +42,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool hasError = false;
   String errorMessage = '';
   late final ProfileController profileController;
+  bool isExpired = false;
+  String? expirationMessage;
+  bool _isGracePassed = false; // ✅ NEW
 
   late final Connectivity _connectivity;
   late final Stream<ConnectivityResult> _connectivityStream;
@@ -46,6 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'المهندسين',
     'الشركات',
     'المتاجر',
+    'المساعدين',
   ];
 
   final List<ProviderType> providerTypes = [
@@ -54,6 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ProviderType.Engineers,
     ProviderType.Companies,
     ProviderType.Marketplaces,
+    ProviderType.Assistants,
   ];
 
   @override
@@ -64,14 +75,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
     searchController = getIt<searchcontroller>();
     profileController = getIt<ProfileController>();
     tokenService = getIt<TokenService>();
-    checkSessionValidity(context, tokenService);
+    getIt<PresenceController>().connect();
+
+    _initData();
+
     if (mounted) {
       _connectivity = Connectivity();
-
       _checkInitialConnectivity();
       _connectivityStream = _connectivity.onConnectivityChanged;
-      _connectivityStream.listen(_onConnectivityChanged);
+      _connectivityStream.listen(onConnectivityChanged);
+
+      // Check for pending notification from terminated state
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkPendingNotification();
+      });
     }
+  }
+
+  void _checkPendingNotification() {
+    final pendingData = FirebaseUtilities.pendingNotificationData;
+    if (pendingData != null) {
+      debugPrint("🚀 Handling pending notification in Dashboard");
+      FirebaseUtilities.pendingNotificationData = null; // Clear it
+
+      final senderId = pendingData['senderId'];
+      final senderName = pendingData['senderName'] ?? 'User';
+
+      if (senderId != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                ChatScreen(targetUserId: senderId, targetUserName: senderName),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _initData() async {
+    // Ensuring everything is correctly initialized
+    await _checkSubscriptionStatus();
+    await _preloadAllProviders();
   }
 
   Future<void> _checkInitialConnectivity() async {
@@ -82,7 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => hasInternet = connected);
 
     if (!connected) {
-      _showSnackBar(
+      showSnackBar(
         'لا يوجد اتصال بالإنترنت. سيتم عرض البيانات المخزنة',
         Colors.orange,
         duration: 3,
@@ -92,8 +137,96 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _preloadAllProviders();
   }
 
+  Future<void> _checkSubscriptionStatus({bool onlyLocal = false}) async {
+    // 1. Immediate local check for fast UI reaction
+    final localExpired = await isCurrentUserExpired();
+    String? localMessage;
+    if (localExpired) {
+      localMessage = await getFormattedSubscriptionMessage();
+    }
+
+    if (mounted) {
+      setState(() {
+        isExpired = localExpired;
+        expirationMessage = localMessage;
+      });
+    }
+
+    // 2. Proactively refetch profile if online (Skip if onlyLocal requested)
+    if (hasInternet && !onlyLocal) {
+      try {
+        await profileController.fetchProfile(forceRefresh: true);
+      } catch (e) {
+        debugPrint('Dashboard: Error refreshing profile status: $e');
+      }
+    }
+
+    final finalExpired = await isCurrentUserExpired();
+    final gracePassed = await tokenService.mustCheckOnline();
+
+    // ✅ NEW: Notify user if status changed
+    if (mounted && isExpired != finalExpired) {
+      if (finalExpired) {
+        CustomSnackBar.show(
+          context,
+          message: 'لقد انتهي اشتراكك',
+          type: SnackBarType.error,
+          duration: 5,
+        );
+      } else {
+        CustomSnackBar.show(
+          context,
+          message: 'تم تفعيل اشتراكك بنجاح!',
+          type: SnackBarType.success,
+          duration: 5,
+        );
+      }
+    }
+
+    String? finalMessage;
+    if (finalExpired) {
+      finalMessage = await getFormattedSubscriptionMessage();
+    }
+
+    if (mounted) {
+      setState(() {
+        isExpired = finalExpired;
+        expirationMessage = finalMessage;
+        _isGracePassed = gracePassed;
+      });
+    }
+  }
+
   Future<void> _preloadAllProviders() async {
     if (!mounted) return;
+
+    // ✅ 1. Update local UI state FIRST with latest known info (fast)
+    await _checkSubscriptionStatus();
+
+    // ⭐ 2. Prepare for network check ⭐
+    // Clear "permanent failure" markers ONLY if online, to give the network a chance.
+    if (hasInternet) {
+      await tokenService.clearRefreshInvalidStatus();
+      // Note: We don't forceClearExpiryFlag here anymore to avoid UI flickering.
+      // _checkSubscriptionStatus already handles the network refresh.
+    }
+
+    // ⭐ Strict 2-day offline check ⭐
+    // Only block the entire refresh if the HARD security limit is passed.
+    if (await tokenService.mustCheckOnline() && !hasInternet) {
+      final isSessionValid = await checkSessionValidity(context, tokenService);
+      if (!isSessionValid) {
+        if (!mounted) return;
+        setState(() {
+          featuredProviders = [];
+          cachedProviders = {};
+          isLoading = false;
+          hasError = true;
+          errorMessage = 'يجب الاتصال بالإنترنت لتحديث البيانات';
+        });
+        return;
+      }
+    }
 
     setState(() {
       isLoading = true;
@@ -105,7 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool allCachesEmpty = true;
 
     for (var type in providerTypes) {
-      final cached = userListCacheService.loadCachedUsers(
+      final cached = await userListCacheService.loadCachedUsersAsync(
         type.name.toLowerCase(),
       );
 
@@ -149,6 +282,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     hasValidCache = !allCachesEmpty;
     if (!mounted) return;
 
+    // ✅ NEW: Re-check status LOCALLY in case searchWorkers detected a 403 expiry
+    await _checkSubscriptionStatus(onlyLocal: true);
+
     setState(() {
       featuredProviders = cachedProviders[providerTypes[tabIndex]] ?? [];
       isLoading = false;
@@ -156,7 +292,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // Show appropriate messages
     if (!hasInternet && allCachesEmpty) {
-      _showSnackBar(
+      showSnackBar(
         'لا توجد بيانات متاحة. يرجى الاتصال بالإنترنت',
         Colors.red,
         duration: 4,
@@ -168,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _onConnectivityChanged(ConnectivityResult result) async {
+  Future<void> onConnectivityChanged(ConnectivityResult result) async {
     if (!mounted) return;
 
     final connected = result != ConnectivityResult.none;
@@ -177,12 +313,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Reconnected
       setState(() => hasInternet = connected);
 
-      _showSnackBar(
+      showSnackBar(
         'تم الاتصال بالإنترنت. جاري تحديث البيانات...',
         Colors.green,
         duration: 2,
       );
 
+      // ✅ Proactively reset local flags to allow recovery
+      await tokenService.clearRefreshInvalidStatus();
+
+      // ✅ Proactively refresh session/grace period status
+      await _checkSubscriptionStatus();
       await _preloadAllProviders();
     } else if (!connected && hasInternet) {
       if (!mounted) return;
@@ -193,7 +334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Load cached data for all provider types
       bool hasCachedData = false;
       for (var type in providerTypes) {
-        final cached = userListCacheService.loadCachedUsers(
+        final cached = await userListCacheService.loadCachedUsersAsync(
           type.name.toLowerCase(),
         );
         if (cached.isNotEmpty) {
@@ -210,13 +351,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
 
       if (hasCachedData) {
-        _showSnackBar(
+        showSnackBar(
           'انقطع الاتصال بالإنترنت. سيتم عرض البيانات المخزنة',
           Colors.orange,
           duration: 3,
         );
       } else {
-        _showSnackBar(
+        showSnackBar(
           'انقطع الاتصال بالإنترنت ولا توجد بيانات مخزنة',
           Colors.red,
           duration: 3,
@@ -229,39 +370,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _showSnackBar(String message, Color color, {int duration = 2}) {
+  void showSnackBar(String message, Color color, {int duration = 2}) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              color == Colors.green
-                  ? Icons.check_circle
-                  : color == Colors.orange
-                  ? Icons.info
-                  : Icons.error,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(message, style: const TextStyle(fontSize: 14)),
-            ),
-          ],
-        ),
-        backgroundColor: color,
-        duration: Duration(seconds: duration),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
+    SnackBarType type = SnackBarType.info;
+    if (color == Colors.green) {
+      type = SnackBarType.success;
+    } else if (color == Colors.orange) {
+      type = SnackBarType.warning;
+    } else if (color == Colors.red) {
+      type = SnackBarType.error;
+    }
+
+    CustomSnackBar.show(
+      context,
+      message: message,
+      type: type,
+      duration: duration,
     );
   }
 
-  Future<void> _loadFeaturedProviders(ProviderType type) async {
+  Future<void> loadFeaturedProviders(ProviderType type) async {
     if (!mounted) return;
 
     setState(() {
@@ -281,6 +410,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             const Text(
@@ -333,7 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 await _preloadAllProviders();
               }
             : () async {
-                _showSnackBar(
+                showSnackBar(
                   'يرجى الاتصال بالإنترنت لتحديث البيانات',
                   Colors.orange,
                 );
@@ -398,7 +528,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (hasInternet) ...[
+                    if (isExpired) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF8B0000).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF8B0000).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.warning_amber_rounded,
+                              color: Color(0xFF8B0000),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                expirationMessage ?? "لقد انتهي اشتراكك",
+                                style: const TextStyle(
+                                  color: Color(0xFF8B0000),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  fontFamily: 'Cairo',
+                                ),
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ] else if (hasInternet) ...[
                       TextField(
                         decoration: InputDecoration(
                           hintText: 'ابحث عن خدمة...',
@@ -442,7 +610,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         itemBuilder: (ctx, i) => GestureDetector(
                           onTap: () {
                             setState(() => tabIndex = i);
-                            _loadFeaturedProviders(providerTypes[i]);
+                            loadFeaturedProviders(providerTypes[i]);
                           },
                           child: Container(
                             margin: const EdgeInsets.only(left: 10),
@@ -547,7 +715,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               )
             else if (!hasInternet && !hasValidCache)
-              _buildEmptyState(
+              buildEmptyState(
                 icon: Icons.cloud_off,
                 title: 'لا يوجد اتصال بالإنترنت',
                 message: 'يرجى الاتصال بالإنترنت لعرض مقدمي الخدمات',
@@ -555,7 +723,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onAction: () => _preloadAllProviders(),
               )
             else if (hasError && featuredProviders.isEmpty)
-              _buildEmptyState(
+              buildEmptyState(
                 icon: Icons.error_outline,
                 title: 'حدث خطأ',
                 message: errorMessage,
@@ -563,7 +731,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onAction: () => _preloadAllProviders(),
               )
             else if (featuredProviders.isEmpty)
-              _buildEmptyState(
+              buildEmptyState(
                 icon: Icons.search_off,
                 title: 'لا توجد نتائج',
                 message: 'لم يتم العثور على مقدمي خدمات في هذه الفئة',
@@ -585,7 +753,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           builder: (_) => WorkerProfilePage(provider: provider),
                         ),
                       ),
-                      child: _buildProviderCard(provider),
+                      child: buildProviderCard(provider),
                     );
                   },
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
@@ -610,10 +778,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   elevation: 3,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                onPressed: () => Navigator.pushNamed(context, '/payment'),
-                child: const Text(
+                onPressed: (_isGracePassed && !hasInternet)
+                    ? () {
+                        showSnackBar(
+                          'يجب الاتصال بالإنترنت لتحديث حالة الدفع',
+                          Colors.orange,
+                          duration: 4,
+                        );
+                      }
+                    : () async {
+                        try {
+                          UserProfile? userData = await profileController
+                              .fetchProfile();
+                          if (userData == null) {
+                            showSnackBar(
+                              'يجب الاتصال بالإنترنت لتحديث بيانات الاشتراك',
+                              Colors.orange,
+                              duration: 4,
+                            );
+                            return;
+                          }
+                          debugPrint(userData.subscription!.endDate.toString());
+                          Navigator.of(context).pushNamed(
+                            '/subscription_status',
+                            arguments: userData,
+                          );
+                        } catch (e) {
+                          CustomSnackBar.show(
+                            context,
+                            message:
+                                'حدث خطأ أثناء جلب حالة الاشتراك: ${e.toString()}',
+                            type: SnackBarType.error,
+                          );
+                          debugPrint(e.toString());
+                        }
+                      },
+                child: Text(
                   'الدفع',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: (_isGracePassed && !hasInternet)
+                        ? Colors.white70
+                        : Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -651,7 +859,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildEmptyState({
+  Widget buildEmptyState({
     required IconData icon,
     required String title,
     required String message,
@@ -660,7 +868,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     const primary = Color(0xFF13A9F6);
     return Container(
-      height: 280,
+      constraints: const BoxConstraints(minHeight: 280),
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -713,7 +921,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildProviderCard(ServiceProvider provider) {
+  Widget buildProviderCard(ServiceProvider provider) {
     const primary = Color(0xFF13A9F6);
     return Card(
       elevation: 2,
@@ -724,72 +932,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              decoration: BoxDecoration(shape: BoxShape.circle),
-              child: SizedBox(
-                width: 80,
-                height: 80,
-                child: ClipOval(
-                  child:
-                      provider.imageUrl != null && provider.imageUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: provider.imageUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: const Color(0xFFF5F7FA),
-                            child: const Center(
-                              child: CircularProgressIndicator(),
+            Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(shape: BoxShape.circle),
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: ClipOval(
+                      child:
+                          provider.imageUrl != null &&
+                              provider.imageUrl!.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: provider.imageUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                color: const Color(0xFFF5F7FA),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) {
+                                return provider.isCompany
+                                    ? Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.orange.withOpacity(
+                                            0.15,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.business,
+                                          color: Colors.orange,
+                                          size: 24,
+                                        ),
+                                      )
+                                    : CircleAvatar(
+                                        radius: 28,
+                                        backgroundColor: Colors.grey[200],
+                                        child: Icon(
+                                          Icons.person,
+                                          color: Colors.blue[600],
+                                          size: 28,
+                                        ),
+                                      );
+                              },
+                            )
+                          : provider.isCompany
+                          ? Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.orange.withOpacity(0.15),
+                              ),
+                              child: Icon(
+                                Icons.business,
+                                color: Colors.orange,
+                                size: 24,
+                              ),
+                            )
+                          : CircleAvatar(
+                              radius: 28,
+                              backgroundColor: Colors.grey[200],
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.blue[600],
+                                size: 28,
+                              ),
                             ),
-                          ),
-                          errorWidget: (context, url, error) {
-                            return provider.isCompany
-                                ? Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.orange.withOpacity(0.15),
-                                    ),
-                                    child: Icon(
-                                      Icons.business,
-                                      color: Colors.orange,
-                                      size: 24,
-                                    ),
-                                  )
-                                : CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: Colors.grey[200],
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Colors.blue[600],
-                                      size: 28,
-                                    ),
-                                  );
-                          },
-                        )
-                      : provider.isCompany
-                      ? Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.orange.withOpacity(0.15),
-                          ),
-                          child: Icon(
-                            Icons.business,
-                            color: Colors.orange,
-                            size: 24,
-                          ),
-                        )
-                      : CircleAvatar(
-                          radius: 28,
-                          backgroundColor: Colors.grey[200],
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.blue[600],
-                            size: 28,
-                          ),
-                        ),
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  bottom: 2,
+                  right: 2,
+                  child: ValueListenableBuilder<Set<String>>(
+                    valueListenable: getIt<PresenceController>().onlineUsers,
+                    builder: (context, onlineUsers, _) {
+                      final isOnline = getIt<PresenceController>().isUserOnline(
+                        provider.userId,
+                      );
+                      return Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: isOnline ? Colors.green : Colors.grey,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Text(
