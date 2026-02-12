@@ -37,6 +37,8 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _governorateController = TextEditingController();
   final _cityController = TextEditingController();
   final _districtController = TextEditingController();
+  String? _selectedGovernorate;
+  String? _selectedCity;
   final _referralController = TextEditingController();
 
   String providerType = "Worker";
@@ -401,18 +403,35 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                           controller: _governorateController,
                           primaryColor: _primaryColor,
                           isRequired: true,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedGovernorate = value;
+                              _selectedCity = null;
+                              _cityController.clear();
+                              _districtController.clear();
+                            });
+                          },
                         ),
                         const SizedBox(height: 16),
 
-                        CityTextField(
+                        CityDropdownField(
                           controller: _cityController,
+                          selectedGovernorate: _selectedGovernorate,
                           primaryColor: _primaryColor,
                           isRequired: true,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCity = value;
+                              _districtController.clear();
+                            });
+                          },
                         ),
                         const SizedBox(height: 16),
 
-                        DistrictTextField(
+                        DistrictDropdownField(
                           controller: _districtController,
+                          selectedGovernorate: _selectedGovernorate,
+                          selectedCity: _selectedCity,
                           primaryColor: _primaryColor,
                           isRequired: false,
                         ),

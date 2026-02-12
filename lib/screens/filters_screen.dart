@@ -25,6 +25,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
   final TextEditingController governorateController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController districtController = TextEditingController();
+  String? _selectedGovernorate;
+  String? _selectedCity;
   late searchcontroller searchController;
   late TokenService tokenService;
 
@@ -236,22 +238,39 @@ class _FiltersScreenState extends State<FiltersScreen> {
                               controller: governorateController,
                               primaryColor: primary,
                               isRequired: false,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedGovernorate = value;
+                                  _selectedCity = null;
+                                  cityController.clear();
+                                  districtController.clear();
+                                });
+                              },
                             ),
                             const SizedBox(height: 16),
 
                             _buildSectionLabel('المدينة'),
                             const SizedBox(height: 8),
-                            CityTextField(
+                            CityDropdownField(
                               controller: cityController,
+                              selectedGovernorate: _selectedGovernorate,
                               primaryColor: primary,
                               isRequired: false,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCity = value;
+                                  districtController.clear();
+                                });
+                              },
                             ),
                             const SizedBox(height: 16),
 
                             _buildSectionLabel('الحي'),
                             const SizedBox(height: 8),
-                            DistrictTextField(
+                            DistrictDropdownField(
                               controller: districtController,
+                              selectedGovernorate: _selectedGovernorate,
+                              selectedCity: _selectedCity,
                               primaryColor: primary,
                               isRequired: false,
                             ),
@@ -288,6 +307,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
                           governorateController.clear();
                           cityController.clear();
                           districtController.clear();
+                          _selectedGovernorate = null;
+                          _selectedCity = null;
                           typeOfService = null;
                         });
                       },

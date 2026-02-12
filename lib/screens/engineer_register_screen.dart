@@ -42,6 +42,8 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final _governorateController = TextEditingController();
   final _cityController = TextEditingController();
   final _districtController = TextEditingController();
+  String? _selectedGovernorate;
+  String? _selectedCity;
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
@@ -389,16 +391,33 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                           controller: _governorateController,
                           primaryColor: const Color(0xFF13A9F6),
                           isRequired: true,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedGovernorate = value;
+                              _selectedCity = null;
+                              _cityController.clear();
+                              _districtController.clear();
+                            });
+                          },
                         ),
                         const SizedBox(height: 16),
-                        CityTextField(
+                        CityDropdownField(
                           controller: _cityController,
+                          selectedGovernorate: _selectedGovernorate,
                           primaryColor: const Color(0xFF13A9F6),
                           isRequired: true,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCity = value;
+                              _districtController.clear();
+                            });
+                          },
                         ),
                         const SizedBox(height: 16),
-                        DistrictTextField(
+                        DistrictDropdownField(
                           controller: _districtController,
+                          selectedGovernorate: _selectedGovernorate,
+                          selectedCity: _selectedCity,
                           primaryColor: const Color(0xFF13A9F6),
                           isRequired: false,
                         ),

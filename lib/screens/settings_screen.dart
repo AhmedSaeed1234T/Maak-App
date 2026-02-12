@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:abokamall/helpers/CustomSnackBar.dart';
+import 'package:abokamall/data/egypt_locations.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -64,6 +65,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   String _owner = '';
   int _workerTypes = 1;
   File? _newProfileImage;
+  // State variables for cascading dropdowns
+  String? _selectedGovernorate;
+  String? _selectedCity;
   @override
   void initState() {
     super.initState();
@@ -114,6 +118,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         _governorate = profile.governorate;
         _city = profile.city;
         _district = profile.district;
+        // Initialize state variables for cascading dropdowns
+        _selectedGovernorate = profile.governorate;
+        _selectedCity = profile.city;
 
         // Provider-specific fields
         if (profile.serviceProvider != null) {
@@ -610,7 +617,12 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           onEdit: () => _showGovernorateDialog(
             initialValue: _governorate,
             onSave: (value) {
-              setState(() => _governorate = value);
+              setState(() {
+                _governorate = value;
+                _selectedGovernorate = value;
+                // Reset city and district when governorate changes
+                _selectedCity = null;
+              });
               _markAsChanged();
             },
           ),
@@ -620,11 +632,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label: 'المدينة',
           value: _city,
           icon: Icons.location_city,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل المدينة',
+          onEdit: () => _showCityDialog(
             initialValue: _city,
             onSave: (value) {
-              setState(() => _city = value);
+              setState(() {
+                _city = value;
+                _selectedCity = value;
+              });
               _markAsChanged();
             },
           ),
@@ -634,8 +648,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label: 'الحي',
           value: _district,
           icon: Icons.home_outlined,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل الحي',
+          onEdit: () => _showDistrictDialog(
             initialValue: _district,
             onSave: (value) {
               setState(() => _district = value);
@@ -1182,6 +1195,341 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   void _changePassword() {
     Navigator.pushNamed(context, '/reset_password');
+  }
+
+  Future<void> _showCityDialog({
+    required String initialValue,
+    required Function(String) onSave,
+  }) async {
+    String? selectedCity;
+    bool isOtherSelected = false;
+    final controller = TextEditingController();
+
+    // Get cities for the selected governorate
+    List<String> cityList = [];
+    if (_selectedGovernorate != null &&
+        _selectedGovernorate!.isNotEmpty &&
+        _selectedGovernorate != 'الاخري') {
+      cityList = [...getCityNames(_selectedGovernorate!), 'الاخري'];
+    } else {
+      cityList = ['الاخري'];
+    }
+
+    // Initialize selection
+    if (cityList.contains(initialValue)) {
+      selectedCity = initialValue;
+      isOtherSelected = initialValue == 'الاخري';
+      if (isOtherSelected) {
+        controller.text = initialValue;
+      }
+    } else if (initialValue.isNotEmpty) {
+      // Custom value - set to \"Other\"
+      selectedCity = 'الاخري';
+      isOtherSelected = true;
+      controller.text = initialValue;
+    }
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text('تعديل المدينة'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (cityList.length == 1 && cityList[0] == 'الاخري') ...[
+                    // Only \"Other\" option available (no governorate selected)
+                    Text(
+                      'يرجى اختيار المحافظة أولاً',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: controller,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'المدينة',
+                        hintText: 'اكتب اسم المدينة',
+                        prefixIcon: const Icon(
+                          Icons.location_city,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ] else if (!isOtherSelected) ...[
+                    // Dropdown mode
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedCity,
+                      decoration: InputDecoration(
+                        labelText: 'المدينة',
+                        prefixIcon: const Icon(
+                          Icons.location_city,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      items: cityList.map((String city) {
+                        return DropdownMenuItem<String>(
+                          value: city,
+                          child: Text(city),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setDialogState(() {
+                          selectedCity = newValue;
+                          if (newValue == 'الاخري') {
+                            isOtherSelected = true;
+                            controller.clear();
+                          }
+                        });
+                      },
+                      isExpanded: true,
+                    ),
+                  ] else ...[
+                    // Text field mode (when \"Other\" is selected)
+                    TextFormField(
+                      controller: controller,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'المدينة',
+                        hintText: 'اكتب اسم المدينة',
+                        prefixIcon: const Icon(
+                          Icons.location_city,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        suffixIcon: cityList.length > 1
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Color(0xFF13A9F6),
+                                ),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    isOtherSelected = false;
+                                    selectedCity = null;
+                                  });
+                                },
+                                tooltip: 'العودة للقائمة',
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  String valueToSave;
+                  if (isOtherSelected || cityList.length == 1) {
+                    valueToSave = controller.text.trim();
+                  } else {
+                    valueToSave = selectedCity ?? '';
+                  }
+
+                  if (valueToSave.isNotEmpty) {
+                    onSave(valueToSave);
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('حفظ'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _showDistrictDialog({
+    required String initialValue,
+    required Function(String) onSave,
+  }) async {
+    String? selectedDistrict;
+    bool isOtherSelected = false;
+    final controller = TextEditingController();
+
+    // Get districts for the selected governorate and city
+    List<String> districtList = [];
+    if (_selectedGovernorate != null &&
+        _selectedGovernorate!.isNotEmpty &&
+        _selectedGovernorate != 'الاخري' &&
+        _selectedCity != null &&
+        _selectedCity!.isNotEmpty &&
+        _selectedCity != 'الاخري') {
+      final districts = getDistrictNames(_selectedGovernorate!, _selectedCity!);
+      if (districts.isNotEmpty) {
+        districtList = [...districts, 'الاخري'];
+      } else {
+        districtList = ['الاخري'];
+      }
+    } else {
+      districtList = ['الاخري'];
+    }
+
+    // Initialize selection
+    if (districtList.contains(initialValue)) {
+      selectedDistrict = initialValue;
+      isOtherSelected = initialValue == 'الاخري';
+      if (isOtherSelected) {
+        controller.text = initialValue;
+      }
+    } else if (initialValue.isNotEmpty) {
+      // Custom value - set to \"Other\"
+      selectedDistrict = 'الاخري';
+      isOtherSelected = true;
+      controller.text = initialValue;
+    }
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text('تعديل الحي'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (districtList.length == 1 &&
+                      districtList[0] == 'الاخري') ...[
+                    // Only \"Other\" option available (no city selected)
+                    Text(
+                      'يرجى اختيار المحافظة والمدينة أولاً',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: controller,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'الحي',
+                        hintText: 'اكتب اسم الحي',
+                        prefixIcon: const Icon(
+                          Icons.home_outlined,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ] else if (!isOtherSelected) ...[
+                    // Dropdown mode
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedDistrict,
+                      decoration: InputDecoration(
+                        labelText: 'الحي',
+                        prefixIcon: const Icon(
+                          Icons.home_outlined,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      items: districtList.map((String district) {
+                        return DropdownMenuItem<String>(
+                          value: district,
+                          child: Text(district),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setDialogState(() {
+                          selectedDistrict = newValue;
+                          if (newValue == 'الاخري') {
+                            isOtherSelected = true;
+                            controller.clear();
+                          }
+                        });
+                      },
+                      isExpanded: true,
+                    ),
+                  ] else ...[
+                    // Text field mode (when \"Other\" is selected)
+                    TextFormField(
+                      controller: controller,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'الحي',
+                        hintText: 'اكتب اسم الحي',
+                        prefixIcon: const Icon(
+                          Icons.home_outlined,
+                          color: Color(0xFF13A9F6),
+                        ),
+                        suffixIcon: districtList.length > 1
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Color(0xFF13A9F6),
+                                ),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    isOtherSelected = false;
+                                    selectedDistrict = null;
+                                  });
+                                },
+                                tooltip: 'العودة للقائمة',
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  String valueToSave;
+                  if (isOtherSelected || districtList.length == 1) {
+                    valueToSave = controller.text.trim();
+                  } else {
+                    valueToSave = selectedDistrict ?? '';
+                  }
+
+                  if (valueToSave.isNotEmpty) {
+                    onSave(valueToSave);
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('حفظ'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }
 
