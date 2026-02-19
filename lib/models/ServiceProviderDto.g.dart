@@ -26,13 +26,15 @@ class ServiceProviderDtoAdapter extends TypeAdapter<ServiceProviderDto> {
       business: fields[6] as String,
       owner: fields[7] as String,
       workerTypes: fields[8] as int,
+      marketplace: fields[9] as String?,
+      derivedSpec: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ServiceProviderDto obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +52,11 @@ class ServiceProviderDtoAdapter extends TypeAdapter<ServiceProviderDto> {
       ..writeByte(7)
       ..write(obj.owner)
       ..writeByte(8)
-      ..write(obj.workerTypes);
+      ..write(obj.workerTypes)
+      ..writeByte(9)
+      ..write(obj.marketplace)
+      ..writeByte(10)
+      ..write(obj.derivedSpec);
   }
 
   @override

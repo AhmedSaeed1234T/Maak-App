@@ -96,6 +96,16 @@ class SelectAccountTypeScreen extends StatelessWidget {
                 Navigator.pushNamed(context, '/register_company');
               },
             ),
+
+            const SizedBox(height: 12),
+            _AccountTypeTile(
+              icon: Icons.construction,
+              label: 'نحات',
+              description: 'تقديم خدمات هدم المباني.',
+              onPressed: () {
+                Navigator.pushNamed(context, '/register_sculptor');
+              },
+            ),
             const SizedBox(height: 32),
 
             // Login Link

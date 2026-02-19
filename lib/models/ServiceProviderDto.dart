@@ -31,6 +31,12 @@ class ServiceProviderDto extends HiveObject {
   @HiveField(8)
   final int workerTypes;
 
+  @HiveField(9)
+  final String? marketplace;
+
+  @HiveField(10)
+  final String? derivedSpec;
+
   ServiceProviderDto({
     required this.id,
     required this.isAvailable,
@@ -41,6 +47,8 @@ class ServiceProviderDto extends HiveObject {
     required this.business,
     required this.owner,
     required this.workerTypes,
+    this.marketplace,
+    this.derivedSpec,
   });
 
   factory ServiceProviderDto.fromJson(Map<String, dynamic> json) {
@@ -54,6 +62,9 @@ class ServiceProviderDto extends HiveObject {
       business: json['business'] ?? '',
       owner: json['owner'] ?? '',
       workerTypes: json['workerTypes'] ?? 0,
+      marketplace: json['marketplace']?.toString(),
+      derivedSpec: (json['derivedSpec'] ?? json['derviedSpec'] ?? '')
+          .toString(),
     );
   }
 
@@ -68,6 +79,8 @@ class ServiceProviderDto extends HiveObject {
       'business': business,
       'owner': owner,
       'workerTypes': workerTypes,
+      'marketplace': marketplace,
+      'derivedSpec': derivedSpec,
     };
   }
 }

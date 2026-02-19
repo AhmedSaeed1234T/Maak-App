@@ -5,4 +5,5 @@ enum ProviderType {
   Marketplaces,
   Workers,
   Assistants,
+  Sculptors,
 }

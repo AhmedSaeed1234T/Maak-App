@@ -16,6 +16,10 @@ class RegisterUserDto {
   double? pay;
   String? specialization;
   String? referralUserName;
+  // NEW: marketplace attribute (for workers/assistants/marketplaces)
+  String? marketplace;
+  // NEW: derived specialization (for engineers/workers/assistants)
+  String? derivedSpec;
 
   RegisterUserDto({
     required this.firstName,
@@ -35,6 +39,8 @@ class RegisterUserDto {
     this.pay,
     this.specialization,
     this.referralUserName,
+    this.marketplace,
+    this.derivedSpec,
   });
 
   Map<String, dynamic> toJson() {
@@ -55,6 +61,8 @@ class RegisterUserDto {
       "owner": owner,
       "pay": pay ?? 0.0,
       "specialization": specialization,
+      "marketplace": marketplace,
+      "derivedSpec": derivedSpec,
     };
     if (referralUserName != null && referralUserName!.isNotEmpty) {
       userRegister['referralUserName'] = referralUserName;
@@ -81,6 +89,8 @@ class RegisterUserDto {
       pay: (json['pay'] != null) ? (json['pay'] as num).toDouble() : 0.0,
       specialization: json['specialization'] ?? '',
       referralUserName: json['referralUserName'] ?? '',
+      marketplace: json['marketplace'] ?? '',
+      derivedSpec: json['derivedSpec'] ?? '',
     );
   }
 }

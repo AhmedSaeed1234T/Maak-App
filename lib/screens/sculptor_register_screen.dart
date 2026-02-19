@@ -8,13 +8,13 @@ import '../helpers/ServiceLocator.dart';
 import '../models/RegisterClass.dart';
 import '../widgets/location_fields.dart';
 
-class WorkerRegisterScreen extends StatefulWidget {
-  const WorkerRegisterScreen({super.key});
+class SculptorRegisterScreen extends StatefulWidget {
+  const SculptorRegisterScreen({super.key});
   @override
-  State<WorkerRegisterScreen> createState() => _WorkerRegisterScreenState();
+  State<SculptorRegisterScreen> createState() => _SculptorRegisterScreenState();
 }
 
-class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
+class _SculptorRegisterScreenState extends State<SculptorRegisterScreen> {
   final registerController = getIt<RegisterController>();
   final loginController = getIt<LoginController>();
 
@@ -31,7 +31,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _jobController = TextEditingController();
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
   final _governorateController = TextEditingController();
@@ -39,11 +38,20 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _districtController = TextEditingController();
   String? _selectedGovernorate;
   String? _selectedCity;
+  // TODO: Fix this if not needed for sculptors?
   final _referralController = TextEditingController();
+  // Using marketplaceController for "Marketplace" input if needed, though typically for sculptors it might just be the name or N/A.
+  // The user requirement said: "unless that it doesn't have the dervied specialization or the specialization itself"
+  // So we keep marketplace as per original worker screen but remove spec/derivedSpec.
   final _marketplaceController = TextEditingController();
-  final _derivedSpecController = TextEditingController();
 
-  String providerType = "Worker";
+  // No specialization or derived specialization controllers needed
+
+  String providerType = "Sculptor"; // Set to Sculptor
+  // Sculptors might not have daily/fixed or maybe they do? User didn't specify.
+  // Assuming they are like workers/assistants in payment terms?
+  // User said "create a new register screen like the worker".
+  // So we keep salary type.
   String salaryType = "daily";
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
@@ -83,7 +91,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
     CustomSnackBar.show(context, message: msg, type: SnackBarType.info);
   }
 
-  Future<void> _registerWorker() async {
+  Future<void> _registerSculptor() async {
     if (!_formKey.currentState!.validate()) {
       _toast("يرجى ملء جميع الحقول المطلوبة");
       return;
@@ -108,14 +116,15 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       governorate: _governorateController.text.trim(),
       city: _cityController.text.trim(),
       providerType: providerType,
-      skill: _jobController.text.trim(),
+      // Sending empty string or null for skill/spec as requested
+      skill: "",
       workerType: salaryType == "daily" ? 0 : 1,
       pay: double.tryParse(_salaryController.text.trim()) ?? 0,
       bio: _bioController.text.trim(),
 
       referralUserName: _referralController.text.trim(),
       marketplace: _marketplaceController.text.trim(),
-      derivedSpec: _derivedSpecController.text.trim(),
+      derivedSpec: "", // Sending empty string
     );
 
     final result = await registerController.registerUser(user, _imageFile);
@@ -123,7 +132,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
     if (!mounted) return;
 
     if (result.success) {
-      final loginResult = await loginController.login(
+      await loginController.login(
         _emailController.text,
         _passwordController.text,
       );
@@ -151,7 +160,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       onWillPop: () async => !isRegistering,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("تسجيل مقدم خدمة"),
+          title: const Text("تسجيل نحات"),
           backgroundColor: Colors.white,
           elevation: 0,
           foregroundColor: Colors.black,
@@ -290,14 +299,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        TextFormField(
-                          controller: _jobController,
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? "المهنة مطلوبة"
-                              : null,
-                          decoration: _buildDecoration("المهنة", Icons.work),
-                        ),
-                        const SizedBox(height: 16),
+                        // Hidden Job/Spec fields as requested
                         TextFormField(
                           controller: _marketplaceController,
                           validator: (v) => v == null || v.trim().isEmpty
@@ -306,19 +308,19 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                           decoration: _buildDecoration("السوق", Icons.store),
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _derivedSpecController,
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? "التخصص الفرعي مطلوب"
-                              : null,
-                          decoration: _buildDecoration(
-                            "التخصص الفرعي",
-                            Icons.build,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
 
+                        // Hidden DerivedSpec field
+
+                        /*
+                         * The user said "create a new register screen like the worker , unless that it doesn't have the dervied specialization or the specialization itself"
+                         * I am removing the RadioListTile for Worker vs Assistant as this is specifically for Sculptors.
+                         * I will check if they want salary type (daily/fixed). Usually yes for manual work.
+                         */
                         Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             border: Border.all(color: const Color(0xFFE0E0E0)),
                             borderRadius: BorderRadius.circular(12),
@@ -328,67 +330,28 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                             children: [
                               Expanded(
                                 child: RadioListTile(
-                                  title: const Text("عامل"),
-                                  value: "Worker",
-                                  groupValue: providerType,
+                                  title: const Text("يومي"),
+                                  value: "daily",
+                                  groupValue: salaryType,
                                   onChanged: (v) =>
-                                      setState(() => providerType = v!),
+                                      setState(() => salaryType = v!),
                                   contentPadding: EdgeInsets.zero,
                                 ),
                               ),
                               Expanded(
                                 child: RadioListTile(
-                                  title: const Text("مساعد"),
-                                  value: "Assistant",
-                                  groupValue: providerType,
+                                  title: const Text("مقطوعية"),
+                                  value: "fixed",
+                                  groupValue: salaryType,
                                   onChanged: (v) =>
-                                      setState(() => providerType = v!),
+                                      setState(() => salaryType = v!),
                                   contentPadding: EdgeInsets.zero,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        if (providerType == "Worker") ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: const Color(0xFFE0E0E0),
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.white,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: RadioListTile(
-                                    title: const Text("يومي"),
-                                    value: "daily",
-                                    groupValue: salaryType,
-                                    onChanged: (v) =>
-                                        setState(() => salaryType = v!),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: RadioListTile(
-                                    title: const Text("مقطوعية"),
-                                    value: "fixed",
-                                    groupValue: salaryType,
-                                    onChanged: (v) =>
-                                        setState(() => salaryType = v!),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+
                         const SizedBox(height: 16),
 
                         TextFormField(
@@ -545,7 +508,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                             ),
                             onPressed: () {
                               if (!_formKey.currentState!.validate()) return;
-                              _registerWorker();
+                              _registerSculptor();
                             },
                             child: isRegistering
                                 ? const SizedBox(

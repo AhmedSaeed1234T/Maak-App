@@ -72,7 +72,8 @@ class ChatController extends ChangeNotifier {
         final messageId = args[2].toString();
         if (_targetUserId != null &&
             (senderId == _targetUserId || senderId == myUserId)) {
-          _messages.add(
+          _messages.insert(
+            0,
             ChatMessage(
               id: messageId,
               senderId: senderId,
@@ -98,7 +99,8 @@ class ChatController extends ChangeNotifier {
 
         // Add your own sent message to the list immediately
         if (_targetUserId == receiverId && myUserId != null) {
-          _messages.add(
+          _messages.insert(
+            0,
             ChatMessage(
               id: messageId,
               senderId: myUserId!,
@@ -238,7 +240,7 @@ class ChatController extends ChangeNotifier {
         final List<dynamic> data = jsonDecode(response.body);
         final messages = data.map((m) => ChatMessage.fromJson(m)).toList();
         if (messages.length < _pageSize) hasMore = false;
-        _messages.insertAll(0, messages);
+        _messages.addAll(messages);
         _currentPage++;
       } else {
         _errorController.add('Failed to load history');

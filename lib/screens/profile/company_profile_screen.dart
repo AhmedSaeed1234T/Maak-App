@@ -7,10 +7,11 @@ class CompanyProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     const primary = Color(0xFF13A9F6);
     final profile = CompanyProfile(
-      image: null, 
+      image: null,
       name: 'The Fashion Hub',
       email: 'User@gmail.com',
-      about: 'The Fashion Hub is your one-stop destination for the latest trends in apparel and accessories. We offer a curated collection of high-quality clothing for men and women, ensuring you always step out in style.',
+      about:
+          'The Fashion Hub is your one-stop destination for the latest trends in apparel and accessories. We offer a curated collection of high-quality clothing for men and women, ensuring you always step out in style.',
       location: '456 Style Avenue, Fashion City, NY 10001',
       phone: '(555) 987-6543',
       shopkeeper: 'User Name',
@@ -18,7 +19,14 @@ class CompanyProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('الملف الشركي', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'الملف الشركي',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0.5,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -40,7 +48,13 @@ class CompanyProfileScreen extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [BoxShadow(color: primary.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withOpacity(0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: const Icon(Icons.store, color: Colors.white, size: 40),
             ),
@@ -62,7 +76,9 @@ class CompanyProfileScreen extends StatelessWidget {
                 radius: 58,
                 backgroundColor: Color(0xFFF4F7FA),
                 backgroundImage: profile.image,
-                child: profile.image == null ? Icon(Icons.store, size: 58, color: primary) : null,
+                child: profile.image == null
+                    ? Icon(Icons.store, size: 58, color: primary)
+                    : null,
               ),
             ),
             const SizedBox(height: 20),
@@ -70,7 +86,11 @@ class CompanyProfileScreen extends StatelessWidget {
             // Store Name and Email
             Text(
               profile.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
@@ -84,14 +104,16 @@ class CompanyProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
                       // About Section
                       _buildSectionWithContent(
-                        'عن المتجر',
+                        'عن السوق',
                         Icons.info_outline,
                         profile.about,
                         primary,
@@ -109,7 +131,7 @@ class CompanyProfileScreen extends StatelessWidget {
 
                       // Phone Section
                       _buildSectionWithContent(
-                        'جوال المتجر',
+                        'جوال السوق',
                         Icons.phone,
                         profile.phone,
                         primary,
@@ -118,7 +140,7 @@ class CompanyProfileScreen extends StatelessWidget {
 
                       // Shopkeeper Section
                       _buildSectionWithContent(
-                        'اسم صاحب المتجر',
+                        'اسم صاحب السوق',
                         Icons.person,
                         profile.shopkeeper,
                         primary,
@@ -140,11 +162,19 @@ class CompanyProfileScreen extends StatelessWidget {
                       height: 56,
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.phone, size: 20),
-                        label: const Text('اتصل الآن', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'اتصل الآن',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           elevation: 3,
                         ),
                         onPressed: () {},
@@ -157,11 +187,22 @@ class CompanyProfileScreen extends StatelessWidget {
                       height: 56,
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.message, size: 20),
-                        label: const Text('رسالة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'رسالة',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: primary,
-                          side: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          side: const BorderSide(
+                            color: Color(0xFF13A9F6),
+                            width: 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () {},
                       ),
@@ -202,12 +243,20 @@ class CompanyProfileScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 content,
-                style: TextStyle(fontSize: 14, height: 1.5, color: Colors.grey[700]),
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: Colors.grey[700],
+                ),
               ),
             ],
           ),
@@ -225,5 +274,13 @@ class CompanyProfile {
   final String location;
   final String phone;
   final String shopkeeper;
-  CompanyProfile({required this.image, required this.name, required this.email, required this.about, required this.location, required this.phone, required this.shopkeeper});
+  CompanyProfile({
+    required this.image,
+    required this.name,
+    required this.email,
+    required this.about,
+    required this.location,
+    required this.phone,
+    required this.shopkeeper,
+  });
 }

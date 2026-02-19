@@ -1,6 +1,7 @@
 import 'package:abokamall/controllers/PresenceController.dart';
 import 'package:abokamall/controllers/ProfileController.dart';
 import 'package:abokamall/controllers/SearchController.dart';
+import 'package:abokamall/controllers/NotificationController.dart';
 import 'package:abokamall/helpers/ContextFunctions.dart';
 import 'package:abokamall/helpers/NetworkStatus.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
@@ -10,16 +11,19 @@ import 'package:abokamall/helpers/subscriptionChecker.dart';
 import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:abokamall/models/UserProfile.dart';
 import 'package:abokamall/screens/chat_screen.dart';
+import 'package:abokamall/screens/chat_screen_debug.dart';
 import 'package:abokamall/screens/debug_token_screen.dart';
 import 'package:abokamall/screens/worker_details_screen.dart';
 import 'package:abokamall/services/UserListCache.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:abokamall/helpers/CustomSnackBar.dart';
 import 'package:abokamall/helpers/FirebaseUtilities.dart';
-import 'package:abokamall/screens/chat_screen.dart';
+import 'package:abokamall/widgets/dashboard/dashboard_header.dart';
+import 'package:abokamall/widgets/dashboard/search_and_categories.dart';
+import 'package:abokamall/widgets/dashboard/provider_card.dart';
+import 'package:abokamall/widgets/dashboard/empty_state_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -46,6 +50,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isExpired = false;
   String? expirationMessage;
   bool _isGracePassed = false; // ✅ NEW
+  int _unreadCount = 0; // State for unread notifications
+  DateTime? _lastNotificationCheck;
 
   late final Connectivity _connectivity;
   late final Stream<ConnectivityResult> _connectivityStream;
@@ -55,8 +61,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'العمال',
     'المهندسين',
     'الشركات',
-    'المتاجر',
+    'الأسواق',
     'المساعدين',
+    'النحاتين', // Added Sculptors
   ];
 
   final List<ProviderType> providerTypes = [
@@ -66,6 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ProviderType.Companies,
     ProviderType.Marketplaces,
     ProviderType.Assistants,
+    ProviderType.Sculptors, // Added Sculptors
   ];
 
   @override
@@ -89,6 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Check for pending notification from terminated state
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkPendingNotification();
+        _checkUnreadNotifications(); // Initial check
       });
     }
   }
@@ -101,16 +110,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final senderId = pendingData['senderId'];
       final senderName = pendingData['senderName'] ?? 'User';
+      final senderImage = pendingData['senderImage'];
 
       if (senderId != null) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                ChatScreen(targetUserId: senderId, targetUserName: senderName),
+            builder: (_) => ChatScreen(
+              targetUserId: senderId,
+              targetUserName: senderName,
+              targetUserImage: senderImage,
+            ),
           ),
         );
       }
+    }
+  }
+
+  Future<void> _checkUnreadNotifications() async {
+    if (!hasInternet) return;
+
+    // Simple debounce/throttle
+    if (_lastNotificationCheck != null &&
+        DateTime.now().difference(_lastNotificationCheck!) <
+            const Duration(seconds: 30)) {
+      return;
+    }
+
+    try {
+      final count = await getIt<NotificationController>().getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadCount = count;
+          _lastNotificationCheck = DateTime.now();
+        });
+      }
+    } catch (e) {
+      debugPrint("Error checking unread notifications: $e");
     }
   }
 
@@ -481,6 +517,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: Colors.white,
         elevation: 0.5,
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications, color: Colors.black),
+                onPressed: () async {
+                  await Navigator.pushNamed(context, '/notifications');
+                  // Refresh count after returning from notifications screen
+                  _checkUnreadNotifications();
+                },
+              ),
+              if (_unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(
+                      4,
+                    ), // Ensure circular shape even with 1 digit
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Center(
+                      child: Text(
+                        _unreadCount > 9 ? '9+' : '$_unreadCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          height: 1, // Fix vertical alignment
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.black),
             onPressed: () => Navigator.pushNamed(context, '/settings'),
@@ -503,180 +582,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           children: [
             // Header Section
-            Row(
-              children: [
-                Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: primary.withOpacity(0.15),
-                  ),
-                  child: const Icon(
-                    Icons.home_outlined,
-                    color: primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'أهلاً بك!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Text(
-                        hasInternet
-                            ? 'اكتشف مقدمي الخدمات المتاحين'
-                            : 'عرض البيانات المخزنة',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: hasInternet ? Colors.grey[600] : Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            DashboardHeader(hasInternet: hasInternet),
             const SizedBox(height: 20),
 
             // Search & categories
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (isExpired) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8B0000).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF8B0000).withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.warning_amber_rounded,
-                              color: Color(0xFF8B0000),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                expirationMessage ?? "لقد انتهي اشتراكك",
-                                style: const TextStyle(
-                                  color: Color(0xFF8B0000),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  fontFamily: 'Cairo',
-                                ),
-                                textAlign: TextAlign.right,
-                                textDirection: TextDirection.rtl,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ] else if (hasInternet) ...[
-                      TextField(
-                        decoration: InputDecoration(
-                          hintText: 'ابحث عن خدمة...',
-                          filled: true,
-                          fillColor: const Color(0xFFF5F7FA),
-                          prefixIcon: const Icon(Icons.search, color: primary),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE0E0E0),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE0E0E0),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: primary,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        onChanged: (v) => setState(() => search = v),
-                        onTap: () => Navigator.pushNamed(context, '/filters'),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-                    SizedBox(
-                      height: 42,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: tabs.length,
-                        itemBuilder: (ctx, i) => GestureDetector(
-                          onTap: () {
-                            setState(() => tabIndex = i);
-                            loadFeaturedProviders(providerTypes[i]);
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(left: 10),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: tabIndex == i
-                                  ? primary
-                                  : const Color(0xFFF5F7FA),
-                              borderRadius: BorderRadius.circular(20),
-                              border: tabIndex != i
-                                  ? Border.all(
-                                      color: const Color(0xFFE0E0E0),
-                                      width: 1,
-                                    )
-                                  : null,
-                            ),
-                            child: Text(
-                              tabs[i],
-                              style: TextStyle(
-                                color: tabIndex == i
-                                    ? Colors.white
-                                    : Colors.black87,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            SearchAndCategories(
+              isExpired: isExpired,
+              expirationMessage: expirationMessage,
+              hasInternet: hasInternet,
+              search: search,
+              onSearchChanged: (v) => setState(() => search = v),
+              onSearchTap: () => Navigator.pushNamed(context, '/filters'),
+              tabs: tabs,
+              tabIndex: tabIndex,
+              providerTypes: providerTypes,
+              onTabChanged: (i) {
+                setState(() => tabIndex = i);
+                loadFeaturedProviders(providerTypes[i]);
+              },
             ),
             const SizedBox(height: 24),
 
@@ -745,7 +668,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               )
             else if (!hasInternet && !hasValidCache)
-              buildEmptyState(
+              EmptyStateWidget(
                 icon: Icons.cloud_off,
                 title: 'لا يوجد اتصال بالإنترنت',
                 message: 'يرجى الاتصال بالإنترنت لعرض مقدمي الخدمات',
@@ -753,7 +676,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onAction: () => _preloadAllProviders(),
               )
             else if (hasError && featuredProviders.isEmpty)
-              buildEmptyState(
+              EmptyStateWidget(
                 icon: Icons.error_outline,
                 title: 'حدث خطأ',
                 message: errorMessage,
@@ -761,12 +684,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onAction: () => _preloadAllProviders(),
               )
             else if (featuredProviders.isEmpty)
-              buildEmptyState(
+              EmptyStateWidget(
                 icon: Icons.search_off,
                 title: 'لا توجد نتائج',
                 message: 'لم يتم العثور على مقدمي خدمات في هذه الفئة',
-                actionLabel: null,
-                onAction: null,
               )
             else
               SizedBox(
@@ -776,14 +697,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   itemCount: featuredProviders.length,
                   itemBuilder: (ctx, i) {
                     final provider = featuredProviders[i];
-                    return GestureDetector(
+                    return ProviderCard(
+                      provider: provider,
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => WorkerProfilePage(provider: provider),
                         ),
                       ),
-                      child: buildProviderCard(provider),
                     );
                   },
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
@@ -870,7 +791,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (kDebugMode) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => OfflineModeTestingPanel(),
+                        builder: (context) => SignalRTestPage(),
                       ),
                     );
                   } else {
@@ -883,205 +804,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String message,
-    String? actionLabel,
-    VoidCallback? onAction,
-  }) {
-    const primary = Color(0xFF13A9F6);
-    return Container(
-      constraints: const BoxConstraints(minHeight: 280),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: primary.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 48, color: primary),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: onAction,
-              icon: const Icon(Icons.refresh),
-              label: Text(actionLabel),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget buildProviderCard(ServiceProvider provider) {
-    const primary = Color(0xFF13A9F6);
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        width: 150,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(shape: BoxShape.circle),
-                  child: SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: ClipOval(
-                      child:
-                          provider.imageUrl != null &&
-                              provider.imageUrl!.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: provider.imageUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                color: const Color(0xFFF5F7FA),
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ),
-                              errorWidget: (context, url, error) {
-                                return provider.isCompany
-                                    ? Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.orange.withOpacity(
-                                            0.15,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.business,
-                                          color: Colors.orange,
-                                          size: 24,
-                                        ),
-                                      )
-                                    : CircleAvatar(
-                                        radius: 28,
-                                        backgroundColor: Colors.grey[200],
-                                        child: Icon(
-                                          Icons.person,
-                                          color: Colors.blue[600],
-                                          size: 28,
-                                        ),
-                                      );
-                              },
-                            )
-                          : provider.isCompany
-                          ? Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.orange.withOpacity(0.15),
-                              ),
-                              child: Icon(
-                                Icons.business,
-                                color: Colors.orange,
-                                size: 24,
-                              ),
-                            )
-                          : CircleAvatar(
-                              radius: 28,
-                              backgroundColor: Colors.grey[200],
-                              child: Icon(
-                                Icons.person,
-                                color: Colors.blue[600],
-                                size: 28,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 2,
-                  right: 2,
-                  child: ValueListenableBuilder<Set<String>>(
-                    valueListenable: getIt<PresenceController>().onlineUsers,
-                    builder: (context, onlineUsers, _) {
-                      final isOnline = getIt<PresenceController>().isUserOnline(
-                        provider.userId,
-                      );
-                      return Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: isOnline ? Colors.green : Colors.grey,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              provider.name,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              provider.skill,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
           ],
         ),
       ),

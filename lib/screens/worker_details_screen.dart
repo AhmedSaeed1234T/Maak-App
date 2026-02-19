@@ -36,6 +36,7 @@ class WorkerProfilePage extends StatelessWidget {
               builder: (_) => ChatScreen(
                 targetUserId: provider.userId!,
                 targetUserName: provider.name,
+                targetUserImage: provider.imageUrl,
               ),
             ),
           );
@@ -126,36 +127,80 @@ class WorkerProfilePage extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Column(
                       children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: isOnline ? Colors.green : Colors.grey,
-                            shape: BoxShape.circle,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: isOnline ? Colors.green : Colors.grey,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              isOnline ? 'متصل الآن' : 'غير متصل',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isOnline
+                                    ? Colors.green
+                                    : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          isOnline ? 'متصل الآن' : 'غير متصل',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isOnline ? Colors.green : Colors.grey[600],
-                            fontWeight: FontWeight.w500,
+                        if (provider.isOccupied) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.orange,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.block,
+                                  size: 16,
+                                  color: Colors.orange[700],
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'غير متاح حالياً',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.orange[700],
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],
                 );
               },
             ),
-            Text(
-              provider.skill,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
+            if (provider.typeOfService != 'Sculptor') ...[
+              Text(
+                provider.skill,
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              ),
+            ],
             const SizedBox(height: 24),
             _buildDetailsSection(provider, context),
             const SizedBox(height: 24),
@@ -232,6 +277,28 @@ class WorkerProfilePage extends StatelessWidget {
               Icons.person,
               'المالك',
               provider.owner ?? 'غير متوفر',
+              primary,
+            ),
+            const Divider(),
+          ],
+          _detailRow(
+            Icons.store,
+            'السوق',
+            (provider.marketplace == null || provider.marketplace!.isEmpty)
+                ? 'غير محدد'
+                : provider.marketplace!,
+            primary,
+          ),
+          const Divider(),
+
+          // Hide specialization for sculptors (نحات)
+          if (provider.typeOfService != 'Sculptor') ...[
+            _detailRow(
+              Icons.build,
+              'التخصص الفرعي',
+              (provider.derivedSpec == null || provider.derivedSpec!.isEmpty)
+                  ? 'نحات'
+                  : provider.derivedSpec!,
               primary,
             ),
             const Divider(),

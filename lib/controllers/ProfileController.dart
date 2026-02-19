@@ -97,6 +97,8 @@ class ProfileController {
     String? business,
     String? owner,
     int? workerTypes,
+    String? marketplace,
+    String? derivedSpec,
     File? profileImage,
   }) async {
     try {
@@ -121,6 +123,8 @@ class ProfileController {
         if (business != null) "business": business,
         if (owner != null) "owner": owner,
         if (workerTypes != null) "workerTypes": workerTypes,
+        if (marketplace != null) "marketplace": marketplace,
+        if (derivedSpec != null) "derivedSpec": derivedSpec,
         if (uploadedImageUrl != null) "profileImage": uploadedImageUrl,
       };
 
@@ -200,6 +204,90 @@ class ProfileController {
     } catch (e) {
       debugPrint('Unexpected error during logout: $e');
       return false;
+    }
+  }
+
+  /// Set user as occupied until midnight
+  Future<ApiMessage> setOccupied() async {
+    try {
+      final response = await apiClient.post("/profile/set-occupied");
+
+      if (response.statusCode != 200) {
+        debugPrint('Set occupied failed: ${response.body}');
+        final decoded = jsonDecode(response.body);
+        return ApiMessage.fromJson(decoded);
+      }
+
+      final data = jsonDecode(response.body);
+      return ApiMessage(
+        success: true,
+        message: data['message'] ?? "تم تعيينك كغير متاح حتى منتصف الليل",
+        errorCode: null,
+      );
+    } on SocketException {
+      return ApiMessage(
+        success: false,
+        message: "لا يوجد اتصال بالإنترنت",
+        errorCode: "NetworkError",
+      );
+    } catch (e) {
+      debugPrint('Error setting occupied: $e');
+      return ApiMessage(
+        success: false,
+        message: "حدث خطأ غير متوقع",
+        errorCode: "GeneralError",
+      );
+    }
+  }
+
+  /// Remove occupation status (set as available)
+  Future<ApiMessage> removeOccupied() async {
+    try {
+      final response = await apiClient.delete("/profile/remove-occupied");
+
+      if (response.statusCode != 200) {
+        debugPrint('Remove occupied failed: ${response.body}');
+        final decoded = jsonDecode(response.body);
+        return ApiMessage.fromJson(decoded);
+      }
+
+      final data = jsonDecode(response.body);
+      return ApiMessage(
+        success: true,
+        message: data['message'] ?? "تم تعيينك كمتاح",
+        errorCode: null,
+      );
+    } on SocketException {
+      return ApiMessage(
+        success: false,
+        message: "لا يوجد اتصال بالإنترنت",
+        errorCode: "NetworkError",
+      );
+    } catch (e) {
+      debugPrint('Error removing occupied: $e');
+      return ApiMessage(
+        success: false,
+        message: "حدث خطأ غير متوقع",
+        errorCode: "GeneralError",
+      );
+    }
+  }
+
+  /// Get current occupation status
+  Future<bool?> getOccupationStatus() async {
+    try {
+      final response = await apiClient.get("/profile/occupation-status");
+
+      if (response.statusCode != 200) {
+        debugPrint('Get occupation status failed: ${response.body}');
+        return null;
+      }
+
+      final data = jsonDecode(response.body);
+      return data['isOccupied'] as bool?;
+    } catch (e) {
+      debugPrint('Error getting occupation status: $e');
+      return null;
     }
   }
 }

@@ -52,6 +52,15 @@ class ServiceProvider extends HiveObject {
   @HiveField(15)
   final String? userId;
 
+  @HiveField(16)
+  final bool isOccupied;
+
+  @HiveField(17)
+  final String? marketplace;
+
+  @HiveField(18)
+  final String? derivedSpec;
+
   ServiceProvider({
     required this.name,
     required this.skill,
@@ -68,6 +77,9 @@ class ServiceProvider extends HiveObject {
     this.aboutMe,
     required this.userName,
     this.userId, // Add to constructor
+    this.isOccupied = false,
+    this.marketplace,
+    this.derivedSpec,
     DateTime? cachedAt,
   }) : cachedAt = cachedAt ?? DateTime.now().toUtc();
 
@@ -88,6 +100,9 @@ class ServiceProvider extends HiveObject {
     DateTime? cachedAt,
     String? userName,
     String? userId,
+    bool? isOccupied,
+    String? marketplace,
+    String? derivedSpec,
   }) {
     return ServiceProvider(
       name: name ?? this.name,
@@ -107,6 +122,9 @@ class ServiceProvider extends HiveObject {
       cachedAt: cachedAt ?? this.cachedAt,
       userName: userName ?? this.userName,
       userId: userId ?? this.userId,
+      isOccupied: isOccupied ?? this.isOccupied,
+      marketplace: marketplace ?? this.marketplace,
+      derivedSpec: derivedSpec ?? this.derivedSpec,
     );
   }
 
@@ -137,6 +155,11 @@ class ServiceProvider extends HiveObject {
           : DateTime.now().toUtc(),
       userName: json['userName'] ?? '',
       userId: json['userId'] ?? json['id'], // Try both userId and id
+      isOccupied: json['isOccupied'] as bool? ?? false,
+      marketplace: (json['marketPlace'] ?? json['marketplace'] ?? '')
+          .toString(),
+      derivedSpec: (json['derivedSpec'] ?? json['derviedSpec'] ?? '')
+          .toString(),
     );
   }
 
@@ -158,6 +181,9 @@ class ServiceProvider extends HiveObject {
       'cachedAt': cachedAt.toIso8601String(),
       'userName': userName,
       'userId': userId, // ✅ Add userId to preserve it in cache
+      'isOccupied': isOccupied,
+      'marketplace': marketplace,
+      'derivedSpec': derivedSpec,
     };
   }
 }

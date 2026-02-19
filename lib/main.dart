@@ -4,6 +4,7 @@ import 'package:abokamall/models/SearchResultDto.dart';
 import 'package:abokamall/models/ServiceProviderDto.dart';
 import 'package:abokamall/models/Subscription.dart';
 import 'package:abokamall/models/UserProfile.dart';
+import 'package:abokamall/screens/notifications_screen.dart';
 import 'package:abokamall/screens/payment_webview_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -34,6 +35,7 @@ import 'screens/company_register_screen.dart';
 import 'screens/profile/profile_worker_screen.dart';
 import 'screens/profile/profile_engineer_screen.dart';
 import 'screens/profile/profile_company_screen.dart';
+import 'screens/sculptor_register_screen.dart'; // Added import
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -57,7 +59,7 @@ Future<void> main() async {
   */
   // Initialize Hive first
 
- await Firebase.initializeApp();
+  await Firebase.initializeApp();
 
   // 3️⃣ Register background handler BEFORE calling FirebaseUtilities.init()
   FirebaseMessaging.onBackgroundMessage(
@@ -139,6 +141,7 @@ class MaakApp extends StatelessWidget {
           providerType: null,
         ),
         '/settings': (_) => const ProfileSettingsPage(),
+        '/notifications': (_) => const NotificationsScreen(),
         '/payment': (_) => const PaymentScreen(),
         '/payment_success': (_) => const PaymentSuccessScreen(),
         '/payment_failure': (_) => const PaymentFailureScreen(),
@@ -164,6 +167,8 @@ class MaakApp extends StatelessWidget {
         '/profile_worker': (_) => const WorkerProfileScreen(),
         '/profile_engineer': (_) => const EngineerProfileScreen(),
         '/profile_company': (_) => const CompanyProfileScreen(),
+        '/register_sculptor': (_) =>
+            const SculptorRegisterScreen(), // Added route
       },
     );
   }

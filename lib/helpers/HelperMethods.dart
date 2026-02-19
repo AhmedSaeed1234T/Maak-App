@@ -88,6 +88,8 @@ String translateProviderTypeToArabic(String providerType) {
       return 'شركة';
     case 'assistant':
       return 'مساعد';
+    case 'sculptor':
+      return 'نحات';
     default:
       return 'غير معروف';
   }
@@ -98,7 +100,8 @@ String formatPay(ServiceProvider provider) {
   if (provider.typeOfService == 'Assistant') {
     return '$pay ج باليومية';
   }
-  if (provider.typeOfService == 'Worker') {
+  if (provider.typeOfService == 'Worker' ||
+      provider.typeOfService == 'Sculptor') {
     if (provider.workerType == 0) return '$pay ج باليومية';
     if (provider.workerType == 1) return '$pay ج بالمقطوعية';
     return '$pay ج';

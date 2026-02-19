@@ -38,7 +38,9 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final _specializationController = TextEditingController();
   final _salaryController = TextEditingController();
   final _bioController = TextEditingController();
+
   final _referralController = TextEditingController();
+  final _derivedSpecController = TextEditingController();
   final _governorateController = TextEditingController();
   final _cityController = TextEditingController();
   final _districtController = TextEditingController();
@@ -76,6 +78,11 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       _toast("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
+    // Validation for derivedSpec if userType is Engineer (1)
+    if (userTypeIndex == 1 && _derivedSpecController.text.trim().isEmpty) {
+      _toast("يرجى إدخال التخصص الفرعي");
+      return;
+    }
     if (_imageFile == null) {
       _toast("يرجى اختيار صورة للملف الشخصي");
       return;
@@ -102,6 +109,9 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       governorate: _governorateController.text.trim(),
       city: _cityController.text.trim(),
       district: _districtController.text.trim(),
+      derivedSpec: userTypeIndex == 1
+          ? _derivedSpecController.text.trim()
+          : null,
     );
 
     // Save session
@@ -361,6 +371,15 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                           Icons.school,
                           isRequired: true,
                         ),
+                        if (userTypeIndex == 1) ...[
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            _derivedSpecController,
+                            'التخصص الفرعي *',
+                            Icons.build,
+                            isRequired: true,
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         _buildTextField(
                           _salaryController,

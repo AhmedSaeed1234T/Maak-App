@@ -14,6 +14,8 @@ class SearchResultsPage extends StatefulWidget {
   final String governorate;
   final String city;
   final String district;
+  final String? marketplace;
+  final String? derivedSpec;
   final int? workerType;
   final dynamic providerType;
 
@@ -25,6 +27,8 @@ class SearchResultsPage extends StatefulWidget {
     required this.governorate,
     required this.city,
     required this.district,
+    this.marketplace,
+    this.derivedSpec,
     required this.workerType,
     required this.providerType,
   });
@@ -77,6 +81,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         governorate: widget.governorate,
         city: widget.city,
         district: widget.district,
+        marketplace: widget.marketplace,
+        derivedSpec: widget.derivedSpec,
         workerType: widget.workerType,
         providerType: widget.providerType,
         basedOnPoints: false,
@@ -266,20 +272,64 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      provider.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: Colors.black87,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            provider.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                        if (provider.isOccupied) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.orange,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.block,
+                                  size: 10,
+                                  color: Colors.orange[700],
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'غير متاح',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    color: Colors.orange[700],
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      provider.skill,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    if (provider.typeOfService != 'Sculptor') ...[
+                      Text(
+                        provider.skill,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Row(
                       children: [

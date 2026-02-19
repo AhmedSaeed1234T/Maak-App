@@ -187,14 +187,18 @@ class FirebaseUtilities {
 
     final senderId = data['senderId'];
     final senderName = data['senderName'] ?? 'User';
+    final senderImage = data['senderImage'];
     debugPrint("I should go for it now");
 
     if (senderId != null) {
       if (navigatorKey.currentState != null) {
         navigatorKey.currentState!.push(
           MaterialPageRoute(
-            builder: (_) =>
-                ChatScreen(targetUserId: senderId, targetUserName: senderName),
+            builder: (_) => ChatScreen(
+              targetUserId: senderId,
+              targetUserName: senderName,
+              targetUserImage: senderImage,
+            ),
           ),
         );
       } else {

@@ -6,6 +6,7 @@ import 'package:abokamall/helpers/ContextFunctions.dart';
 import 'package:abokamall/helpers/HelperMethods.dart';
 import 'package:abokamall/helpers/ServiceLocator.dart';
 import 'package:abokamall/helpers/TokenService.dart';
+import 'package:abokamall/models/ApiMessage.dart';
 import 'package:abokamall/models/UserProfile.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -50,6 +51,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   bool _isSaving = false;
   bool _hasChanges = false;
   bool _isLogingOut = false;
+  bool _isOccupied = false;
+  bool _isLoadingOccupation = false;
+  bool _isTogglingOccupation = false;
   // Profile data from API
   UserProfile? _userProfile;
   // Local editable data
@@ -63,6 +67,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   String _specialization = '';
   String _business = '';
   String _owner = '';
+  String _marketplace = '';
+  String _derivedSpec = '';
   int _workerTypes = 1;
   File? _newProfileImage;
   // State variables for cascading dropdowns
@@ -128,6 +134,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           _specialization = profile.serviceProvider!.specialization;
           _business = profile.serviceProvider!.business;
           _owner = profile.serviceProvider!.owner;
+          _marketplace = profile.serviceProvider!.marketplace ?? '';
+          _derivedSpec = profile.serviceProvider!.derivedSpec ?? '';
           _workerTypes = profile.serviceProvider!.workerTypes;
         }
       });
@@ -144,6 +152,54 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
     if (!mounted) return;
     setState(() => _isLoading = false);
+
+    // Load occupation status
+    _loadOccupationStatus();
+  }
+
+  Future<void> _loadOccupationStatus() async {
+    setState(() => _isLoadingOccupation = true);
+    final isOccupied = await _controller.getOccupationStatus();
+    if (!mounted) return;
+    setState(() {
+      _isOccupied = isOccupied ?? false;
+      _isLoadingOccupation = false;
+    });
+  }
+
+  Future<void> _toggleOccupation() async {
+    if (!_isConnected) {
+      CustomSnackBar.show(
+        context,
+        message: 'لا يوجد اتصال بالإنترنت',
+        type: SnackBarType.error,
+      );
+      return;
+    }
+
+    setState(() => _isTogglingOccupation = true);
+
+    ApiMessage result;
+    if (_isOccupied) {
+      result = await _controller.removeOccupied();
+    } else {
+      result = await _controller.setOccupied();
+    }
+
+    if (!mounted) return;
+    setState(() => _isTogglingOccupation = false);
+
+    CustomSnackBar.show(
+      context,
+      message:
+          result.message ?? (result.success ? "تم التحديث بنجاح" : "حدث خطأ"),
+      type: result.success ? SnackBarType.success : SnackBarType.error,
+    );
+
+    if (result.success) {
+      // Refresh occupation status
+      await _loadOccupationStatus();
+    }
   }
 
   Future<void> _pickImage() async {
@@ -184,18 +240,30 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     String? business;
     String? owner;
     int? workerTypes;
+    String? marketplace;
+    String? derivedSpec;
 
     switch (providerType) {
       case 'worker':
+      case 'assistant':
         specialization = _specialization;
+        if (_marketplace.isNotEmpty) marketplace = _marketplace;
+        if (_derivedSpec.isNotEmpty) derivedSpec = _derivedSpec;
+        break;
+      case 'sculptor':
+        // Sculptors don't have specialization or derived spec
         workerTypes = _workerTypes;
+        if (_marketplace.isNotEmpty) marketplace = _marketplace;
         break;
       case 'engineer':
         specialization = _specialization;
+        if (_derivedSpec.isNotEmpty) derivedSpec = _derivedSpec;
         break;
       case 'marketplace':
         business = _business;
         owner = _owner;
+        if (_marketplace.isNotEmpty) marketplace = _marketplace;
+        if (_derivedSpec.isNotEmpty) derivedSpec = _derivedSpec;
         break;
       case 'contractor':
         specialization = _specialization;
@@ -218,6 +286,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       business: business,
       owner: owner,
       workerTypes: workerTypes,
+      marketplace: marketplace,
+      derivedSpec: derivedSpec,
       profileImage: _newProfileImage,
     );
 
@@ -289,6 +359,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             const Divider(height: 32, thickness: 1),
             // Provider-Specific Section
             _buildProviderSpecificSection(providerType),
+            const SizedBox(height: 24),
+            const Divider(height: 32, thickness: 1),
+            // Occupation Status Section
+            _buildOccupationStatusSection(),
             const SizedBox(height: 24),
 
             // Change Password Button
@@ -664,6 +738,12 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     switch (providerType) {
       case 'worker':
         return _buildWorkerSection();
+
+      case 'assistant':
+        return _buildAssistantSection();
+
+      case 'sculptor':
+        return _buildSculptorSection();
       case 'engineer':
         return _buildEngineerSection();
       case 'marketplace':
@@ -727,6 +807,175 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           value: _workerTypes == 1 ? 'مقطوعية' : 'يومية',
           icon: Icons.group,
         ),
+
+        _buildDisplayField(
+          label: 'السوق',
+          value: _marketplace,
+          icon: Icons.store,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل السوق',
+            initialValue: _marketplace,
+            onSave: (value) {
+              setState(() => _marketplace = value);
+              _markAsChanged();
+            },
+          ),
+        ),
+
+        _buildDisplayField(
+          label: 'التخصص الفرعي',
+          value: _derivedSpec,
+          icon: Icons.build,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل التخصص الفرعي',
+            initialValue: _derivedSpec,
+            onSave: (value) {
+              setState(() => _derivedSpec = value);
+              _markAsChanged();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAssistantSection() {
+    const primary = Color(0xFF13A9F6);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.work_outline, color: primary),
+            const SizedBox(width: 8),
+            Text(
+              'معلومات العامل',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Specialization (non-editable)
+        _buildNonEditableField(
+          label: 'التخصص',
+          value: _specialization,
+          icon: Icons.construction,
+        ),
+
+        // Pay (editable)
+        _buildDisplayField(
+          label: 'الأجر (جنيه/يومية)',
+          value: '$_pay جنيه',
+          icon: Icons.attach_money,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل الأجر',
+            initialValue: _pay,
+            keyboardType: TextInputType.number,
+            onSave: (value) {
+              setState(() => _pay = value);
+              _markAsChanged();
+            },
+          ),
+        ),
+
+        // Worker type (non-editable)
+        _buildNonEditableField(
+          label: 'نوع العمل',
+          value: 'يومية',
+          icon: Icons.group,
+        ),
+
+        _buildDisplayField(
+          label: 'السوق',
+          value: _marketplace,
+          icon: Icons.store,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل السوق',
+            initialValue: _marketplace,
+            onSave: (value) {
+              setState(() => _marketplace = value);
+              _markAsChanged();
+            },
+          ),
+        ),
+
+        _buildDisplayField(
+          label: 'التخصص الفرعي',
+          value: _derivedSpec,
+          icon: Icons.build,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل التخصص الفرعي',
+            initialValue: _derivedSpec,
+            onSave: (value) {
+              setState(() => _derivedSpec = value);
+              _markAsChanged();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSculptorSection() {
+    const primary = Color(0xFF13A9F6);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.construction, color: primary),
+            const SizedBox(width: 8),
+            Text(
+              'معلومات الهدام',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Pay (editable)
+        _buildDisplayField(
+          label: _workerTypes == 0
+              ? 'الأجر (جنيه/يومية)'
+              : 'الأجر (جنيه/مشروع)',
+          value: '$_pay جنيه',
+          icon: Icons.attach_money,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل الأجر',
+            initialValue: _pay,
+            keyboardType: TextInputType.number,
+            onSave: (value) {
+              setState(() => _pay = value);
+              _markAsChanged();
+            },
+          ),
+        ),
+
+        // Worker type (non-editable)
+        _buildNonEditableField(
+          label: 'نوع العمل',
+          value: _workerTypes == 1 ? 'مقطوعية' : 'يومية',
+          icon: Icons.group,
+        ),
+
+        _buildDisplayField(
+          label: 'السوق',
+          value: _marketplace,
+          icon: Icons.store,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل السوق',
+            initialValue: _marketplace,
+            onSave: (value) {
+              setState(() => _marketplace = value);
+              _markAsChanged();
+            },
+          ),
+        ),
       ],
     );
   }
@@ -757,6 +1006,20 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label: 'التخصص الهندسي',
           value: _specialization,
           icon: Icons.school,
+        ),
+
+        _buildDisplayField(
+          label: 'التخصص الفرعي',
+          value: _derivedSpec,
+          icon: Icons.build,
+          onEdit: () => _showEditDialog(
+            title: 'تعديل التخصص الفرعي',
+            initialValue: _derivedSpec,
+            onSave: (value) {
+              setState(() => _derivedSpec = value);
+              _markAsChanged();
+            },
+          ),
         ),
 
         // Pay (editable)
@@ -888,6 +1151,110 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label: 'اسم المالك/المدير',
           value: _owner,
           icon: Icons.person_outline,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOccupationStatusSection() {
+    const primary = Color(0xFF13A9F6);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.access_time, color: primary),
+            const SizedBox(width: 8),
+            Text(
+              'حالة التوفر',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Occupation Status Display
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _isOccupied ? Icons.block : Icons.check_circle,
+                color: _isOccupied ? Colors.orange : Colors.green,
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'الحالة الحالية',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isLoadingOccupation
+                          ? 'جاري التحميل...'
+                          : (_isOccupied ? 'غير متاح' : 'متاح'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _isOccupied ? Colors.orange : Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Toggle Button
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _isConnected && !_isTogglingOccupation
+                ? _toggleOccupation
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _isConnected && !_isTogglingOccupation
+                  ? (_isOccupied ? Colors.green : Colors.orange)
+                  : Colors.grey[400],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+            child: _isTogglingOccupation
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    _isOccupied ? 'تعيين كمتاح' : 'تعيين كغير متاح',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
         ),
       ],
     );

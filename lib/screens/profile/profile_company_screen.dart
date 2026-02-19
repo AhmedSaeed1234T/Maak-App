@@ -144,7 +144,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                     _buildSectionLabel('معلومات الشركة'),
                     const SizedBox(height: 12),
                     _buildTextField(
-                      'اسم الشركة أو المتجر',
+                      'اسم الشركة أو السوق',
                       Icons.store,
                       companyName,
                       (v) => setState(() => companyName = v),

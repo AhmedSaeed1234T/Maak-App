@@ -56,6 +56,23 @@ class ApiClient {
     });
   }
 
+  /// PATCH request with automatic 401 handling
+  Future<http.Response> patch(String endpoint, {Object? body}) async {
+    return _makeRequest(() async {
+      final needsAuth = !_isAuthEndpoint(endpoint);
+      final token = needsAuth ? await _tokenService.getAccessToken() : null;
+      final headers = <String, String>{'Content-Type': 'application/json'};
+      if (needsAuth && token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      return http.patch(
+        Uri.parse('$apiRoute$endpoint'),
+        headers: headers,
+        body: body != null ? jsonEncode(body) : null,
+      );
+    });
+  }
+
   /// DELETE request with automatic 401 handling
   Future<http.Response> delete(String endpoint) async {
     return _makeRequest(() async {

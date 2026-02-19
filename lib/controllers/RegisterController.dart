@@ -40,6 +40,12 @@ class RegisterController {
       if (user.pay != null) request.fields['pay'] = user.pay.toString();
       if (user.specialization != null)
         request.fields['specialization'] = user.specialization!;
+      if (user.marketplace != null && user.marketplace!.isNotEmpty) {
+        request.fields['marketplace'] = user.marketplace!;
+      }
+      if (user.derivedSpec != null && user.derivedSpec!.isNotEmpty) {
+        request.fields['derivedSpec'] = user.derivedSpec!;
+      }
       if (user.referralUserName != null && user.referralUserName!.isNotEmpty) {
         request.fields['referralUserName'] = user.referralUserName!;
       }

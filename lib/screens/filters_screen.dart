@@ -22,13 +22,19 @@ class _FiltersScreenState extends State<FiltersScreen> {
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController specializationController =
       TextEditingController();
+  final TextEditingController derivedSpecController =
+      TextEditingController(); // Added
   final TextEditingController governorateController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController districtController = TextEditingController();
+  final TextEditingController marketplaceController =
+      TextEditingController(); // Added
   String? _selectedGovernorate;
   String? _selectedCity;
   late searchcontroller searchController;
   late TokenService tokenService;
+  // 'location' or 'marketplace'
+  String _searchType = 'location';
 
   @override
   void initState() {
@@ -44,9 +50,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
     firstNameController.dispose();
     lastNameController.dispose();
     specializationController.dispose();
+    derivedSpecController.dispose(); // Added
     governorateController.dispose();
     cityController.dispose();
     districtController.dispose();
+    marketplaceController.dispose(); // Added
     super.dispose();
   }
 
@@ -68,6 +76,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
         return ProviderType.Marketplaces;
       case 'مساعد':
         return ProviderType.Assistants;
+      case 'نحات':
+        return ProviderType.Sculptors;
       case 'عامل':
       default:
         return ProviderType.Workers;
@@ -95,6 +105,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
           governorate: governorateController.text,
           city: cityController.text,
           district: districtController.text,
+          marketplace: marketplaceController.text, // Added
+          derivedSpec: derivedSpecController.text, // Added
           workerType: workerType,
           providerType: providerType,
         ),
@@ -216,14 +228,31 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             ],
 
                             // Specialization
-                            _buildSectionLabel("التخصص"),
-                            const SizedBox(height: 8),
-                            _buildTextField(
-                              specializationController,
-                              'ابحث التخصص ...',
-                              Icons.work,
-                            ),
-                            const SizedBox(height: 16),
+                            if (selectedProfession != 'نحات') ...[
+                              _buildSectionLabel("التخصص"),
+                              const SizedBox(height: 8),
+                              _buildTextField(
+                                specializationController,
+                                'ابحث التخصص ...',
+                                Icons.work,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // Derived Specialization (Hidden for Contractor, Company, Marketplace)
+                            if (selectedProfession != 'مقاول' &&
+                                selectedProfession != 'شركة' &&
+                                selectedProfession != 'متجر' &&
+                                selectedProfession != 'نحات') ...[
+                              _buildSectionLabel("التخصص الفرعي"),
+                              const SizedBox(height: 8),
+                              _buildTextField(
+                                derivedSpecController,
+                                'ابحث التخصص الفرعي ...',
+                                Icons.build,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
 
                             // Profession Radio Buttons
                             _buildSectionLabel('التخصصات'),
@@ -231,53 +260,160 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             _buildProfessionRadioGroup(),
                             const SizedBox(height: 16),
 
-                            // Location fields
-                            _buildSectionLabel('المحافظة'),
-                            const SizedBox(height: 8),
-                            GovernorateDropdownField(
-                              controller: governorateController,
-                              primaryColor: primary,
-                              isRequired: false,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedGovernorate = value;
-                                  _selectedCity = null;
-                                  cityController.clear();
-                                  districtController.clear();
-                                });
-                              },
+                            // Search Type Toggle
+                            _buildSectionLabel('نوع البحث'),
+                            const SizedBox(height: 10),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F7FA),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFFE0E0E0),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _searchType = 'location';
+                                          marketplaceController.clear();
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _searchType == 'location'
+                                              ? primary
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'حسب الموقع',
+                                            style: TextStyle(
+                                              color: _searchType == 'location'
+                                                  ? Colors.white
+                                                  : Colors.black54,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _searchType = 'marketplace';
+                                          _selectedGovernorate = null;
+                                          _selectedCity = null;
+                                          governorateController.clear();
+                                          cityController.clear();
+                                          districtController.clear();
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _searchType == 'marketplace'
+                                              ? primary
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'حسب السوق',
+                                            style: TextStyle(
+                                              color:
+                                                  _searchType == 'marketplace'
+                                                  ? Colors.white
+                                                  : Colors.black54,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(height: 20),
+
+                            // Location Fields
+                            if (_searchType == 'location') ...[
+                              _buildSectionLabel('المحافظة'),
+                              const SizedBox(height: 8),
+                              GovernorateDropdownField(
+                                controller: governorateController,
+                                primaryColor: primary,
+                                isRequired: false,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedGovernorate = value;
+                                    _selectedCity = null;
+                                    cityController.clear();
+                                    districtController.clear();
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16),
+
+                              _buildSectionLabel('المدينة'),
+                              const SizedBox(height: 8),
+                              CityDropdownField(
+                                controller: cityController,
+                                selectedGovernorate: _selectedGovernorate,
+                                primaryColor: primary,
+                                isRequired: false,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedCity = value;
+                                    districtController.clear();
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16),
+
+                              _buildSectionLabel('الحي'),
+                              const SizedBox(height: 8),
+                              DistrictDropdownField(
+                                controller: districtController,
+                                selectedGovernorate: _selectedGovernorate,
+                                selectedCity: _selectedCity,
+                                primaryColor: primary,
+                                isRequired: false,
+                              ),
+                            ],
+
+                            // Marketplace Field
+                            if (_searchType == 'marketplace') ...[
+                              _buildSectionLabel("اسم السوق"),
+                              const SizedBox(height: 8),
+                              _buildTextField(
+                                marketplaceController,
+                                'ابحث باسم السوق ...',
+                                Icons.store,
+                              ),
+                            ],
                             const SizedBox(height: 16),
 
-                            _buildSectionLabel('المدينة'),
-                            const SizedBox(height: 8),
-                            CityDropdownField(
-                              controller: cityController,
-                              selectedGovernorate: _selectedGovernorate,
-                              primaryColor: primary,
-                              isRequired: false,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedCity = value;
-                                  districtController.clear();
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 16),
-
-                            _buildSectionLabel('الحي'),
-                            const SizedBox(height: 8),
-                            DistrictDropdownField(
-                              controller: districtController,
-                              selectedGovernorate: _selectedGovernorate,
-                              selectedCity: _selectedCity,
-                              primaryColor: primary,
-                              isRequired: false,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Worker Type (only for عامل)
-                            if (selectedProfession == 'عامل') ...[
+                            // Worker Type (only for عامل or نحات)
+                            if (selectedProfession == 'عامل' ||
+                                selectedProfession == 'نحات') ...[
                               _buildSectionLabel('نوع الخدمة'),
                               const SizedBox(height: 10),
                               _buildServiceTypeRadioGroup(),
@@ -304,12 +440,15 @@ class _FiltersScreenState extends State<FiltersScreen> {
                           firstNameController.clear();
                           lastNameController.clear();
                           specializationController.clear();
+                          derivedSpecController.clear(); // Added
                           governorateController.clear();
                           cityController.clear();
                           districtController.clear();
+                          marketplaceController.clear(); // Added
                           _selectedGovernorate = null;
                           _selectedCity = null;
                           typeOfService = null;
+                          _searchType = 'location'; // Added
                         });
                       },
                       style: OutlinedButton.styleFrom(
@@ -418,6 +557,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
           _buildRadioTile('مهندس', 'مهندس'),
           _buildRadioTile('متجر', 'متجر'),
           _buildRadioTile('مساعد', 'مساعد'),
+          _buildRadioTile('نحات', 'نحات'),
         ],
       ),
     );
