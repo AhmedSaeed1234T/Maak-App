@@ -767,7 +767,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             Icon(Icons.work_outline, color: primary),
             const SizedBox(width: 8),
             Text(
-              'معلومات العامل',
+              'معلومات الصنايعى',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -809,11 +809,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
 
         _buildDisplayField(
-          label: 'السوق',
+          label: 'المحلات',
           value: _marketplace,
           icon: Icons.store,
           onEdit: () => _showEditDialog(
-            title: 'تعديل السوق',
+            title: 'تعديل المحلات',
             initialValue: _marketplace,
             onSave: (value) {
               setState(() => _marketplace = value);
@@ -849,7 +849,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             Icon(Icons.work_outline, color: primary),
             const SizedBox(width: 8),
             Text(
-              'معلومات العامل',
+              'معلومات الصنايعى',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -889,11 +889,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
 
         _buildDisplayField(
-          label: 'السوق',
+          label: 'المحلات',
           value: _marketplace,
           icon: Icons.store,
           onEdit: () => _showEditDialog(
-            title: 'تعديل السوق',
+            title: 'تعديل المحلات',
             initialValue: _marketplace,
             onSave: (value) {
               setState(() => _marketplace = value);
@@ -964,11 +964,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
 
         _buildDisplayField(
-          label: 'السوق',
+          label: 'المحلات',
           value: _marketplace,
           icon: Icons.store,
           onEdit: () => _showEditDialog(
-            title: 'تعديل السوق',
+            title: 'تعديل المحلات',
             initialValue: _marketplace,
             onSave: (value) {
               setState(() => _marketplace = value);
@@ -1050,7 +1050,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             Icon(Icons.store_outlined, color: Theme.of(context).primaryColor),
             const SizedBox(width: 8),
             Text(
-              'معلومات السوق',
+              'معلومات المحلات',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),

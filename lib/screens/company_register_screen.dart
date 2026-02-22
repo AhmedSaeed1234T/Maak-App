@@ -108,7 +108,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
 
     if (result.success) {
       final loginResult = await loginController.login(
-        _emailController.text,
+        _mobileController.text,
         _passwordController.text,
       );
 
@@ -138,7 +138,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text(
-            "تسجيل شركة/متجر",
+            "تسجيل شركة/محلات",
             style: TextStyle(
               color: Colors.black,
               fontSize: 18,
@@ -284,7 +284,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                               Expanded(
                                 child: RadioListTile<int>(
                                   title: const Text(
-                                    'متجر',
+                                    'محلات',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.black87,
@@ -337,9 +337,9 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                         const SizedBox(height: 10),
                         _buildTextField(
                           _emailController,
-                          "البريد الإلكتروني *",
+                          "البريد الإلكتروني ",
                           Icons.email,
-                          isRequired: true,
+                          isRequired: false,
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(

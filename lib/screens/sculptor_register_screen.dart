@@ -133,7 +133,7 @@ class _SculptorRegisterScreenState extends State<SculptorRegisterScreen> {
 
     if (result.success) {
       await loginController.login(
-        _emailController.text,
+        _phoneController.text,
         _passwordController.text,
       );
 
@@ -276,9 +276,7 @@ class _SculptorRegisterScreenState extends State<SculptorRegisterScreen> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? "البريد الالكتروني مطلوب"
-                              : null,
+                          validator: (v) => null,
                           decoration: _buildDecoration(
                             "البريد الالكتروني",
                             Icons.email,
@@ -303,9 +301,9 @@ class _SculptorRegisterScreenState extends State<SculptorRegisterScreen> {
                         TextFormField(
                           controller: _marketplaceController,
                           validator: (v) => v == null || v.trim().isEmpty
-                              ? "السوق مطلوب"
+                              ? "المحلات مطلوب"
                               : null,
-                          decoration: _buildDecoration("السوق", Icons.store),
+                          decoration: _buildDecoration("سوق العماله ", Icons.store),
                         ),
                         const SizedBox(height: 16),
 

@@ -113,7 +113,7 @@ class CompanyProfileScreen extends StatelessWidget {
                     children: [
                       // About Section
                       _buildSectionWithContent(
-                        'عن السوق',
+                        'عن المحلات',
                         Icons.info_outline,
                         profile.about,
                         primary,
@@ -131,7 +131,7 @@ class CompanyProfileScreen extends StatelessWidget {
 
                       // Phone Section
                       _buildSectionWithContent(
-                        'جوال السوق',
+                        'جوال المحلات',
                         Icons.phone,
                         profile.phone,
                         primary,
@@ -140,7 +140,7 @@ class CompanyProfileScreen extends StatelessWidget {
 
                       // Shopkeeper Section
                       _buildSectionWithContent(
-                        'اسم صاحب السوق',
+                        'اسم صاحب المحلات',
                         Icons.person,
                         profile.shopkeeper,
                         primary,

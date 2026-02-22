@@ -72,7 +72,7 @@ class SelectAccountTypeScreen extends StatelessWidget {
             // Account type tiles
             _AccountTypeTile(
               icon: Icons.build,
-              label: 'عامل او مساعد',
+              label: 'صنايعى او مساعد',
               description: 'تقديم خدمات فردية.',
               onPressed: () {
                 Navigator.pushNamed(context, '/register_worker');
@@ -90,7 +90,7 @@ class SelectAccountTypeScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _AccountTypeTile(
               icon: Icons.store_mall_directory,
-              label: 'شركة أو متجر تجارى',
+              label: 'شركة أو محلات تجارى',
               description: 'عرض نشاطك أو خدماتك.',
               onPressed: () {
                 Navigator.pushNamed(context, '/register_company');

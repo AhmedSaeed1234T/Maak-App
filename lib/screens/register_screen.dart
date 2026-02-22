@@ -173,9 +173,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'البريد الإلكترونى مطلوب';
-                      }
                       return null;
                     },
                     decoration: _buildDecoration('البريد الإلكترونى', Icons.email),

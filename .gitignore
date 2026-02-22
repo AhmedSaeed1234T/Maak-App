@@ -5,13 +5,12 @@
 *.swp
 .DS_Store
 .atom/
-.build/
 .buildlog/
 .history
 .svn/
 .swiftpm/
 migrate_working_dir/
-
+android\app\google-services.json
 # IntelliJ related
 *.iml
 *.ipr
@@ -45,7 +44,7 @@ app.*.map.json
 /android/app/release
 /android/.gradle/
 /android/local.properties
-/android/app/build.gradle.kts
+# /android/app/build.gradle.kts
 /android/app/google-services.json
 /android/build.gradle.kts
 /android/build_log.txt

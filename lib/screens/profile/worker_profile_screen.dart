@@ -119,7 +119,7 @@ class WorkerProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         const Text(
-                          'عن العامل',
+                          'عن الصنايعى',
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
                         ),
                       ],

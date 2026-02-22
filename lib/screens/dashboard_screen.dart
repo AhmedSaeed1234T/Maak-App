@@ -58,10 +58,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<String> tabs = [
     'المقاولين',
-    'العمال',
+    'الصنايعيين',
     'المهندسين',
     'الشركات',
-    'الأسواق',
+    'المحلات',
     'المساعدين',
     'النحاتين', // Added Sculptors
   ];

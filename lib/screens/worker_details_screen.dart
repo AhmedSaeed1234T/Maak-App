@@ -46,7 +46,7 @@ class WorkerProfilePage extends StatelessWidget {
         backgroundColor: primary,
       ),
       appBar: AppBar(
-        title: const Text('ملف العامل', style: TextStyle(color: Colors.black)),
+        title: const Text('ملف الصنايعى', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -283,7 +283,7 @@ class WorkerProfilePage extends StatelessWidget {
           ],
           _detailRow(
             Icons.store,
-            'السوق',
+            'المحلات',
             (provider.marketplace == null || provider.marketplace!.isEmpty)
                 ? 'غير محدد'
                 : provider.marketplace!,

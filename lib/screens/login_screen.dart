@@ -102,9 +102,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'البريد الإلكترونى أو رقم الهاتف مطلوب';
-                        }
                         return null;
                       },
                       decoration: _buildDecoration(
@@ -180,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.pushNamed(context, '/forgot');
                         },
                         child: const Text(
-                          'تغيير كلمة المرور',
+                          'نسيت كلمة المرور',
                           style: TextStyle(
                             color: Color(0xFF13A9F6),
                             fontSize: 13,

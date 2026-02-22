@@ -72,13 +72,13 @@ class _FiltersScreenState extends State<FiltersScreen> {
         return ProviderType.Contractors;
       case 'شركة':
         return ProviderType.Companies;
-      case 'متجر':
+      case 'محلات':
         return ProviderType.Marketplaces;
       case 'مساعد':
         return ProviderType.Assistants;
       case 'نحات':
         return ProviderType.Sculptors;
-      case 'عامل':
+      case 'صنايعى':
       default:
         return ProviderType.Workers;
     }
@@ -216,7 +216,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
                             // Last Name
                             if (selectedProfession != 'شركة' &&
-                                selectedProfession != 'متجر') ...[
+                                selectedProfession != 'محلات') ...[
                               _buildSectionLabel("اسم العائلة"),
                               const SizedBox(height: 8),
                               _buildTextField(
@@ -233,7 +233,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                               const SizedBox(height: 8),
                               _buildTextField(
                                 specializationController,
-                                'ابحث التخصص ...',
+                                'ابحث حسب المهنه ...',
                                 Icons.work,
                               ),
                               const SizedBox(height: 16),
@@ -242,7 +242,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             // Derived Specialization (Hidden for Contractor, Company, Marketplace)
                             if (selectedProfession != 'مقاول' &&
                                 selectedProfession != 'شركة' &&
-                                selectedProfession != 'متجر' &&
+                                selectedProfession != 'محلات' &&
                                 selectedProfession != 'نحات') ...[
                               _buildSectionLabel("التخصص الفرعي"),
                               const SizedBox(height: 8),
@@ -334,7 +334,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                                         ),
                                         child: Center(
                                           child: Text(
-                                            'حسب السوق',
+                                            'حسب سوق العماله  ',
                                             style: TextStyle(
                                               color:
                                                   _searchType == 'marketplace'
@@ -401,18 +401,18 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
                             // Marketplace Field
                             if (_searchType == 'marketplace') ...[
-                              _buildSectionLabel("اسم السوق"),
+                              _buildSectionLabel("اسم المحلات"),
                               const SizedBox(height: 8),
                               _buildTextField(
                                 marketplaceController,
-                                'ابحث باسم السوق ...',
+                                'ابحث باسم المحلات ...',
                                 Icons.store,
                               ),
                             ],
                             const SizedBox(height: 16),
 
-                            // Worker Type (only for عامل or نحات)
-                            if (selectedProfession == 'عامل' ||
+                            // Worker Type (only for صنايعى or نحات)
+                            if (selectedProfession == 'صنايعى' ||
                                 selectedProfession == 'نحات') ...[
                               _buildSectionLabel('نوع الخدمة'),
                               const SizedBox(height: 10),
@@ -551,11 +551,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
       ),
       child: Column(
         children: [
-          _buildRadioTile('عامل', 'عامل'),
+          _buildRadioTile('صنايعى', 'صنايعى'),
           _buildRadioTile('مقاول', 'مقاول'),
           _buildRadioTile('شركة', 'شركة'),
           _buildRadioTile('مهندس', 'مهندس'),
-          _buildRadioTile('متجر', 'متجر'),
+          _buildRadioTile('محلات', 'محلات'),
           _buildRadioTile('مساعد', 'مساعد'),
           _buildRadioTile('نحات', 'نحات'),
         ],

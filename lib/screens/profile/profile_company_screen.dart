@@ -87,7 +87,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'حدّث معلومات متجرك أو شركتك',
+              'حدّث معلومات محلاتك أو شركتك',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 28),
@@ -144,7 +144,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                     _buildSectionLabel('معلومات الشركة'),
                     const SizedBox(height: 12),
                     _buildTextField(
-                      'اسم الشركة أو السوق',
+                      'اسم الشركة أو المحلات',
                       Icons.store,
                       companyName,
                       (v) => setState(() => companyName = v),
