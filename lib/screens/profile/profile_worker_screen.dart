@@ -1,0 +1,442 @@
+import 'package:flutter/material.dart';
+import 'package:abokamall/helpers/CustomSnackBar.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+
+class WorkerProfileScreen extends StatefulWidget {
+  const WorkerProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<WorkerProfileScreen> createState() => _WorkerProfileScreenState();
+}
+
+class _WorkerProfileScreenState extends State<WorkerProfileScreen> {
+  File? _imageFile;
+  final picker = ImagePicker();
+
+  String name = 'الاسم';
+  String profession = 'المهنة';
+  String location = 'الموقع';
+  String price = 'السعر';
+  String phone = '';
+  String email = '';
+  String about = '';
+
+  Future<void> _pickImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const primary = Color(0xFF13A9F6);
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'تعديل الملف الشخصي',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Header Icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [primary, primary.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withOpacity(0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.edit_location,
+                color: Colors.white,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'قم بتحديث بياناتك',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'حافظ على معلوماتك الشخصية محدثة',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 28),
+
+            // Profile Image
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withOpacity(0.15),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Color(0xFFF4F7FA),
+                  backgroundImage: _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : null,
+                  child: _imageFile == null
+                      ? Icon(Icons.person, size: 55, color: primary)
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text('تغيير الصورة'),
+              style: TextButton.styleFrom(
+                foregroundColor: primary,
+                textStyle: const TextStyle(fontSize: 14),
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Main Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Personal Info Section
+                    _buildSectionLabel('المعلومات الشخصية'),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      'الاسم',
+                      Icons.person,
+                      name,
+                      (v) => setState(() => name = v),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildTextField(
+                      'المهنة',
+                      Icons.work,
+                      profession,
+                      (v) => setState(() => profession = v),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildLocationField(),
+                    const SizedBox(height: 20),
+
+                    // Contact Info Section
+                    _buildSectionLabel('معلومات الاتصال'),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      'رقم الجوال',
+                      Icons.phone,
+                      phone,
+                      (v) => setState(() => phone = v),
+                      TextInputType.phone,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildTextField(
+                      'البريد الإلكتروني',
+                      Icons.email,
+                      email,
+                      (v) => setState(() => email = v),
+                      TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Service Info Section
+                    _buildSectionLabel('معلومات الخدمة'),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      'السعر',
+                      Icons.monetization_on,
+                      price,
+                      (v) => setState(() => price = v),
+                      TextInputType.number,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildTextFieldMultiline(
+                      'نبذة عني',
+                      Icons.description,
+                      about,
+                      (v) => setState(() => about = v),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.save, size: 20),
+                        label: const Text(
+                          'حفظ البيانات',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 3,
+                        ),
+                        onPressed: () {
+                          CustomSnackBar.show(
+                            context,
+                            message: 'تم حفظ البيانات بنجاح',
+                            type: SnackBarType.success,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String text) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    IconData icon,
+    String initialValue,
+    Function(String) onChanged, [
+    TextInputType keyboardType = TextInputType.text,
+  ]) {
+    return TextFormField(
+      initialValue: initialValue,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF13A9F6)),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+        ),
+      ),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildTextFieldMultiline(
+    String label,
+    IconData icon,
+    String initialValue,
+    Function(String) onChanged,
+  ) {
+    return TextFormField(
+      initialValue: initialValue,
+      maxLines: 3,
+      minLines: 3,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(bottom: 40),
+          child: Icon(icon, color: const Color(0xFF13A9F6)),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
+        ),
+      ),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildLocationField() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            initialValue: location,
+            decoration: InputDecoration(
+              labelText: 'مكان العمل',
+              prefixIcon: const Icon(
+                Icons.location_on,
+                color: Color(0xFF13A9F6),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
+              labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF13A9F6),
+                  width: 2,
+                ),
+              ),
+            ),
+            onChanged: (v) => setState(() => location = v),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF13A9F6).withOpacity(0.15),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.my_location,
+              color: Color(0xFF13A9F6),
+              size: 20,
+            ),
+            tooltip: 'تحديد الموقع تلقائيًا',
+            onPressed: () async {
+              bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+              if (!serviceEnabled) {
+                CustomSnackBar.show(
+                  context,
+                  message: 'يجب تفعيل خدمة الموقع.',
+                  type: SnackBarType.warning,
+                );
+                return;
+              }
+              LocationPermission permission =
+                  await Geolocator.checkPermission();
+              if (permission == LocationPermission.denied) {
+                permission = await Geolocator.requestPermission();
+                if (permission == LocationPermission.denied) {
+                  CustomSnackBar.show(
+                    context,
+                    message: 'تم رفض إذن الموقع',
+                    type: SnackBarType.error,
+                  );
+                  return;
+                }
+              }
+              if (permission == LocationPermission.deniedForever) {
+                CustomSnackBar.show(
+                  context,
+                  message: 'إذن الموقع مرفوض دائمًا',
+                  type: SnackBarType.error,
+                );
+                return;
+              }
+              Position pos = await Geolocator.getCurrentPosition();
+              List<Placemark> placemarks = await placemarkFromCoordinates(
+                pos.latitude,
+                pos.longitude,
+              );
+              if (placemarks.isNotEmpty) {
+                final place = placemarks.first;
+                String address =
+                    '${place.country ?? ''} - ${place.administrativeArea ?? ''} - ${place.locality ?? ''} - ${place.street ?? ''}';
+                setState(() => location = address);
+              } else {
+                setState(
+                  () => location =
+                      'خط العرض: ${pos.latitude}, خط الطول: ${pos.longitude}',
+                );
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
