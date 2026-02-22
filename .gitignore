@@ -44,7 +44,7 @@ app.*.map.json
 /android/app/release
 /android/.gradle/
 /android/local.properties
-/android/app/build.gradle.kts
+# /android/app/build.gradle.kts
 /android/app/google-services.json
 /android/build.gradle.kts
 /android/build_log.txt
