@@ -229,7 +229,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
                             // Specialization
                             if (selectedProfession != 'نحات') ...[
-                              _buildSectionLabel("التخصص"),
+                              _buildSectionLabel("المهنة"),
                               const SizedBox(height: 8),
                               _buildTextField(
                                 specializationController,
@@ -244,11 +244,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
                                 selectedProfession != 'شركة' &&
                                 selectedProfession != 'محلات' &&
                                 selectedProfession != 'نحات') ...[
-                              _buildSectionLabel("التخصص الفرعي"),
+                              _buildSectionLabel("التخصص داخل المهنة"),
                               const SizedBox(height: 8),
                               _buildTextField(
                                 derivedSpecController,
-                                'ابحث التخصص الفرعي ...',
+                                'التخصص داخل المهنة ...',
                                 Icons.build,
                               ),
                               const SizedBox(height: 16),
@@ -401,11 +401,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
                             // Marketplace Field
                             if (_searchType == 'marketplace') ...[
-                              _buildSectionLabel("اسم المحلات"),
+                              _buildSectionLabel("سوق العمالة"),
                               const SizedBox(height: 8),
                               _buildTextField(
                                 marketplaceController,
-                                'ابحث باسم المحلات ...',
+                                'ابحث حسب سوق العمالة ...',
                                 Icons.store,
                               ),
                             ],
@@ -556,7 +556,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
           _buildRadioTile('شركة', 'شركة'),
           _buildRadioTile('مهندس', 'مهندس'),
           _buildRadioTile('محلات', 'محلات'),
-          _buildRadioTile('مساعد', 'مساعد'),
+          _buildRadioTile('عامل', 'مساعد'),
           _buildRadioTile('نحات', 'نحات'),
         ],
       ),

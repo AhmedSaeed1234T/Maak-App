@@ -59,7 +59,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   // Local editable data
   String _firstName = '';
   String _lastName = '';
-  String _bio = '';
   String _governorate = '';
   String _city = '';
   String _district = '';
@@ -120,7 +119,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         // Populate local variables
         _firstName = profile.firstName;
         _lastName = profile.lastName;
-        _bio = profile.serviceProvider?.bio ?? '';
         _governorate = profile.governorate;
         _city = profile.city;
         _district = profile.district;
@@ -277,7 +275,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     final result = await _controller.updateProfile(
       firstName: _firstName,
       lastName: _lastName,
-      bio: _bio,
+      bio: "",
       pay: _pay,
       governorate: _governorate,
       city: _city,
@@ -651,23 +649,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 ),
               ),
 
-        // Bio
-        _buildDisplayField(
-          label: 'نبذة عنك',
-          value: _bio.isEmpty ? 'لم يتم إضافة نبذة' : _bio,
-          icon: Icons.info_outline,
-          maxLines: 3,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل النبذة',
-            initialValue: _bio,
-            maxLines: 4,
-            onSave: (value) {
-              setState(() => _bio = value);
-              _markAsChanged();
-            },
-          ),
-        ),
-
         const SizedBox(height: 24),
 
         Row(
@@ -1022,21 +1003,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           ),
         ),
 
-        // Pay (editable)
-        _buildDisplayField(
-          label: 'الراتب (جنيه/شهر)',
-          value: '$_pay جنيه',
-          icon: Icons.attach_money,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل الأجر',
-            initialValue: _pay,
-            keyboardType: TextInputType.number,
-            onSave: (value) {
-              setState(() => _pay = value);
-              _markAsChanged();
-            },
-          ),
-        ),
       ],
     );
   }
@@ -1101,21 +1067,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           icon: Icons.build,
         ),
 
-        _buildDisplayField(
-          label: 'الأجر (جنيه/مشروع)',
-          value: '$_pay جنيه',
-          icon: Icons.attach_money,
-          onEdit: () => _showEditDialog(
-            title: 'تعديل الأجر',
-            initialValue: _pay,
-            keyboardType: TextInputType.number,
-            hint: 'الأجر التقريبي للمشروع الواحد',
-            onSave: (value) {
-              setState(() => _pay = value);
-              _markAsChanged();
-            },
-          ),
-        ),
       ],
     );
   }

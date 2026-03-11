@@ -33,7 +33,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _jobController = TextEditingController();
   final _salaryController = TextEditingController();
-  final _bioController = TextEditingController();
   final _governorateController = TextEditingController();
   final _cityController = TextEditingController();
   final _districtController = TextEditingController();
@@ -111,7 +110,7 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
       skill: _jobController.text.trim(),
       workerType: salaryType == "daily" ? 0 : 1,
       pay: double.tryParse(_salaryController.text.trim()) ?? 0,
-      bio: _bioController.text.trim(),
+      bio: "",
 
       referralUserName: _referralController.text.trim(),
       marketplace: _marketplaceController.text.trim(),
@@ -402,15 +401,6 @@ class _WorkerRegisterScreenState extends State<WorkerRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        TextFormField(
-                          controller: _bioController,
-                          maxLines: 3,
-                          decoration: _buildDecoration(
-                            "نبذة عنك",
-                            Icons.description,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
 
                         TextFormField(
                           controller: _referralController,

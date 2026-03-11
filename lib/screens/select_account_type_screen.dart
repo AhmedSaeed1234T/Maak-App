@@ -72,7 +72,7 @@ class SelectAccountTypeScreen extends StatelessWidget {
             // Account type tiles
             _AccountTypeTile(
               icon: Icons.build,
-              label: 'صنايعى او مساعد',
+              label: 'صنايعى او عامل',
               description: 'تقديم خدمات فردية.',
               onPressed: () {
                 Navigator.pushNamed(context, '/register_worker');

@@ -32,7 +32,6 @@ class _SculptorRegisterScreenState extends State<SculptorRegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _salaryController = TextEditingController();
-  final _bioController = TextEditingController();
   final _governorateController = TextEditingController();
   final _cityController = TextEditingController();
   final _districtController = TextEditingController();
@@ -120,7 +119,7 @@ class _SculptorRegisterScreenState extends State<SculptorRegisterScreen> {
       skill: "",
       workerType: salaryType == "daily" ? 0 : 1,
       pay: double.tryParse(_salaryController.text.trim()) ?? 0,
-      bio: _bioController.text.trim(),
+      bio: "",
 
       referralUserName: _referralController.text.trim(),
       marketplace: _marketplaceController.text.trim(),
@@ -365,15 +364,6 @@ class _SculptorRegisterScreenState extends State<SculptorRegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        TextFormField(
-                          controller: _bioController,
-                          maxLines: 3,
-                          decoration: _buildDecoration(
-                            "نبذة عنك",
-                            Icons.description,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
 
                         TextFormField(
                           controller: _referralController,

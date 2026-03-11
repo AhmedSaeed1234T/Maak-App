@@ -34,7 +34,6 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _bioController = TextEditingController();
   final _referralController = TextEditingController();
   final _nameController = TextEditingController();
   // Location controllers
@@ -98,7 +97,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
       district: _districtController.text.trim(),
       business: _businessController.text.trim(),
       owner: _ownerController.text.trim(),
-      bio: _bioController.text.trim(),
+      bio: "",
       referralUserName: _referralController.text.trim(),
     );
 
@@ -350,13 +349,6 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                           isRequired: true,
                         ),
                         const SizedBox(height: 16),
-                        _buildTextFieldMultiline(
-                          _bioController,
-                          "نبذة عن الشركة",
-                          Icons.description,
-                          lines: 3,
-                        ),
-                        const SizedBox(height: 16),
                         _buildTextField(
                           _referralController,
                           "كيف عرفت هذا التطبيق؟",
@@ -544,44 +536,6 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
     );
   }
 
-  Widget _buildTextFieldMultiline(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    int lines = 3,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: lines,
-      minLines: lines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(bottom: 40),
-          child: Icon(icon, color: const Color(0xFF13A9F6)),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-        labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-        ),
-      ),
-    );
-  }
 
   Widget _buildPasswordField(
     TextEditingController controller,

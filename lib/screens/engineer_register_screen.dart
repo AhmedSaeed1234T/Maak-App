@@ -36,8 +36,6 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _specializationController = TextEditingController();
-  final _salaryController = TextEditingController();
-  final _bioController = TextEditingController();
 
   final _referralController = TextEditingController();
   final _derivedSpecController = TextEditingController();
@@ -103,8 +101,8 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
       providerType: userTypeIndex == 0 ? "Contractor" : "Engineer",
       specialization: _specializationController.text.trim(),
       workerType: 1,
-      pay: double.tryParse(_salaryController.text.trim()) ?? 0,
-      bio: _bioController.text.trim(),
+      pay: 0,
+      bio: "",
       referralUserName: _referralController.text.trim(),
       governorate: _governorateController.text.trim(),
       city: _cityController.text.trim(),
@@ -380,21 +378,7 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
                             isRequired: true,
                           ),
                         ],
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          _salaryController,
-                          'الأجر *',
-                          Icons.monetization_on,
-                          keyboardType: TextInputType.number,
-                          isRequired: true,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextFieldMultiline(
-                          _bioController,
-                          'نبذة عنك',
-                          Icons.description,
-                          lines: 3,
-                        ),
+
                         const SizedBox(height: 16),
                         _buildTextField(
                           _referralController,
@@ -583,44 +567,6 @@ class _EngineerRegisterScreenState extends State<EngineerRegisterScreen> {
     );
   }
 
-  Widget _buildTextFieldMultiline(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    int lines = 3,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: lines,
-      minLines: lines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(bottom: 40),
-          child: Icon(icon, color: const Color(0xFF13A9F6)),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-        labelStyle: const TextStyle(fontSize: 14, color: Colors.black87),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF13A9F6), width: 2),
-        ),
-      ),
-    );
-  }
 
   Widget _buildPasswordField(
     TextEditingController controller,

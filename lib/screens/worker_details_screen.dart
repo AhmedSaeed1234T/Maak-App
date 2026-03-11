@@ -46,7 +46,10 @@ class WorkerProfilePage extends StatelessWidget {
         backgroundColor: primary,
       ),
       appBar: AppBar(
-        title: const Text('ملف الصنايعى', style: TextStyle(color: Colors.black)),
+        title: Text(
+          'ملف ${provider.skill.isNotEmpty ? provider.skill : provider.typeOfService ?? 'الصنايعى'}',
+          style: const TextStyle(color: Colors.black),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -203,8 +206,6 @@ class WorkerProfilePage extends StatelessWidget {
             ],
             const SizedBox(height: 24),
             _buildDetailsSection(provider, context),
-            const SizedBox(height: 24),
-            _buildAboutSection(provider),
           ],
         ),
       ),
@@ -263,7 +264,7 @@ class WorkerProfilePage extends StatelessWidget {
             primary,
           ),
           const Divider(),
-          if (!provider.isCompany) ...[
+          if (!provider.isCompany && provider.typeOfService != 'Engineer' && provider.typeOfService != 'Contractor') ...[
             _detailRow(
               Icons.attach_money,
               'السعر',
@@ -281,15 +282,17 @@ class WorkerProfilePage extends StatelessWidget {
             ),
             const Divider(),
           ],
-          _detailRow(
-            Icons.store,
-            'المحلات',
-            (provider.marketplace == null || provider.marketplace!.isEmpty)
-                ? 'غير محدد'
-                : provider.marketplace!,
-            primary,
-          ),
-          const Divider(),
+          if (provider.typeOfService != 'Engineer' && provider.typeOfService != 'Contractor') ...[
+            _detailRow(
+              Icons.store,
+              'سوق العمالة',
+              (provider.marketplace == null || provider.marketplace!.isEmpty)
+                  ? 'غير محدد'
+                  : provider.marketplace!,
+              primary,
+            ),
+            const Divider(),
+          ],
 
           // Hide specialization for sculptors (نحات)
           if (provider.typeOfService != 'Sculptor') ...[
@@ -346,33 +349,5 @@ class WorkerProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildAboutSection(ServiceProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'نبذة عني',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            provider.aboutMe ??
-                'لا توجد معلومات متاحة عن هذا الموفر. يرجى التواصل مباشرة لمزيد من التفاصيل.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 }
